@@ -1,0 +1,31 @@
+import 'package:ahgzly_pos/features/menu/domain/entities/category.dart';
+
+class CategoryModel extends Category {
+  const CategoryModel({
+    super.id,
+    required super.name,
+    super.imagePath,
+    required super.createdAt,
+    required super.updatedAt,
+  });
+
+  factory CategoryModel.fromMap(Map<String, dynamic> map) {
+    return CategoryModel(
+      id: map['id'],
+      name: map['name'],
+      imagePath: map['image_path'],
+      createdAt: map['created_at'],
+      updatedAt: map['updated_at'],
+    );
+  }
+
+  Map<String, dynamic> toMap() {
+    return {
+      if (id != null) 'id': id,
+      'name': name,
+      'image_path': imagePath,
+      'created_at': createdAt,
+      'updated_at': updatedAt,
+    };
+  }
+}
