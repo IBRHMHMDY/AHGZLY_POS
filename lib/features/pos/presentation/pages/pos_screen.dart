@@ -97,6 +97,13 @@ class _PosScreenState extends State<PosScreen> {
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         actions: [
           IconButton(
+            icon: const Icon(Icons.analytics),
+            tooltip: 'تقرير الوردية',
+            onPressed: () {
+              context.push('/shift');
+            },
+          ),
+          IconButton(
             icon: const Icon(Icons.settings),
             tooltip: 'إدارة القائمة',
             onPressed: () async {

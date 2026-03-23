@@ -7,6 +7,10 @@ import 'package:ahgzly_pos/features/menu/presentation/bloc/menu_event.dart';
 import 'package:ahgzly_pos/features/menu/presentation/pages/menu_management_screen.dart';
 import 'package:ahgzly_pos/features/pos/presentation/bloc/pos_bloc.dart';
 import 'package:ahgzly_pos/features/pos/presentation/pages/pos_screen.dart';
+import 'package:ahgzly_pos/features/shift/presentation/bloc/shift_bloc.dart';
+import 'package:ahgzly_pos/features/shift/presentation/bloc/shift_event.dart';
+import 'package:ahgzly_pos/features/shift/presentation/pages/shift_report_screen.dart';
+
 
 class AppRouter {
   static final GoRouter router = GoRouter(
@@ -33,6 +37,15 @@ class AppRouter {
           return BlocProvider(
             create: (_) => sl<MenuBloc>()..add(FetchCategoriesEvent()),
             child: const MenuManagementScreen(),
+          );
+        },
+      ),
+      GoRoute(
+        path: '/shift',
+        builder: (BuildContext context, GoRouterState state) {
+          return BlocProvider(
+            create: (_) => sl<ShiftBloc>()..add(LoadZReportEvent()),
+            child: const ShiftReportScreen(),
           );
         },
       ),

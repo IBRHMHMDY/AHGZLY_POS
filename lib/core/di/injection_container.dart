@@ -17,6 +17,14 @@ import 'package:ahgzly_pos/features/pos/domain/repositories/pos_repository.dart'
 import 'package:ahgzly_pos/features/pos/domain/usecases/save_order_usecase.dart';
 import 'package:ahgzly_pos/features/pos/presentation/bloc/pos_bloc.dart';
 
+// Shifts Management
+import 'package:ahgzly_pos/features/shift/data/datasources/shift_local_data_source.dart';
+import 'package:ahgzly_pos/features/shift/data/repositories/shift_repository_impl.dart';
+import 'package:ahgzly_pos/features/shift/domain/repositories/shift_repository.dart';
+import 'package:ahgzly_pos/features/shift/domain/usecases/get_z_report_usecase.dart';
+import 'package:ahgzly_pos/features/shift/domain/usecases/close_shift_usecase.dart';
+import 'package:ahgzly_pos/features/shift/presentation/bloc/shift_bloc.dart';
+
 final sl = GetIt.instance;
 
 Future<void> init() async {
@@ -61,4 +69,13 @@ Future<void> init() async {
   sl.registerLazySingleton(() => SaveOrderUseCase(sl()));
   sl.registerLazySingleton<PosRepository>(() => PosRepositoryImpl(localDataSource: sl()));
   sl.registerLazySingleton<PosLocalDataSource>(() => PosLocalDataSourceImpl(databaseHelper: sl()));
+
+  // ==========================================
+  // Features - Shift Management (الورديات)
+  // ==========================================
+  sl.registerFactory(() => ShiftBloc(getZReportUseCase: sl(),closeShiftUseCase: sl(),));
+  sl.registerLazySingleton(() => GetZReportUseCase(sl()));
+  sl.registerLazySingleton(() => CloseShiftUseCase(sl()));
+  sl.registerLazySingleton<ShiftRepository>(() => ShiftRepositoryImpl(localDataSource: sl()),);
+  sl.registerLazySingleton<ShiftLocalDataSource>(() => ShiftLocalDataSourceImpl(databaseHelper: sl()),);
 }
