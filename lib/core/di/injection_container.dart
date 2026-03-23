@@ -1,32 +1,36 @@
+import 'package:get_it/get_it.dart';
+import 'package:ahgzly_pos/core/database/database_helper.dart';
+import 'package:ahgzly_pos/core/services/printer_service.dart'; // تأكد من وجود الـ import
+
+// Menu Imports
+import 'package:ahgzly_pos/features/menu/data/datasources/menu_local_data_source.dart';
+import 'package:ahgzly_pos/features/menu/data/repositories/menu_repository_impl.dart';
+import 'package:ahgzly_pos/features/menu/domain/repositories/menu_repository.dart';
+import 'package:ahgzly_pos/features/menu/domain/usecases/category_usecases.dart';
+import 'package:ahgzly_pos/features/menu/domain/usecases/item_usecases.dart';
+import 'package:ahgzly_pos/features/menu/presentation/bloc/menu_bloc.dart';
+
+// POS Imports
 import 'package:ahgzly_pos/features/pos/data/datasources/pos_local_data_source.dart';
 import 'package:ahgzly_pos/features/pos/data/repositories/pos_repository_impl.dart';
 import 'package:ahgzly_pos/features/pos/domain/repositories/pos_repository.dart';
 import 'package:ahgzly_pos/features/pos/domain/usecases/save_order_usecase.dart';
 import 'package:ahgzly_pos/features/pos/presentation/bloc/pos_bloc.dart';
-import 'package:get_it/get_it.dart';
-import '../database/database_helper.dart';
 
-// Menu
-import '../../features/menu/data/datasources/menu_local_data_source.dart';
-import '../../features/menu/data/repositories/menu_repository_impl.dart';
-import '../../features/menu/domain/repositories/menu_repository.dart';
-import '../../features/menu/domain/usecases/category_usecases.dart';
-import '../../features/menu/domain/usecases/item_usecases.dart';
-import '../../features/menu/presentation/bloc/menu_bloc.dart';
-
-final sl = GetIt.instance; // sl = Service Locator
+final sl = GetIt.instance;
 
 Future<void> init() async {
   // ==========================================
-  // Core
+  // Core (يجب تسجيل الخدمات الأساسية أولاً)
   // ==========================================
   sl.registerLazySingleton<DatabaseHelper>(() => DatabaseHelper());
+  
+  // تأكد أن هذا السطر موجود هنا وليس داخل دالة أخرى
+  sl.registerLazySingleton<PrinterService>(() => PrinterService());
 
   // ==========================================
   // Features - Menu
   // ==========================================
-  
-  // Bloc
   sl.registerFactory(() => MenuBloc(
         getCategories: sl(),
         addCategory: sl(),
@@ -38,46 +42,23 @@ Future<void> init() async {
         deleteItem: sl(),
       ));
 
-  // UseCases
   sl.registerLazySingleton(() => GetCategoriesUseCase(sl()));
   sl.registerLazySingleton(() => AddCategoryUseCase(sl()));
   sl.registerLazySingleton(() => UpdateCategoryUseCase(sl()));
   sl.registerLazySingleton(() => DeleteCategoryUseCase(sl()));
-  
   sl.registerLazySingleton(() => GetItemsUseCase(sl()));
   sl.registerLazySingleton(() => AddItemUseCase(sl()));
   sl.registerLazySingleton(() => UpdateItemUseCase(sl()));
   sl.registerLazySingleton(() => DeleteItemUseCase(sl()));
 
-  // Repository
-  sl.registerLazySingleton<MenuRepository>(
-    () => MenuRepositoryImpl(localDataSource: sl()),
-  );
+  sl.registerLazySingleton<MenuRepository>(() => MenuRepositoryImpl(localDataSource: sl()));
+  sl.registerLazySingleton<MenuLocalDataSource>(() => MenuLocalDataSourceImpl(databaseHelper: sl()));
 
-  // Data Sources
-  sl.registerLazySingleton<MenuLocalDataSource>(
-    () => MenuLocalDataSourceImpl(databaseHelper: sl()),
-  );
-
-// ==========================================
-  // Features - POS (نقطة البيع)
   // ==========================================
-  
-  // Bloc
+  // Features - POS
+  // ==========================================
   sl.registerFactory(() => PosBloc(saveOrderUseCase: sl()));
-
-  // UseCases
   sl.registerLazySingleton(() => SaveOrderUseCase(sl()));
-
-  // Repository
-  sl.registerLazySingleton<PosRepository>(
-    () => PosRepositoryImpl(localDataSource: sl()),
-  );
-
-  // Data Sources
-  sl.registerLazySingleton<PosLocalDataSource>(
-    () => PosLocalDataSourceImpl(databaseHelper: sl()),
-  );
-
-
+  sl.registerLazySingleton<PosRepository>(() => PosRepositoryImpl(localDataSource: sl()));
+  sl.registerLazySingleton<PosLocalDataSource>(() => PosLocalDataSourceImpl(databaseHelper: sl()));
 }
