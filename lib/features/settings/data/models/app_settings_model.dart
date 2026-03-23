@@ -6,6 +6,8 @@ class AppSettingsModel extends AppSettings {
     required super.serviceRate,
     required super.deliveryFee,
     required super.printerName,
+    required super.restaurantName,
+    required super.taxNumber,
   });
 
   factory AppSettingsModel.fromMap(Map<String, dynamic> map) {
@@ -14,16 +16,20 @@ class AppSettingsModel extends AppSettings {
       serviceRate: (map['service_rate'] as num).toDouble(),
       deliveryFee: (map['delivery_fee'] as num).toDouble(),
       printerName: map['printer_name'] as String,
+      restaurantName: map['restaurant_name'] as String? ?? 'مـطـعـم احـجـزلـي',
+      taxNumber: map['tax_number'] as String? ?? '123-456-789',
     );
   }
 
   Map<String, dynamic> toMap() {
     return {
-      'id': 1, // دائماً 1 لأننا نملك صف إعدادات واحد فقط
+      'id': 1,
       'tax_rate': taxRate,
       'service_rate': serviceRate,
       'delivery_fee': deliveryFee,
       'printer_name': printerName,
+      'restaurant_name': restaurantName,
+      'tax_number': taxNumber,
     };
   }
 
@@ -33,6 +39,8 @@ class AppSettingsModel extends AppSettings {
       serviceRate: entity.serviceRate,
       deliveryFee: entity.deliveryFee,
       printerName: entity.printerName,
+      restaurantName: entity.restaurantName,
+      taxNumber: entity.taxNumber,
     );
   }
 }

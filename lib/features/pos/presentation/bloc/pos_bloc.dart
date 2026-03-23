@@ -48,7 +48,7 @@ class PosBloc extends Bloc<PosEvent, PosState> {
     result.fold(
       (failure) {
         // إعدادات افتراضية للطوارئ
-        _settings = const AppSettings(taxRate: 0.14, serviceRate: 0.12, deliveryFee: 20.0, printerName: 'Unknown Printer');
+        _settings = const AppSettings(taxRate: 0.14, serviceRate: 0.12, deliveryFee: 20.0, printerName: 'Unknown Printer', restaurantName: 'Ahgzly Restaurants', taxNumber: '123 456 789');
       },
       (settings) {
         _settings = settings;
