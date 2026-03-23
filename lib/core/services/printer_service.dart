@@ -1,4 +1,7 @@
 import 'dart:typed_data';
+import 'package:ahgzly_pos/core/di/injection_container.dart';
+import 'package:ahgzly_pos/core/usecases/usecase.dart';
+import 'package:ahgzly_pos/features/settings/domain/usecases/get_settings_usecase.dart';
 import 'package:flutter/material.dart';
 import 'package:screenshot/screenshot.dart';
 import 'package:pdf/pdf.dart';
@@ -39,11 +42,39 @@ class PrinterService {
 
       // 3. إرسال الـ PDF مباشرة إلى مدير طباعة الويندوز
       // ستظهر نافذة اختيار الطابعة (اختر Epson)
-      await Printing.layoutPdf(
-        onLayout: (PdfPageFormat format) async => pdf.save(),
-        name: 'Ahgzly_Receipt',
+      final settingsResult = await sl<GetSettingsUseCase>().call(NoParams());
+      String savedPrinterName = '';
+      settingsResult.fold(
+        (failure) => null,
+        (settings) => savedPrinterName = settings.printerName,
       );
 
+      // 2. جلب قائمة الطابعات المتصلة بالويندوز
+      final printers = await Printing.listPrinters();
+      Printer? targetPrinter;
+
+      // 3. البحث عن الطابعة المطلوبة بالاسم
+      for (var p in printers) {
+        if (p.name.trim().toLowerCase() == savedPrinterName.trim().toLowerCase()) {
+          targetPrinter = p;
+          break;
+        }
+      }
+
+      // 4. تنفيذ الطباعة
+      if (targetPrinter != null) {
+        // طباعة صامتة (مباشرة) في الخلفية بدون نوافذ
+        await Printing.directPrintPdf(
+          printer: targetPrinter,
+          onLayout: (PdfPageFormat format) async => pdf.save(), // تأكد أن اسم المتغير pdf مطابق لما لديك (أو doc)
+        );
+      } else {
+        // في حال كان اسم الطابعة في الإعدادات خاطئاً، نفتح النافذة كحل بديل للطوارئ
+        await Printing.layoutPdf(
+          name: 'Receipt',
+          onLayout: (PdfPageFormat format) async => pdf.save(),
+        );
+      }
       return true;
     } catch (e) {
       debugPrint('USB Print Error: $e');

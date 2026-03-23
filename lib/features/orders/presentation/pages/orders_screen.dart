@@ -76,7 +76,7 @@ class OrdersScreen extends StatelessWidget {
             child: ListView.separated(
               shrinkWrap: true,
               itemCount: order.items.length,
-              separatorBuilder: (_, __) => const Divider(),
+              separatorBuilder: (_, _) => const Divider(),
               itemBuilder: (ctx, index) {
                 final item = order.items[index];
                 return ListTile(

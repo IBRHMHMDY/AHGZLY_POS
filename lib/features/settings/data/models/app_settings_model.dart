@@ -8,6 +8,7 @@ class AppSettingsModel extends AppSettings {
     required super.printerName,
     required super.restaurantName,
     required super.taxNumber,
+    required super.printMode,
   });
 
   factory AppSettingsModel.fromMap(Map<String, dynamic> map) {
@@ -18,6 +19,7 @@ class AppSettingsModel extends AppSettings {
       printerName: map['printer_name'] as String,
       restaurantName: map['restaurant_name'] as String? ?? 'مـطـعـم احـجـزلـي',
       taxNumber: map['tax_number'] as String? ?? '123-456-789',
+      printMode: map['print_mode'] as String? ?? 'ask',
     );
   }
 
@@ -30,6 +32,7 @@ class AppSettingsModel extends AppSettings {
       'printer_name': printerName,
       'restaurant_name': restaurantName,
       'tax_number': taxNumber,
+      'print_mode': printMode,
     };
   }
 
@@ -41,6 +44,7 @@ class AppSettingsModel extends AppSettings {
       printerName: entity.printerName,
       restaurantName: entity.restaurantName,
       taxNumber: entity.taxNumber,
+      printMode: entity.printMode,
     );
   }
 }

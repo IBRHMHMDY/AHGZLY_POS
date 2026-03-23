@@ -1,65 +1,127 @@
 import 'package:flutter/material.dart';
 
-class CheckoutDialog extends StatelessWidget {
+class CheckoutDialog extends StatefulWidget {
   final double totalAmount;
 
   const CheckoutDialog({super.key, required this.totalAmount});
+
+  @override
+  State<CheckoutDialog> createState() => _CheckoutDialogState();
+}
+
+class _CheckoutDialogState extends State<CheckoutDialog> {
+  String _selectedMethod = 'كاش';
+  late TextEditingController _paidController;
+  double _change = 0.0;
+
+  @override
+  void initState() {
+    super.initState();
+    _paidController = TextEditingController(text: widget.totalAmount.toString());
+    _paidController.addListener(_calculateChange);
+  }
+
+  void _calculateChange() {
+    final paid = double.tryParse(_paidController.text) ?? 0.0;
+    setState(() {
+      _change = paid - widget.totalAmount;
+    });
+  }
+
+  @override
+  void dispose() {
+    _paidController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Directionality(
       textDirection: TextDirection.rtl,
       child: AlertDialog(
-        title: const Text('إتمام الدفع', textAlign: TextAlign.center, style: TextStyle(fontWeight: FontWeight.bold)),
+        title: const Text('إتمام الدفع', style: TextStyle(fontWeight: FontWeight.bold)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text('الإجمالي المطلوب:', style: TextStyle(fontSize: 18)),
-            const SizedBox(height: 8),
-            Text(
-              '$totalAmount ج.م',
-              style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.teal),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(color: Colors.teal.shade50, borderRadius: BorderRadius.circular(8)),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text('المطلوب:', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                  Text('${widget.totalAmount} ج.م', style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.teal)),
+                ],
+              ),
             ),
-            const SizedBox(height: 24),
-            const Text('اختر طريقة الدفع لتأكيد الطلب:'),
-            const SizedBox(height: 16),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                ElevatedButton.icon(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.green.shade600,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                  ),
-                  icon: const Icon(Icons.money),
-                  label: const Text('كاش', style: TextStyle(fontSize: 16)),
-                  onPressed: () => Navigator.pop(context, 'كاش'),
+            const SizedBox(height: 20),
+            DropdownButtonFormField<String>(
+              value: _selectedMethod,
+              decoration: const InputDecoration(labelText: 'طريقة الدفع', border: OutlineInputBorder()),
+              items: ['كاش', 'فيزا', 'InstaPay']
+                  .map((method) => DropdownMenuItem(value: method, child: Text(method)))
+                  .toList(),
+              onChanged: (val) {
+                if (val != null) {
+                  setState(() {
+                    _selectedMethod = val;
+                    if (val != 'كاش') {
+                      _paidController.text = widget.totalAmount.toString();
+                    }
+                  });
+                }
+              },
+            ),
+            const SizedBox(height: 20),
+            if (_selectedMethod == 'كاش') ...[
+              TextFormField(
+                controller: _paidController,
+                keyboardType: TextInputType.number,
+                style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                decoration: const InputDecoration(
+                  labelText: 'المبلغ المدفوع (من العميل)',
+                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.money),
                 ),
-                ElevatedButton.icon(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue.shade700,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                  ),
-                  icon: const Icon(Icons.credit_card),
-                  label: const Text('فيزا', style: TextStyle(fontSize: 16)),
-                  onPressed: () => Navigator.pop(context, 'فيزا'),
+              ),
+              const SizedBox(height: 20),
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: _change >= 0 ? Colors.green.shade50 : Colors.red.shade50,
+                  borderRadius: BorderRadius.circular(8),
                 ),
-                ElevatedButton.icon(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.purple.shade600,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                  ),
-                  icon: const Icon(Icons.phone_android),
-                  label: const Text('InstaPay', style: TextStyle(fontSize: 16)),
-                  onPressed: () => Navigator.pop(context, 'InstaPay'),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text('المتبقي (باقي للعميل):', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                    Text(
+                      '${_change >= 0 ? _change.toStringAsFixed(2) : "مبلغ غير كافٍ"} ج.م',
+                      style: TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                        color: _change >= 0 ? Colors.green.shade700 : Colors.red,
+                      ),
+                    ),
+                  ],
                 ),
-              ],
-            )
+              ),
+            ]
           ],
         ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('إلغاء', style: TextStyle(color: Colors.red)),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.teal, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12)),
+            onPressed: (_selectedMethod == 'كاش' && _change < 0)
+                ? null // تعطيل الزر إذا كان المدفوع أقل من المطلوب
+                : () => Navigator.pop(context, _selectedMethod),
+            child: const Text('تأكيد وطباعة', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+          ),
+        ],
       ),
     );
   }

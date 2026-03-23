@@ -25,27 +25,23 @@ class PosUpdated extends PosState {
   final List<CartItem> cartItems;
   final String orderType;
   final double subTotal;
+  final double discountAmount; // جديد
   final double taxAmount;
   final double serviceFee;
   final double deliveryFee;
   final double total;
   final String restaurantName;
   final String taxNumber;
+  final String printMode;
 
   PosUpdated({
-    required this.cartItems,
-    required this.orderType,
-    required this.subTotal,
-    required this.taxAmount,
-    required this.serviceFee,
-    required this.deliveryFee,
-    required this.total,
-    required this.restaurantName,
-    required this.taxNumber,
+    required this.cartItems, required this.orderType, required this.subTotal, required this.discountAmount,
+    required this.taxAmount, required this.serviceFee, required this.deliveryFee, required this.total,
+    required this.restaurantName, required this.taxNumber, required this.printMode,
   });
 
   @override
-  List<Object> get props => [cartItems, orderType, subTotal, taxAmount, serviceFee, deliveryFee, total, restaurantName, taxNumber];
+  List<Object> get props => [cartItems, orderType, subTotal, discountAmount, taxAmount, serviceFee, deliveryFee, total, restaurantName, taxNumber, printMode];
 }
 
 class PosCheckoutSuccess extends PosState {

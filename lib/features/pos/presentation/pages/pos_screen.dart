@@ -28,10 +28,72 @@ class _PosScreenState extends State<PosScreen> {
   Category? _selectedCategory;
   List<Category> _categories = [];
   List<Item> _items = [];
-
+  
+  // حفظ بيانات السلة قبل التفريغ لغرض الطباعة
   PosUpdated? _lastOrderState;
 
-  // دالة مساعدة لإظهار نافذة الطباعة بعد نجاح الطلب
+  @override
+  void initState() {
+    super.initState();
+    context.read<MenuBloc>().add(FetchCategoriesEvent());
+  }
+
+  // ----------------------------------------------------
+  // دالة الطباعة التلقائية في الخلفية
+  // ----------------------------------------------------
+  void _handleAutoPrint(BuildContext context, int orderId, PosUpdated orderState, String mode) async {
+    final printerService = sl<PrinterService>();
+    bool customerSuccess = true;
+    bool kitchenSuccess = true;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('جاري الطباعة التلقائية...')),
+    );
+
+    if (mode == 'customer' || mode == 'both') {
+      customerSuccess = await printerService.printReceiptUsb(
+        receiptWidget: CustomerReceiptWidget(
+          orderId: orderId,
+          orderType: orderState.orderType,
+          items: orderState.cartItems,
+          subTotal: orderState.subTotal,
+          discountAmount: orderState.discountAmount,
+          taxAmount: orderState.taxAmount,
+          serviceFee: orderState.serviceFee,
+          deliveryFee: orderState.deliveryFee,
+          total: orderState.total,
+          restaurantName: orderState.restaurantName,
+          taxNumber: orderState.taxNumber,
+        ),
+      );
+    }
+
+    if (mode == 'kitchen' || mode == 'both') {
+      kitchenSuccess = await printerService.printReceiptUsb(
+        receiptWidget: KitchenReceiptWidget(
+          orderId: orderId,
+          orderType: orderState.orderType,
+          items: orderState.cartItems,
+        ),
+      );
+    }
+
+    if (context.mounted) {
+      if (customerSuccess && kitchenSuccess) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('تمت الطباعة بنجاح'), backgroundColor: Colors.green),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('حدث خطأ أثناء الاتصال بالطابعة!'), backgroundColor: Colors.red),
+        );
+      }
+    }
+  }
+
+  // ----------------------------------------------------
+  // دالة إظهار نافذة الطباعة اليدوية (اسأل أولاً)
+  // ----------------------------------------------------
   void _showPrintDialog(BuildContext context, int orderId, PosUpdated previousState) {
     showDialog(
       context: context,
@@ -40,8 +102,8 @@ class _PosScreenState extends State<PosScreen> {
         return Directionality(
           textDirection: TextDirection.rtl,
           child: AlertDialog(
-            title: const Text('تم حفظ الطلب! اختر الفاتورة للطباعة', style: TextStyle(fontWeight: FontWeight.bold)),
-            content: const Text('سيتم فتح قائمة طابعات النظام، يرجى اختيار طابعة Epson الخاصة بك.'),
+            title: const Text('تم حفظ الطلب!', style: TextStyle(fontWeight: FontWeight.bold)),
+            content: const Text('اختر الفاتورة التي ترغب في طباعتها:'),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(dialogContext),
@@ -58,6 +120,7 @@ class _PosScreenState extends State<PosScreen> {
                       orderType: previousState.orderType,
                       items: previousState.cartItems,
                       subTotal: previousState.subTotal,
+                      discountAmount: previousState.discountAmount,
                       taxAmount: previousState.taxAmount,
                       serviceFee: previousState.serviceFee,
                       deliveryFee: previousState.deliveryFee,
@@ -90,29 +153,68 @@ class _PosScreenState extends State<PosScreen> {
     );
   }
 
-  @override
-  void initState() {
-    super.initState();
-    context.read<MenuBloc>().add(FetchCategoriesEvent());
+  // ----------------------------------------------------
+  // دالة إظهار نافذة الخصم (Discount)
+  // ----------------------------------------------------
+  void _showDiscountDialog(BuildContext context) {
+    final controller = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (ctx) => Directionality(
+        textDirection: TextDirection.rtl,
+        child: AlertDialog(
+          title: const Text('إضافة خصم (مبلغ ثابت)'),
+          content: TextField(
+            controller: controller,
+            keyboardType: TextInputType.number,
+            decoration: const InputDecoration(labelText: 'قيمة الخصم (ج.م)', border: OutlineInputBorder()),
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('إلغاء')),
+            ElevatedButton(
+              onPressed: () {
+                if (controller.text.isNotEmpty) {
+                  final discount = double.tryParse(controller.text) ?? 0.0;
+                  context.read<PosBloc>().add(ApplyDiscountEvent(discount));
+                  Navigator.pop(ctx);
+                }
+              },
+              child: const Text('تطبيق الخصم'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ----------------------------------------------------
+  // بناء صفوف ملخص الفاتورة
+  // ----------------------------------------------------
+  Widget _buildSummaryRow(String label, double amount, {bool isDiscount = false}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4.0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(label, style: TextStyle(fontSize: 16, color: isDiscount ? Colors.red : Colors.black)),
+          Text('${isDiscount ? "-" : ""}$amount ج.م', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: isDiscount ? Colors.red : Colors.black)),
+        ],
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          'نقطة البيع (POS)',
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
+        title: const Text('نقطة البيع (POS)', style: TextStyle(fontWeight: FontWeight.bold)),
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         actions: [
           BlocBuilder<AuthBloc, AuthState>(
             builder: (context, state) {
               final isAdmin = state is AuthAuthenticated && state.user.isAdmin;
-
               return Row(
                 children: [
-                  // الأزرار المخفية عن الكاشير
                   if (isAdmin) ...[
                     IconButton(
                       icon: const Icon(Icons.history),
@@ -145,13 +247,12 @@ class _PosScreenState extends State<PosScreen> {
                       },
                     ),
                   ],
-                  // زر تسجيل الخروج (متاح للجميع)
                   IconButton(
                     icon: const Icon(Icons.logout, color: Colors.red),
                     tooltip: 'تسجيل الخروج',
                     onPressed: () {
                       context.read<AuthBloc>().add(LogoutEvent());
-                      context.go('/'); // العودة لشاشة الدخول
+                      context.go('/');
                     },
                   ),
                 ],
@@ -165,177 +266,124 @@ class _PosScreenState extends State<PosScreen> {
         child: Row(
           children: [
             // ==========================================
-            // الجانب الأيمن (2/3): القائمة (الفئات والأصناف)
+            // القسم الأول: الفئات (Categories)
             // ==========================================
             Expanded(
-              flex: 2,
-              child: BlocConsumer<MenuBloc, MenuState>(
-                listener: (context, state) {
-                  if (state is CategoriesLoaded) {
-                    setState(() {
-                      _categories = state.categories;
-                      if (_selectedCategory == null && _categories.isNotEmpty) {
-                        _selectedCategory = _categories.first;
-                        context.read<MenuBloc>().add(
-                          FetchItemsEvent(_selectedCategory!.id!),
-                        );
-                      }
-                    });
-                  } else if (state is ItemsLoaded) {
-                    setState(() {
-                      _items = state.items;
-                    });
-                  }
-                },
-                builder: (context, state) {
-                  return Column(
-                    children: [
-                      Container(
-                        height: 80,
-                        padding: const EdgeInsets.symmetric(vertical: 8),
-                        color: Colors.grey.shade100,
-                        child: _categories.isEmpty
-                            ? const Center(child: Text('لا توجد فئات'))
-                            : ListView.builder(
-                                scrollDirection: Axis.horizontal,
-                                itemCount: _categories.length,
-                                itemBuilder: (context, index) {
-                                  final category = _categories[index];
-                                  final isSelected =
-                                      _selectedCategory?.id == category.id;
-                                  return Padding(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 4.0,
-                                    ),
-                                    child: ChoiceChip(
-                                      label: Text(
-                                        category.name,
-                                        style: const TextStyle(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                      selected: isSelected,
-                                      selectedColor: Colors.teal.shade200,
-                                      onSelected: (selected) {
-                                        if (selected) {
-                                          setState(() {
-                                            _selectedCategory = category;
-                                            _items = [];
-                                          });
-                                          context.read<MenuBloc>().add(
-                                            FetchItemsEvent(category.id!),
-                                          );
-                                        }
-                                      },
-                                    ),
-                                  );
-                                },
-                              ),
-                      ),
-                      const Divider(height: 1),
-                      Expanded(
-                        child: Builder(
-                          builder: (context) {
-                            if (state is MenuLoading) {
-                              return const Center(
-                                child: CircularProgressIndicator(),
-                              );
-                            }
-                            if (_items.isEmpty) {
-                              return const Center(
-                                child: Text(
-                                  'لا توجد أصناف في هذه الفئة',
-                                  style: TextStyle(fontSize: 18),
-                                ),
-                              );
-                            }
-                            return GridView.builder(
-                              padding: const EdgeInsets.all(12.0),
-                              gridDelegate:
-                                  const SliverGridDelegateWithFixedCrossAxisCount(
-                                    crossAxisCount: 4,
-                                    childAspectRatio: 1.2,
-                                    crossAxisSpacing: 12,
-                                    mainAxisSpacing: 12,
-                                  ),
-                              itemCount: _items.length,
-                              itemBuilder: (context, index) {
-                                final item = _items[index];
-                                return InkWell(
-                                  onTap: () {
-                                    context.read<PosBloc>().add(
-                                      AddItemToCartEvent(item),
-                                    );
-                                  },
-                                  child: Card(
-                                    elevation: 3,
-                                    color: Colors.teal.shade50,
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                    child: Column(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.center,
-                                      children: [
-                                        const Icon(
-                                          Icons.fastfood,
-                                          size: 40,
-                                          color: Colors.teal,
-                                        ),
-                                        const SizedBox(height: 8),
-                                        Text(
-                                          item.name,
-                                          style: const TextStyle(
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 16,
-                                          ),
-                                          textAlign: TextAlign.center,
-                                        ),
-                                        const SizedBox(height: 4),
-                                        Text(
-                                          '${item.price} ج.م',
-                                          style: const TextStyle(
-                                            color: Colors.teal,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                );
-                              },
-                            );
+              flex: 1,
+              child: Container(
+                color: Colors.grey.shade100,
+                child: BlocConsumer<MenuBloc, MenuState>(
+                  listener: (context, state) {
+                    if (state is CategoriesLoaded) {
+                      setState(() {
+                        _categories = state.categories;
+                        if (_selectedCategory == null && _categories.isNotEmpty) {
+                          _selectedCategory = _categories.first;
+                          context.read<MenuBloc>().add(FetchItemsEvent(_selectedCategory!.id!));
+                        }
+                      });
+                    } else if (state is ItemsLoaded) {
+                      setState(() {
+                        _items = state.items;
+                      });
+                    }
+                  },
+                  buildWhen: (previous, current) => current is CategoriesLoaded || current is MenuLoading,
+                  builder: (context, state) {
+                    if (state is MenuLoading && _categories.isEmpty) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
+                    return ListView.builder(
+                      itemCount: _categories.length,
+                      itemBuilder: (context, index) {
+                        final category = _categories[index];
+                        final isSelected = _selectedCategory?.id == category.id;
+                        return ListTile(
+                          title: Text(category.name, style: const TextStyle(fontWeight: FontWeight.bold)),
+                          selected: isSelected,
+                          selectedTileColor: Colors.teal.shade100,
+                          onTap: () {
+                            setState(() {
+                              _selectedCategory = category;
+                            });
+                            context.read<MenuBloc>().add(FetchItemsEvent(category.id!));
                           },
+                        );
+                      },
+                    );
+                  },
+                ),
+              ),
+            ),
+            const VerticalDivider(width: 1),
+            // ==========================================
+            // القسم الثاني: الأصناف (Items)
+            // ==========================================
+            Expanded(
+              flex: 3,
+              child: BlocBuilder<MenuBloc, MenuState>(
+                buildWhen: (previous, current) => current is ItemsLoaded || current is MenuLoading,
+                builder: (context, state) {
+                  if (state is MenuLoading && _items.isEmpty) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+                  if (_items.isEmpty) {
+                    return const Center(child: Text('اختر فئة لعرض الأصناف'));
+                  }
+                  return GridView.builder(
+                    padding: const EdgeInsets.all(16),
+                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 3,
+                      childAspectRatio: 1.2,
+                      crossAxisSpacing: 16,
+                      mainAxisSpacing: 16,
+                    ),
+                    itemCount: _items.length,
+                    itemBuilder: (context, index) {
+                      final item = _items[index];
+                      return InkWell(
+                        onTap: () {
+                          context.read<PosBloc>().add(AddItemToCartEvent(item));
+                        },
+                        child: Card(
+                          elevation: 4,
+                          color: Colors.teal.shade50,
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(item.name, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold), textAlign: TextAlign.center),
+                              const SizedBox(height: 8),
+                              Text('${item.price} ج.م', style: const TextStyle(fontSize: 16, color: Colors.teal, fontWeight: FontWeight.bold)),
+                            ],
+                          ),
                         ),
-                      ),
-                    ],
+                      );
+                    },
                   );
                 },
               ),
             ),
-
-            const VerticalDivider(width: 1, thickness: 1),
-
+            const VerticalDivider(width: 1),
             // ==========================================
-            // الجانب الأيسر (1/3): سلة المشتريات (Cart)
+            // القسم الثالث: سلة المشتريات (Cart & Checkout)
             // ==========================================
             Expanded(
-              flex: 1,
+              flex: 2,
               child: BlocConsumer<PosBloc, PosState>(
-                // نحتفظ بالحالة السابقة قبل تفريغ السلة لتمريرها للطباعة
-                listenWhen: (previous, current) =>
-                    current is PosCheckoutSuccess || current is PosError,
+                listenWhen: (previous, current) => current is PosCheckoutSuccess || current is PosError,
                 listener: (context, state) {
                   if (state is PosCheckoutSuccess) {
-                    // 1. إظهار رسالة النجاح
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(content: Text('تم حفظ الفاتورة بنجاح! (رقم: #${state.orderId})'), backgroundColor: Colors.green),
                     );
                     
-                    // 2. إظهار نافذة الطباعة برقم الطلب الحقيقي المولد من قاعدة البيانات
                     if (_lastOrderState != null) {
-                      _showPrintDialog(context, state.orderId, _lastOrderState!);
+                      final mode = _lastOrderState!.printMode;
+                      if (mode == 'ask') {
+                        _showPrintDialog(context, state.orderId, _lastOrderState!);
+                      } else {
+                        _handleAutoPrint(context, state.orderId, _lastOrderState!, mode);
+                      }
                     }
                   } else if (state is PosError) {
                     ScaffoldMessenger.of(context).showSnackBar(
@@ -343,209 +391,141 @@ class _PosScreenState extends State<PosScreen> {
                     );
                   }
                 },
+                buildWhen: (previous, current) => current is PosUpdated || current is PosInitial,
                 builder: (context, state) {
                   if (state is PosUpdated) {
                     return Column(
                       children: [
+                        // تحديد نوع الطلب والتفريغ
                         Container(
-                          padding: const EdgeInsets.all(8.0),
+                          padding: const EdgeInsets.all(16),
                           color: Colors.grey.shade200,
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               DropdownButton<String>(
                                 value: state.orderType,
-                                underline: const SizedBox(),
                                 items: ['تيك أواي', 'صالة', 'دليفري']
-                                    .map(
-                                      (type) => DropdownMenuItem(
-                                        value: type,
-                                        child: Text(
-                                          type,
-                                          style: const TextStyle(
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 16,
-                                          ),
-                                        ),
-                                      ),
-                                    )
+                                    .map((type) => DropdownMenuItem(value: type, child: Text(type)))
                                     .toList(),
                                 onChanged: (value) {
                                   if (value != null) {
-                                    context.read<PosBloc>().add(
-                                      ChangeOrderTypeEvent(value),
-                                    );
+                                    context.read<PosBloc>().add(ChangeOrderTypeEvent(value));
                                   }
                                 },
                               ),
-                              TextButton.icon(
-                                icon: const Icon(
-                                  Icons.delete_sweep,
-                                  color: Colors.red,
-                                ),
-                                label: const Text(
-                                  'إلغاء الطلب',
-                                  style: TextStyle(color: Colors.red),
-                                ),
-                                onPressed: state.cartItems.isEmpty
-                                    ? null
-                                    : () => context.read<PosBloc>().add(
-                                        ClearCartEvent(),
-                                      ),
+                              IconButton(
+                                icon: const Icon(Icons.delete_sweep, color: Colors.red),
+                                tooltip: 'إلغاء الطلب بالكامل',
+                                onPressed: () {
+                                  context.read<PosBloc>().add(ClearCartEvent());
+                                },
                               ),
                             ],
                           ),
                         ),
-
+                        // قائمة الأصناف في السلة
                         Expanded(
                           child: state.cartItems.isEmpty
-                              ? const Center(
-                                  child: Text(
-                                    'السلة فارغة',
-                                    style: TextStyle(
-                                      fontSize: 18,
-                                      color: Colors.grey,
-                                    ),
-                                  ),
-                                )
-                              : ListView.separated(
+                              ? const Center(child: Text('السلة فارغة', style: TextStyle(fontSize: 18, color: Colors.grey)))
+                              : ListView.builder(
                                   itemCount: state.cartItems.length,
-                                  separatorBuilder: (context, index) =>
-                                      const Divider(height: 1),
                                   itemBuilder: (context, index) {
                                     final cartItem = state.cartItems[index];
-                                    return ListTile(
-                                      title: Text(
-                                        cartItem.item.name,
-                                        style: const TextStyle(
-                                          fontWeight: FontWeight.bold,
+                                    return Card(
+                                      margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                      child: Padding(
+                                        padding: const EdgeInsets.all(8.0),
+                                        child: Row(
+                                          children: [
+                                            Expanded(
+                                              flex: 2,
+                                              child: Column(
+                                                crossAxisAlignment: CrossAxisAlignment.start,
+                                                children: [
+                                                  Text(cartItem.item.name, style: const TextStyle(fontWeight: FontWeight.bold)),
+                                                  Text('${cartItem.item.price} ج.م', style: const TextStyle(color: Colors.teal)),
+                                                ],
+                                              ),
+                                            ),
+                                            Row(
+                                              children: [
+                                                IconButton(
+                                                  icon: const Icon(Icons.remove_circle_outline),
+                                                  onPressed: () => context.read<PosBloc>().add(UpdateCartItemQuantityEvent(index, cartItem.quantity - 1)),
+                                                ),
+                                                Text('${cartItem.quantity}', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                                                IconButton(
+                                                  icon: const Icon(Icons.add_circle_outline),
+                                                  onPressed: () => context.read<PosBloc>().add(UpdateCartItemQuantityEvent(index, cartItem.quantity + 1)),
+                                                ),
+                                              ],
+                                            ),
+                                            IconButton(
+                                              icon: const Icon(Icons.delete, color: Colors.red),
+                                              onPressed: () => context.read<PosBloc>().add(RemoveItemFromCartEvent(index)),
+                                            ),
+                                          ],
                                         ),
-                                      ),
-                                      subtitle: Text(
-                                        '${cartItem.item.price} ج.م',
-                                      ),
-                                      trailing: Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          IconButton(
-                                            icon: const Icon(
-                                              Icons.remove_circle_outline,
-                                              color: Colors.red,
-                                            ),
-                                            onPressed: () =>
-                                                context.read<PosBloc>().add(
-                                                  UpdateCartItemQuantityEvent(
-                                                    index,
-                                                    cartItem.quantity - 1,
-                                                  ),
-                                                ),
-                                          ),
-                                          Text(
-                                            '${cartItem.quantity}',
-                                            style: const TextStyle(
-                                              fontSize: 16,
-                                              fontWeight: FontWeight.bold,
-                                            ),
-                                          ),
-                                          IconButton(
-                                            icon: const Icon(
-                                              Icons.add_circle_outline,
-                                              color: Colors.green,
-                                            ),
-                                            onPressed: () =>
-                                                context.read<PosBloc>().add(
-                                                  UpdateCartItemQuantityEvent(
-                                                    index,
-                                                    cartItem.quantity + 1,
-                                                  ),
-                                                ),
-                                          ),
-                                        ],
                                       ),
                                     );
                                   },
                                 ),
                         ),
-
+                        // ملخص الفاتورة وأزرار الدفع والخصم
                         Container(
-                          padding: const EdgeInsets.all(16.0),
-                          color: Colors.teal.shade50,
+                          padding: const EdgeInsets.all(16),
+                          decoration: const BoxDecoration(
+                            color: Colors.white,
+                            boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 10, offset: Offset(0, -5))],
+                          ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
-                              _buildSummaryRow(
-                                'الإجمالي الفرعي:',
-                                state.subTotal,
-                              ),
-                              _buildSummaryRow('الضريبة المضافه:', state.taxAmount),
-                              if (state.orderType == 'صالة')
-                                _buildSummaryRow(
-                                  'خدمة الصالة (%):',
-                                  state.serviceFee,
-                                ),
-                              if (state.orderType == 'دليفري')
-                                _buildSummaryRow(
-                                  'رسوم التوصيل:',
-                                  state.deliveryFee,
-                                ),
+                              _buildSummaryRow('الإجمالي الفرعي:', state.subTotal),
+                              if (state.discountAmount > 0) 
+                                _buildSummaryRow('قيمة الخصم:', state.discountAmount, isDiscount: true),
+                              _buildSummaryRow('الضريبة المضافة:', state.taxAmount),
+                              if (state.orderType == 'صالة') _buildSummaryRow('رسوم الخدمة:', state.serviceFee),
+                              if (state.orderType == 'دليفري') _buildSummaryRow('رسوم التوصيل:', state.deliveryFee),
                               const Divider(thickness: 2),
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  const Text(
-                                    'الإجمالي النهائي:',
-                                    style: TextStyle(
-                                      fontSize: 20,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  Text(
-                                    '${state.total} ج.م',
-                                    style: const TextStyle(
-                                      fontSize: 20,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.teal,
-                                    ),
-                                  ),
-                                ],
-                              ),
+                              _buildSummaryRow('الإجمالي النهائي:', state.total),
                               const SizedBox(height: 16),
-                              ElevatedButton(
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.teal,
-                                  foregroundColor: Colors.white,
-                                  padding: const EdgeInsets.symmetric(
-                                    vertical: 16,
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: OutlinedButton.icon(
+                                      style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 16), foregroundColor: Colors.red),
+                                      icon: const Icon(Icons.discount),
+                                      label: const Text('إضافة خصم', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                                      onPressed: state.cartItems.isEmpty ? null : () => _showDiscountDialog(context),
+                                    ),
                                   ),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                ),
-                                onPressed: state.cartItems.isEmpty
-                                    ? null
-                                    : () async {
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    flex: 2,
+                                    child: ElevatedButton(
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: Colors.teal,
+                                        foregroundColor: Colors.white,
+                                        padding: const EdgeInsets.symmetric(vertical: 16),
+                                      ),
+                                      onPressed: state.cartItems.isEmpty ? null : () async {
                                         final previousState = state; 
                                         final paymentMethod = await showDialog<String>(
-                                          context: context,
-                                          barrierDismissible: false,
+                                          context: context, 
+                                          barrierDismissible: false, 
                                           builder: (_) => CheckoutDialog(totalAmount: previousState.total),
                                         );
-                                        
                                         if (paymentMethod != null && context.mounted) {
-                                          // نحفظ حالة السلة في المتغير قبل أن يقوم الـ Bloc بتفريغها
                                           _lastOrderState = previousState; 
-                                          // نرسل حدث الحفظ، وسيتولى الـ Listener إظهار نافذة الطباعة
                                           context.read<PosBloc>().add(SubmitOrderEvent(paymentMethod));
                                         }
                                       },
-                                child: const Text(
-                                  'دفــع وطباعة',
-                                  style: TextStyle(
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.bold,
+                                      child: const Text('دفــع وطباعة', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                                    ),
                                   ),
-                                ),
+                                ],
                               ),
                             ],
                           ),
@@ -559,22 +539,6 @@ class _PosScreenState extends State<PosScreen> {
             ),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildSummaryRow(String label, double amount) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4.0),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(label, style: const TextStyle(fontSize: 16)),
-          Text(
-            '$amount ج.م',
-            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-          ),
-        ],
       ),
     );
   }

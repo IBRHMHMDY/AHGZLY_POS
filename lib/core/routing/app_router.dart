@@ -4,7 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:ahgzly_pos/core/di/injection_container.dart';
 import 'package:ahgzly_pos/features/menu/presentation/bloc/menu_bloc.dart';
 import 'package:ahgzly_pos/features/menu/presentation/bloc/menu_event.dart';
-import 'package:ahgzly_pos/features/menu/presentation/pages/menu_management_screen.dart';
+import 'package:ahgzly_pos/features/menu/presentation/pages/menu_screen.dart';
 import 'package:ahgzly_pos/features/pos/presentation/bloc/pos_bloc.dart';
 import 'package:ahgzly_pos/features/pos/presentation/pages/pos_screen.dart';
 import 'package:ahgzly_pos/features/shift/presentation/bloc/shift_bloc.dart';
@@ -46,7 +46,7 @@ class AppRouter {
           // شاشة إدارة القائمة تحتاج MenuBloc فقط
           return BlocProvider(
             create: (_) => sl<MenuBloc>()..add(FetchCategoriesEvent()),
-            child: const MenuManagementScreen(),
+            child: const MenuScreen(),
           );
         },
       ),

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:ahgzly_pos/core/services/backup_service.dart'; // استيراد خدمة النسخ الاحتياطي
+import 'package:ahgzly_pos/core/services/backup_service.dart';
 import 'package:ahgzly_pos/features/settings/domain/entities/app_settings.dart';
 import 'package:ahgzly_pos/features/settings/presentation/bloc/settings_bloc.dart';
 import 'package:ahgzly_pos/features/settings/presentation/bloc/settings_event.dart';
@@ -21,7 +21,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
   late TextEditingController _printerController;
   late TextEditingController _restaurantNameController;
   late TextEditingController _taxNumberController;
-  final BackupService _backupService = BackupService(); // إنشاء كائن الخدمة
+  
+  String _selectedPrintMode = 'ask';
+  bool _isInit = false; // متغير لضمان عدم الكتابة فوق اختيار المستخدم
+  final BackupService _backupService = BackupService();
 
   @override
   void initState() {
@@ -49,7 +52,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final success = await _backupService.exportDatabase();
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(success ? 'تم حفظ النسخة الاحتياطية بنجاح' : 'فشل حفظ النسخة أو تم الإلغاء'), backgroundColor: success ? Colors.green : Colors.red),
+      SnackBar(
+        content: Text(success ? 'تم حفظ النسخة الاحتياطية بنجاح' : 'فشل حفظ النسخة أو تم الإلغاء'),
+        backgroundColor: success ? Colors.green : Colors.red,
+      ),
     );
   }
 
@@ -58,11 +64,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
     if (!mounted) return;
     if (success) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('تمت استعادة النسخة بنجاح. يرجى إعادة تشغيل التطبيق بالكامل.'), backgroundColor: Colors.green, duration: Duration(seconds: 5)),
+        const SnackBar(
+          content: Text('تمت استعادة النسخة بنجاح. يرجى إعادة تشغيل التطبيق بالكامل.'),
+          backgroundColor: Colors.green,
+          duration: Duration(seconds: 5),
+        ),
       );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('فشل استعادة النسخة الاحتياطية'), backgroundColor: Colors.red),
+        const SnackBar(
+          content: Text('فشل استعادة النسخة الاحتياطية'),
+          backgroundColor: Colors.red,
+        ),
       );
     }
   }
@@ -71,7 +84,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('إعدادات النظام'),
+        title: const Text('إعدادات النظام', style: TextStyle(fontWeight: FontWeight.bold)),
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
       ),
       body: Directionality(
@@ -83,17 +96,26 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 const SnackBar(content: Text('تم حفظ الإعدادات بنجاح.'), backgroundColor: Colors.green),
               );
               Navigator.pop(context);
+            } else if (state is SettingsError) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('خطأ: ${state.message}'), backgroundColor: Colors.red),
+              );
             }
           },
           builder: (context, state) {
             if (state is SettingsLoaded) {
-              final s = state.settings;
-              _taxController.text = (s.taxRate * 100).toString();
-              _serviceController.text = (s.serviceRate * 100).toString();
-              _deliveryController.text = s.deliveryFee.toString();
-              _printerController.text = s.printerName;
-              _restaurantNameController.text = s.restaurantName;
-              _taxNumberController.text = s.taxNumber;
+              // نقوم بملء البيانات مرة واحدة فقط حتى لا نمسح تعديلات المستخدم أثناء كتابتها
+              if (!_isInit) {
+                final s = state.settings;
+                _taxController.text = (s.taxRate * 100).toString();
+                _serviceController.text = (s.serviceRate * 100).toString();
+                _deliveryController.text = s.deliveryFee.toString();
+                _printerController.text = s.printerName;
+                _restaurantNameController.text = s.restaurantName;
+                _taxNumberController.text = s.taxNumber;
+                _selectedPrintMode = s.printMode;
+                _isInit = true;
+              }
 
               return Padding(
                 padding: const EdgeInsets.all(24.0),
@@ -117,13 +139,37 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       _buildTextField(_deliveryController, 'رسوم التوصيل الثابتة (ج.م)', 'مثال: 20'),
                       const SizedBox(height: 32),
 
-                      const Text('الأجهزة', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.teal)),
+                      const Text('الأجهزة والطباعة', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.teal)),
                       const Divider(),
                       _buildTextField(_printerController, 'اسم طابعة الويندوز (USB Printer Name)', 'EPSON Printer'),
+                      const SizedBox(height: 16),
+                      
+                      // القائمة المنسدلة للطباعة التلقائية
+                      DropdownButtonFormField<String>(
+                        value: _selectedPrintMode,
+                        decoration: const InputDecoration(labelText: 'وضع الطباعة بعد الدفع', border: OutlineInputBorder()),
+                        items: const [
+                          DropdownMenuItem(value: 'ask', child: Text('اسأل أولاً (عرض نافذة الطباعة)')),
+                          DropdownMenuItem(value: 'customer', child: Text('طباعة فاتورة العميل تلقائياً')),
+                          DropdownMenuItem(value: 'kitchen', child: Text('طباعة بون المطبخ تلقائياً')),
+                          DropdownMenuItem(value: 'both', child: Text('طباعة العميل والمطبخ تلقائياً')),
+                        ],
+                        onChanged: (val) {
+                          if (val != null) {
+                            setState(() {
+                              _selectedPrintMode = val;
+                            });
+                          }
+                        },
+                      ),
                       const SizedBox(height: 32),
                       
                       ElevatedButton(
-                        style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 16), backgroundColor: Colors.teal, foregroundColor: Colors.white),
+                        style: ElevatedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 16), 
+                          backgroundColor: Colors.teal, 
+                          foregroundColor: Colors.white
+                        ),
                         onPressed: () {
                           if (_formKey.currentState!.validate()) {
                             final newSettings = AppSettings(
@@ -133,6 +179,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                               printerName: _printerController.text.trim(),
                               restaurantName: _restaurantNameController.text.trim(),
                               taxNumber: _taxNumberController.text.trim(),
+                              printMode: _selectedPrintMode, // هنا يتم حفظ الوضع الذي اختاره المستخدم
                             );
                             context.read<SettingsBloc>().add(SaveSettingsEvent(newSettings));
                           }

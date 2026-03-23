@@ -14,29 +14,20 @@ class PosBloc extends Bloc<PosEvent, PosState> {
 
   final List<CartItem> _currentCart = [];
   String _currentOrderType = 'تيك أواي';
-  
-  // الإعدادات الديناميكية
+  double _currentDiscount = 0.0; // الخصم الحالي
   AppSettings? _settings;
 
-  PosBloc({
-    required this.saveOrderUseCase,
-    required this.getSettingsUseCase,
-  }) : super(PosInitial()) {
+  PosBloc({required this.saveOrderUseCase, required this.getSettingsUseCase}) : super(PosInitial()) {
     on<AddItemToCartEvent>(_onAddItemToCart);
     on<UpdateCartItemQuantityEvent>(_onUpdateCartItemQuantity);
     on<RemoveItemFromCartEvent>(_onRemoveItemFromCart);
     on<ChangeOrderTypeEvent>(_onChangeOrderType);
     on<ClearCartEvent>(_onClearCart);
+    on<ApplyDiscountEvent>(_onApplyDiscount); // حدث الخصم
     on<SubmitOrderEvent>(_onSubmitOrder);
     on<ReloadSettingsEvent>((event, emit) async {
       final result = await getSettingsUseCase(NoParams());
-      result.fold(
-        (failure) {}, // في حالة الفشل نحتفظ بالإعدادات القديمة
-        (settings) {
-          _settings = settings;
-        },
-      );
-      // إعادة حساب السلة وإصدار الحالة الجديدة
+      result.fold((failure) {}, (settings) => _settings = settings);
       _emitUpdatedCart(emit: emit);
     });
 
@@ -46,13 +37,8 @@ class PosBloc extends Bloc<PosEvent, PosState> {
   Future<void> _initSettings() async {
     final result = await getSettingsUseCase(NoParams());
     result.fold(
-      (failure) {
-        // إعدادات افتراضية للطوارئ
-        _settings = const AppSettings(taxRate: 0.14, serviceRate: 0.12, deliveryFee: 20.0, printerName: 'Unknown Printer', restaurantName: 'Ahgzly Restaurants', taxNumber: '123 456 789');
-      },
-      (settings) {
-        _settings = settings;
-      },
+      (failure) => _settings = const AppSettings(taxRate: 0.14, serviceRate: 0.12, deliveryFee: 20.0, printerName: 'EPSON Printer', restaurantName: 'مـطـعـم احـجـزلـي', taxNumber: '123-456-789', printMode: 'ask'),
+      (settings) => _settings = settings,
     );
     _emitUpdatedCart();
   }
@@ -88,31 +74,29 @@ class PosBloc extends Bloc<PosEvent, PosState> {
     _emitUpdatedCart(emit: emit);
   }
 
+  void _onApplyDiscount(ApplyDiscountEvent event, Emitter<PosState> emit) {
+    _currentDiscount = event.discountAmount;
+    _emitUpdatedCart(emit: emit);
+  }
+
   void _onClearCart(ClearCartEvent event, Emitter<PosState> emit) {
     _currentCart.clear();
     _currentOrderType = 'تيك أواي';
+    _currentDiscount = 0.0;
     _emitUpdatedCart(emit: emit);
   }
 
   Future<void> _onSubmitOrder(SubmitOrderEvent event, Emitter<PosState> emit) async {
     if (_currentCart.isEmpty) return;
-    
-    // نمرر الإعدادات كجزء من عملية الدفع لطباعتها
     emit(PosLoading());
     final calculations = _calculateTotals();
     
-    final List<OrderItem> orderItems = _currentCart.map((cartItem) {
-      return OrderItem(
-        itemId: cartItem.item.id!,
-        quantity: cartItem.quantity,
-        unitPrice: cartItem.item.price,
-        notes: cartItem.notes,
-      );
-    }).toList();
+    final List<OrderItem> orderItems = _currentCart.map((c) => OrderItem(itemId: c.item.id!, quantity: c.quantity, unitPrice: c.item.price, notes: c.notes)).toList();
 
     final order = Order(
       orderType: _currentOrderType,
       subTotal: calculations['subTotal']!,
+      discount: calculations['discountAmount']!, // تمرير الخصم
       taxAmount: calculations['taxAmount']!,
       serviceFee: calculations['serviceFee']!,
       deliveryFee: calculations['deliveryFee']!,
@@ -131,11 +115,10 @@ class PosBloc extends Bloc<PosEvent, PosState> {
         _emitUpdatedCart(emit: emit);
       },
       (orderId) {
-        // نُمرر اسم الطابعة مع النجاح
-        final _ = _settings?.printerName ?? 'EPSON Printer';
         emit(PosCheckoutSuccess(orderId));
         _currentCart.clear();
         _currentOrderType = 'تيك أواي';
+        _currentDiscount = 0.0; // تفريغ الخصم بعد الدفع
         _emitUpdatedCart(emit: emit);
       },
     );
@@ -143,45 +126,51 @@ class PosBloc extends Bloc<PosEvent, PosState> {
 
   void _emitUpdatedCart({Emitter<PosState>? emit}) {
     if (_settings == null) return; 
-    
     final calculations = _calculateTotals();
     final state = PosUpdated(
       cartItems: List.from(_currentCart),
       orderType: _currentOrderType,
       subTotal: calculations['subTotal']!,
+      discountAmount: calculations['discountAmount']!,
       taxAmount: calculations['taxAmount']!,
       serviceFee: calculations['serviceFee']!,
       deliveryFee: calculations['deliveryFee']!,
       total: calculations['total']!,
-      restaurantName: _settings!.restaurantName, // تمرير اسم المطعم
-      taxNumber: _settings!.taxNumber,           // تمرير الرقم الضريبي
+      restaurantName: _settings!.restaurantName,
+      taxNumber: _settings!.taxNumber,
+      printMode: _settings!.printMode,
     );
-    
     if (emit != null) {
-      emit(state);
-    } else {
+      emit(state); 
+    }else{ 
       this.emit(state);
     }
   }
-  
+
   Map<String, double> _calculateTotals() {
     double subTotal = 0.0;
     for (var cartItem in _currentCart) {
       subTotal += (cartItem.item.price * cartItem.quantity);
     }
 
+    double discountAmount = _currentDiscount;
+    if (discountAmount > subTotal) discountAmount = subTotal; // منع خصم أكبر من السعر
+
+    double taxableAmount = subTotal - discountAmount; // الضرائب تُحسب بعد الخصم
+
     final tax = _settings?.taxRate ?? 0.14;
     final service = _settings?.serviceRate ?? 0.12;
     final delivery = _settings?.deliveryFee ?? 20.0;
 
-    double taxAmount = subTotal * tax;
-    double serviceFee = (_currentOrderType == 'صالة') ? (subTotal * service) : 0.0;
+    double taxAmount = taxableAmount * tax;
+    double serviceFee = (_currentOrderType == 'صالة') ? (taxableAmount * service) : 0.0;
     double deliveryFee = (_currentOrderType == 'دليفري') ? delivery : 0.0;
     
-    double total = subTotal + taxAmount + serviceFee + deliveryFee;
+    double total = taxableAmount + taxAmount + serviceFee + deliveryFee;
 
     return {
       'subTotal': double.parse(subTotal.toStringAsFixed(2)),
+      'discountAmount': double.parse(discountAmount.toStringAsFixed(2)),
       'taxAmount': double.parse(taxAmount.toStringAsFixed(2)),
       'serviceFee': double.parse(serviceFee.toStringAsFixed(2)),
       'deliveryFee': double.parse(deliveryFee.toStringAsFixed(2)),

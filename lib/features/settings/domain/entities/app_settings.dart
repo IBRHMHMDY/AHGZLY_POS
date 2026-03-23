@@ -7,6 +7,7 @@ class AppSettings extends Equatable {
   final String printerName;
   final String restaurantName;
   final String taxNumber;
+  final String printMode; // المتغير الجديد
 
   const AppSettings({
     required this.taxRate,
@@ -15,8 +16,9 @@ class AppSettings extends Equatable {
     required this.printerName,
     required this.restaurantName,
     required this.taxNumber,
+    required this.printMode,
   });
 
   @override
-  List<Object?> get props => [taxRate, serviceRate, deliveryFee, printerName, restaurantName, taxNumber];
+  List<Object?> get props => [taxRate, serviceRate, deliveryFee, printerName, restaurantName, taxNumber, printMode];
 }

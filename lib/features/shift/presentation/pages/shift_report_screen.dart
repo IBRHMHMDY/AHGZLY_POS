@@ -3,6 +3,11 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:ahgzly_pos/features/shift/presentation/bloc/shift_bloc.dart';
 import 'package:ahgzly_pos/features/shift/presentation/bloc/shift_event.dart';
 import 'package:ahgzly_pos/features/shift/presentation/bloc/shift_state.dart';
+import 'package:ahgzly_pos/core/di/injection_container.dart';
+import 'package:ahgzly_pos/core/services/printer_service.dart';
+import 'package:ahgzly_pos/features/pos/presentation/widgets/receipt_widgets.dart';
+import 'package:ahgzly_pos/core/usecases/usecase.dart';
+import 'package:ahgzly_pos/features/settings/domain/usecases/get_settings_usecase.dart';
 
 class ShiftReportScreen extends StatelessWidget {
   const ShiftReportScreen({super.key});
@@ -68,20 +73,33 @@ class ShiftReportScreen extends StatelessWidget {
                       ],
                     ),
                     const Spacer(),
-                    ElevatedButton.icon(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.red.shade700,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 20),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                      ),
-                      icon: const Icon(Icons.lock_clock),
-                      label: const Text('إغلاق الوردية (تقفيل الصندوق)', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
-                      onPressed: report.totalOrders == 0
-                          ? null
-                          : () {
-                              _showConfirmationDialog(context, report);
+                    Row(
+                      children: [
+                        Expanded(
+                          child: ElevatedButton.icon(
+                            style: ElevatedButton.styleFrom(backgroundColor: Colors.blue.shade700, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 20)),
+                            icon: const Icon(Icons.print),
+                            label: const Text('طباعة التقرير (X-Report)', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                            onPressed: report.totalOrders == 0 ? null : () async {
+                              final settingsResult = await sl<GetSettingsUseCase>().call(NoParams());
+                              String rName = 'مـطـعـم احـجـزلـي';
+                              settingsResult.fold((l) => null, (r) => rName = r.restaurantName);
+                              
+                              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('جاري طباعة التقرير...')));
+                              await sl<PrinterService>().printReceiptUsb(receiptWidget: ZReportReceiptWidget(report: report, restaurantName: rName));
                             },
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: ElevatedButton.icon(
+                            style: ElevatedButton.styleFrom(backgroundColor: Colors.red.shade700, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 20)),
+                            icon: const Icon(Icons.lock_clock),
+                            label: const Text('إغلاق الوردية (Z-Report)', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                            onPressed: report.totalOrders == 0 ? null : () => _showConfirmationDialog(context, report),
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
