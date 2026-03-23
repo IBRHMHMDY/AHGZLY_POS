@@ -142,7 +142,7 @@ class PosBloc extends Bloc<PosEvent, PosState> {
   }
 
   void _emitUpdatedCart({Emitter<PosState>? emit}) {
-    if (_settings == null) return; // انتظار تحميل الإعدادات
+    if (_settings == null) return; 
     
     final calculations = _calculateTotals();
     final state = PosUpdated(
@@ -153,6 +153,8 @@ class PosBloc extends Bloc<PosEvent, PosState> {
       serviceFee: calculations['serviceFee']!,
       deliveryFee: calculations['deliveryFee']!,
       total: calculations['total']!,
+      restaurantName: _settings!.restaurantName, // تمرير اسم المطعم
+      taxNumber: _settings!.taxNumber,           // تمرير الرقم الضريبي
     );
     
     if (emit != null) {
@@ -161,7 +163,7 @@ class PosBloc extends Bloc<PosEvent, PosState> {
       this.emit(state);
     }
   }
-
+  
   Map<String, double> _calculateTotals() {
     double subTotal = 0.0;
     for (var cartItem in _currentCart) {

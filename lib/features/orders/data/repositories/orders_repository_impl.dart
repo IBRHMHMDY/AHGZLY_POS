@@ -6,7 +6,6 @@ import 'package:ahgzly_pos/features/orders/data/datasources/orders_local_data_so
 
 class OrdersRepositoryImpl implements OrdersRepository {
   final OrdersLocalDataSource localDataSource;
-
   OrdersRepositoryImpl({required this.localDataSource});
 
   @override
@@ -16,6 +15,16 @@ class OrdersRepositoryImpl implements OrdersRepository {
       return Right(orders);
     } catch (e) {
       return Left(DatabaseFailure('فشل في جلب سجل الطلبات: ${e.toString()}'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> refundOrder(int orderId) async {
+    try {
+      await localDataSource.refundOrder(orderId);
+      return const Right(null);
+    } catch (e) {
+      return Left(DatabaseFailure('فشل استرجاع الطلب: ${e.toString()}'));
     }
   }
 }

@@ -1,33 +1,25 @@
 import 'package:equatable/equatable.dart';
 import 'package:ahgzly_pos/features/menu/domain/entities/item.dart';
 
-// كلاس مساعد لتمثيل العنصر داخل سلة المشتريات (UI State)
 class CartItem extends Equatable {
   final Item item;
   final int quantity;
   final String? notes;
-
   const CartItem({required this.item, required this.quantity, this.notes});
-
-  CartItem copyWith({Item? item, int? quantity, String? notes}) {
-    return CartItem(
-      item: item ?? this.item,
-      quantity: quantity ?? this.quantity,
-      notes: notes ?? this.notes,
-    );
+  CartItem copyWith({int? quantity, String? notes}) {
+    return CartItem(item: item, quantity: quantity ?? this.quantity, notes: notes ?? this.notes);
   }
-
   @override
   List<Object?> get props => [item, quantity, notes];
 }
 
 abstract class PosState extends Equatable {
-  const PosState();
   @override
-  List<Object?> get props => [];
+  List<Object> get props => [];
 }
 
 class PosInitial extends PosState {}
+class PosLoading extends PosState {}
 
 class PosUpdated extends PosState {
   final List<CartItem> cartItems;
@@ -37,8 +29,10 @@ class PosUpdated extends PosState {
   final double serviceFee;
   final double deliveryFee;
   final double total;
+  final String restaurantName;
+  final String taxNumber;
 
-  const PosUpdated({
+  PosUpdated({
     required this.cartItems,
     required this.orderType,
     required this.subTotal,
@@ -46,44 +40,24 @@ class PosUpdated extends PosState {
     required this.serviceFee,
     required this.deliveryFee,
     required this.total,
+    required this.restaurantName,
+    required this.taxNumber,
   });
 
-  PosUpdated copyWith({
-    List<CartItem>? cartItems,
-    String? orderType,
-    double? subTotal,
-    double? taxAmount,
-    double? serviceFee,
-    double? deliveryFee,
-    double? total,
-  }) {
-    return PosUpdated(
-      cartItems: cartItems ?? this.cartItems,
-      orderType: orderType ?? this.orderType,
-      subTotal: subTotal ?? this.subTotal,
-      taxAmount: taxAmount ?? this.taxAmount,
-      serviceFee: serviceFee ?? this.serviceFee,
-      deliveryFee: deliveryFee ?? this.deliveryFee,
-      total: total ?? this.total,
-    );
-  }
-
   @override
-  List<Object?> get props => [cartItems, orderType, subTotal, taxAmount, serviceFee, deliveryFee, total];
+  List<Object> get props => [cartItems, orderType, subTotal, taxAmount, serviceFee, deliveryFee, total, restaurantName, taxNumber];
 }
-
-class PosLoading extends PosState {}
 
 class PosCheckoutSuccess extends PosState {
   final int orderId;
-  const PosCheckoutSuccess(this.orderId);
+  PosCheckoutSuccess(this.orderId);
   @override
-  List<Object?> get props => [orderId];
+  List<Object> get props => [orderId];
 }
 
 class PosError extends PosState {
   final String message;
-  const PosError(this.message);
+  PosError(this.message);
   @override
-  List<Object?> get props => [message];
+  List<Object> get props => [message];
 }

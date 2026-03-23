@@ -5,11 +5,7 @@ class OrderHistoryItem extends Equatable {
   final int quantity;
   final double unitPrice;
 
-  const OrderHistoryItem({
-    required this.itemName,
-    required this.quantity,
-    required this.unitPrice,
-  });
+  const OrderHistoryItem({required this.itemName, required this.quantity, required this.unitPrice});
 
   @override
   List<Object?> get props => [itemName, quantity, unitPrice];
@@ -21,6 +17,7 @@ class OrderHistory extends Equatable {
   final double total;
   final String paymentMethod;
   final String createdAt;
+  final String status; // حالة الطلب (مكتمل / مرتجع)
   final List<OrderHistoryItem> items;
 
   const OrderHistory({
@@ -29,9 +26,10 @@ class OrderHistory extends Equatable {
     required this.total,
     required this.paymentMethod,
     required this.createdAt,
+    required this.status,
     required this.items,
   });
 
   @override
-  List<Object?> get props => [id, orderType, total, paymentMethod, createdAt, items];
+  List<Object?> get props => [id, orderType, total, paymentMethod, createdAt, status, items];
 }

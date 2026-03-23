@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:ahgzly_pos/features/pos/presentation/bloc/pos_state.dart';
+import 'package:ahgzly_pos/features/orders/domain/entities/order_history.dart';
 
 // ==========================================
-// 1. فاتورة العميل (تحتوي على الأسعار واللوجو)
+// 1. فاتورة العميل الحالية (من شاشة الكاشير)
 // ==========================================
 class CustomerReceiptWidget extends StatelessWidget {
   final int orderId;
@@ -13,6 +14,8 @@ class CustomerReceiptWidget extends StatelessWidget {
   final double serviceFee;
   final double deliveryFee;
   final double total;
+  final String restaurantName;
+  final String taxNumber;
 
   const CustomerReceiptWidget({
     super.key,
@@ -24,13 +27,14 @@ class CustomerReceiptWidget extends StatelessWidget {
     required this.serviceFee,
     required this.deliveryFee,
     required this.total,
+    required this.restaurantName,
+    required this.taxNumber,
   });
 
   @override
   Widget build(BuildContext context) {
-    // تحديد عرض الفاتورة ليتناسب مع ورق 80mm (حوالي 380 بكسل)
     return Container(
-      width: 382,
+      width: 380,
       color: Colors.white,
       padding: const EdgeInsets.all(16.0),
       child: Directionality(
@@ -39,8 +43,8 @@ class CustomerReceiptWidget extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            const Text('مـطـعـم احـجـزلـي', style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.black)),
-            const Text('رقم ضريبي: 123-456-789', style: TextStyle(fontSize: 14, color: Colors.black)),
+            Text(restaurantName, style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.black)),
+            Text('الرقم الضريبي: $taxNumber', style: const TextStyle(fontSize: 14, color: Colors.black)),
             const SizedBox(height: 10),
             const Divider(color: Colors.black, thickness: 2),
             Row(
@@ -63,8 +67,8 @@ class CustomerReceiptWidget extends StatelessWidget {
                 )),
             const Text('----------------------------------------', style: TextStyle(color: Colors.black)),
             _buildRow('الإجمالي الفرعي:', subTotal),
-            _buildRow('ضريبة (%):', taxAmount),
-            if (serviceFee > 0) _buildRow('خدمة الصالة:', serviceFee),
+            _buildRow('الضريبة المضافة:', taxAmount),
+            if (serviceFee > 0) _buildRow('رسوم الخدمة:', serviceFee),
             if (deliveryFee > 0) _buildRow('رسوم التوصيل:', deliveryFee),
             const Divider(color: Colors.black, thickness: 2),
             Row(
@@ -95,7 +99,7 @@ class CustomerReceiptWidget extends StatelessWidget {
 }
 
 // ==========================================
-// 2. بون المطبخ (بدون أسعار، بخط كبير جداً للوضوح)
+// 2. فاتورة بون المطبخ (بدون أسعار)
 // ==========================================
 class KitchenReceiptWidget extends StatelessWidget {
   final int orderId;
@@ -141,6 +145,75 @@ class KitchenReceiptWidget extends StatelessWidget {
                 )),
             const Text('====================', style: TextStyle(fontSize: 20, color: Colors.black)),
             Text(DateTime.now().toString().substring(0, 16), style: const TextStyle(fontSize: 16, color: Colors.black)),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ==========================================
+// 3. فاتورة إعادة الطباعة (من سجل الطلبات)
+// ==========================================
+class CustomerHistoryReceiptWidget extends StatelessWidget {
+  final OrderHistory order;
+  final String restaurantName;
+  final String taxNumber;
+
+  const CustomerHistoryReceiptWidget({
+    super.key,
+    required this.order,
+    required this.restaurantName,
+    required this.taxNumber,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 380,
+      color: Colors.white,
+      padding: const EdgeInsets.all(16.0),
+      child: Directionality(
+        textDirection: TextDirection.rtl,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Text(restaurantName, style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.black)),
+            Text('الرقم الضريبي: $taxNumber', style: const TextStyle(fontSize: 14, color: Colors.black)),
+            const SizedBox(height: 10),
+            const Text('*** نسخة مُعاد طباعتها ***', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black)),
+            const Divider(color: Colors.black, thickness: 2),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text('طلب رقم: #${order.id}', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black)),
+                Text('النوع: ${order.orderType}', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black)),
+              ],
+            ),
+            const Text('----------------------------------------', style: TextStyle(color: Colors.black)),
+            ...order.items.map((item) => Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 4.0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(child: Text('${item.itemName} (x${item.quantity})', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black))),
+                      Text('${item.unitPrice * item.quantity} ج.م', style: const TextStyle(fontSize: 16, color: Colors.black)),
+                    ],
+                  ),
+                )),
+            const Text('----------------------------------------', style: TextStyle(color: Colors.black)),
+            const Divider(color: Colors.black, thickness: 2),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text('الإجمالي النهائي:', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.black)),
+                Text('${order.total} ج.م', style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.black)),
+              ],
+            ),
+            const SizedBox(height: 20),
+            const Text('شكراً لزيارتكم!', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black)),
+            Text(DateTime.now().toString().substring(0, 16), style: const TextStyle(fontSize: 14, color: Colors.black)),
           ],
         ),
       ),

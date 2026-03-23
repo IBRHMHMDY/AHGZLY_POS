@@ -30,11 +30,7 @@ class _PosScreenState extends State<PosScreen> {
   List<Item> _items = [];
 
   // دالة مساعدة لإظهار نافذة الطباعة بعد نجاح الطلب
-  void _showPrintDialog(
-    BuildContext context,
-    int orderId,
-    PosUpdated previousState,
-  ) {
+  void _showPrintDialog(BuildContext context, int orderId, PosUpdated previousState) {
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -42,13 +38,8 @@ class _PosScreenState extends State<PosScreen> {
         return Directionality(
           textDirection: TextDirection.rtl,
           child: AlertDialog(
-            title: const Text(
-              'تم حفظ الطلب! اختر الفاتورة للطباعة',
-              style: TextStyle(fontWeight: FontWeight.bold),
-            ),
-            content: const Text(
-              'سيتم فتح قائمة طابعات النظام، يرجى اختيار الطابعة الخاصة بك.',
-            ),
+            title: const Text('تم حفظ الطلب! اختر الفاتورة للطباعة', style: TextStyle(fontWeight: FontWeight.bold)),
+            content: const Text('سيتم فتح قائمة طابعات النظام، يرجى اختيار طابعة Epson الخاصة بك.'),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(dialogContext),
@@ -69,15 +60,14 @@ class _PosScreenState extends State<PosScreen> {
                       serviceFee: previousState.serviceFee,
                       deliveryFee: previousState.deliveryFee,
                       total: previousState.total,
+                      restaurantName: previousState.restaurantName,
+                      taxNumber: previousState.taxNumber,
                     ),
                   );
                 },
               ),
               ElevatedButton.icon(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.orange,
-                  foregroundColor: Colors.white,
-                ),
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.orange, foregroundColor: Colors.white),
                 icon: const Icon(Icons.kitchen),
                 label: const Text('بون المطبخ'),
                 onPressed: () async {
@@ -495,7 +485,7 @@ class _PosScreenState extends State<PosScreen> {
                                 'الإجمالي الفرعي:',
                                 state.subTotal,
                               ),
-                              _buildSummaryRow('الضريبة%):', state.taxAmount),
+                              _buildSummaryRow('الضريبة المضافه:', state.taxAmount),
                               if (state.orderType == 'صالة')
                                 _buildSummaryRow(
                                   'خدمة الصالة (%):',
