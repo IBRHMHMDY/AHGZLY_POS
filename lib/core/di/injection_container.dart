@@ -1,10 +1,13 @@
 import 'package:get_it/get_it.dart';
+import '../database/database_helper.dart';
 
 final sl = GetIt.instance; // sl = Service Locator
 
 Future<void> init() async {
-  // سيتم تسجيل الـ Blocs, UseCases, Repositories, و DataSources هنا في الخطوات القادمة
+  // ==========================================
+  // Core
+  // ==========================================
+  sl.registerLazySingleton<DatabaseHelper>(() => DatabaseHelper());
   
-  // مثال (Core):
-  // sl.registerLazySingleton<DatabaseHelper>(() => DatabaseHelper());
+  // سيتم إضافة الباقي (Blocs, Repositories, DataSources) هنا في الخطوات القادمة
 }
