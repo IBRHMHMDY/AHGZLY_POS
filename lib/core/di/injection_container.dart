@@ -1,3 +1,8 @@
+import 'package:ahgzly_pos/features/pos/data/datasources/pos_local_data_source.dart';
+import 'package:ahgzly_pos/features/pos/data/repositories/pos_repository_impl.dart';
+import 'package:ahgzly_pos/features/pos/domain/repositories/pos_repository.dart';
+import 'package:ahgzly_pos/features/pos/domain/usecases/save_order_usecase.dart';
+import 'package:ahgzly_pos/features/pos/presentation/bloc/pos_bloc.dart';
 import 'package:get_it/get_it.dart';
 import '../database/database_helper.dart';
 
@@ -53,4 +58,26 @@ Future<void> init() async {
   sl.registerLazySingleton<MenuLocalDataSource>(
     () => MenuLocalDataSourceImpl(databaseHelper: sl()),
   );
+
+// ==========================================
+  // Features - POS (نقطة البيع)
+  // ==========================================
+  
+  // Bloc
+  sl.registerFactory(() => PosBloc(saveOrderUseCase: sl()));
+
+  // UseCases
+  sl.registerLazySingleton(() => SaveOrderUseCase(sl()));
+
+  // Repository
+  sl.registerLazySingleton<PosRepository>(
+    () => PosRepositoryImpl(localDataSource: sl()),
+  );
+
+  // Data Sources
+  sl.registerLazySingleton<PosLocalDataSource>(
+    () => PosLocalDataSourceImpl(databaseHelper: sl()),
+  );
+
+
 }
