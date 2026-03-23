@@ -29,6 +29,8 @@ class _PosScreenState extends State<PosScreen> {
   List<Category> _categories = [];
   List<Item> _items = [];
 
+  PosUpdated? _lastOrderState;
+
   // دالة مساعدة لإظهار نافذة الطباعة بعد نجاح الطلب
   void _showPrintDialog(BuildContext context, int orderId, PosUpdated previousState) {
     showDialog(
@@ -326,28 +328,18 @@ class _PosScreenState extends State<PosScreen> {
                     current is PosCheckoutSuccess || current is PosError,
                 listener: (context, state) {
                   if (state is PosCheckoutSuccess) {
-                    // نحتاج حالة السلة المحدثة لطباعتها
-                    final _ = context.read<PosBloc>().state;
-                    // نظراً لأن السلة تتفرغ تلقائياً، سنلتقط الحالة من خلال متغير محلي أو نكتفي بإظهار رسالة النجاح في حال عدم التخزين
-                    // بما أننا قمنا بتفريغ السلة في الـ Bloc بعد النجاح، يجب أن نلتقط البيانات من State قبل الإرسال (تم التعديل في البلوك لعدم التفريغ فوراً أو نمرر البيانات).
-                    // للتبسيط في العرض سنعرض النافذة (لقد تم تفريغ السلة في البلوك للأسف، لذا يجب تعديل البلوك لاحقاً إذا أردت طباعة التفاصيل بعد مسحها).
+                    // 1. إظهار رسالة النجاح
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(
-                          'تم حفظ الفاتورة بنجاح! (رقم: ${state.orderId})',
-                        ),
-                        backgroundColor: Colors.green,
-                      ),
+                      SnackBar(content: Text('تم حفظ الفاتورة بنجاح! (رقم: #${state.orderId})'), backgroundColor: Colors.green),
                     );
-
-                    // تنويه: في بيئة العمل الحقيقية، نأخذ نسخة من `PosUpdated` قبل إرسال الطلب لطباعتها هنا.
-                    // لعدم تعقيد الكود، سنكتفي حالياً برسالة النجاح ويمكنك إضافة الطابعة للطلب الفعلي عبر الـ LocalStorage.
+                    
+                    // 2. إظهار نافذة الطباعة برقم الطلب الحقيقي المولد من قاعدة البيانات
+                    if (_lastOrderState != null) {
+                      _showPrintDialog(context, state.orderId, _lastOrderState!);
+                    }
                   } else if (state is PosError) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(state.message),
-                        backgroundColor: Colors.red,
-                      ),
+                      SnackBar(content: Text(state.message), backgroundColor: Colors.red),
                     );
                   }
                 },
@@ -533,30 +525,18 @@ class _PosScreenState extends State<PosScreen> {
                                 onPressed: state.cartItems.isEmpty
                                     ? null
                                     : () async {
-                                        final previousState =
-                                            state; // حفظ نسخة من السلة قبل الدفع
-                                        final paymentMethod =
-                                            await showDialog<String>(
-                                              context: context,
-                                              barrierDismissible: false,
-                                              builder: (_) => CheckoutDialog(
-                                                totalAmount:
-                                                    previousState.total,
-                                              ),
-                                            );
-
-                                        if (paymentMethod != null &&
-                                            context.mounted) {
-                                          context.read<PosBloc>().add(
-                                            SubmitOrderEvent(paymentMethod),
-                                          );
-                                          // إظهار نافذة الطباعة مباشرة
-                                          // ملحوظة: استخدمنا 0 مؤقتاً كرقم الطلب لسرعة العرض
-                                          _showPrintDialog(
-                                            context,
-                                            1001,
-                                            previousState,
-                                          );
+                                        final previousState = state; 
+                                        final paymentMethod = await showDialog<String>(
+                                          context: context,
+                                          barrierDismissible: false,
+                                          builder: (_) => CheckoutDialog(totalAmount: previousState.total),
+                                        );
+                                        
+                                        if (paymentMethod != null && context.mounted) {
+                                          // نحفظ حالة السلة في المتغير قبل أن يقوم الـ Bloc بتفريغها
+                                          _lastOrderState = previousState; 
+                                          // نرسل حدث الحفظ، وسيتولى الـ Listener إظهار نافذة الطباعة
+                                          context.read<PosBloc>().add(SubmitOrderEvent(paymentMethod));
                                         }
                                       },
                                 child: const Text(
