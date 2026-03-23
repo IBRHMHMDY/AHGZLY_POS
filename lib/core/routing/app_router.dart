@@ -18,7 +18,8 @@ class AppRouter {
           // توفير Bloc القائمة وسلة المشتريات لشاشة نقطة البيع
           return MultiBlocProvider(
             providers: [
-              BlocProvider(create: (_) => sl<MenuBloc>()),
+              // أضفنا استدعاء الحدث فور إنشاء البلوك
+              BlocProvider(create: (_) => sl<MenuBloc>()..add(FetchCategoriesEvent())),
               BlocProvider(create: (_) => sl<PosBloc>()),
             ],
             child: const PosScreen(),

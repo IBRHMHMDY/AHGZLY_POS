@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ahgzly_pos/features/menu/domain/entities/category.dart';
+import 'package:ahgzly_pos/features/menu/domain/entities/item.dart';
 import 'package:ahgzly_pos/features/menu/presentation/bloc/menu_bloc.dart';
 import 'package:ahgzly_pos/features/menu/presentation/bloc/menu_event.dart';
 import 'package:ahgzly_pos/features/menu/presentation/bloc/menu_state.dart';
@@ -19,11 +20,14 @@ class PosScreen extends StatefulWidget {
 
 class _PosScreenState extends State<PosScreen> {
   Category? _selectedCategory;
+  // أضفنا متغيرات للاحتفاظ بالبيانات محلياً (Caching)
+  List<Category> _categories = [];
+  List<Item> _items = [];
 
   @override
   void initState() {
     super.initState();
-    // جلب الفئات بمجرد فتح الشاشة
+    // جلب الفئات فور فتح الشاشة
     context.read<MenuBloc>().add(FetchCategoriesEvent());
   }
 
@@ -37,8 +41,13 @@ class _PosScreenState extends State<PosScreen> {
           IconButton(
             icon: const Icon(Icons.settings),
             tooltip: 'إدارة القائمة',
-            onPressed: () {
-              context.push('/menu');
+            onPressed: () async {
+              // الانتظار حتى العودة من شاشة الإدارة
+              await context.push('/menu');
+              // تحديث البيانات بعد العودة
+              if (context.mounted) {
+                context.read<MenuBloc>().add(FetchCategoriesEvent());
+              }
             },
           )
         ],
@@ -54,22 +63,23 @@ class _PosScreenState extends State<PosScreen> {
               flex: 2,
               child: BlocConsumer<MenuBloc, MenuState>(
                 listener: (context, state) {
-                  if (state is CategoriesLoaded && state.categories.isNotEmpty && _selectedCategory == null) {
+                  // تحديث المتغيرات المحلية بناءً على الحالات
+                  if (state is CategoriesLoaded) {
                     setState(() {
-                      _selectedCategory = state.categories.first;
+                      _categories = state.categories;
+                      // اختيار أول فئة تلقائياً إن لم يكن هناك فئة محددة
+                      if (_selectedCategory == null && _categories.isNotEmpty) {
+                        _selectedCategory = _categories.first;
+                        context.read<MenuBloc>().add(FetchItemsEvent(_selectedCategory!.id!));
+                      }
                     });
-                    context.read<MenuBloc>().add(FetchItemsEvent(_selectedCategory!.id!));
+                  } else if (state is ItemsLoaded) {
+                    setState(() {
+                      _items = state.items;
+                    });
                   }
                 },
                 builder: (context, state) {
-                  List<Category> categories = [];
-                  if (state is CategoriesLoaded) {
-                    categories = state.categories;
-                  } else if (context.read<MenuBloc>().state is CategoriesLoaded) {
-                     // الاحتفاظ بالبيانات القديمة أثناء التحميل
-                    categories = (context.read<MenuBloc>().state as CategoriesLoaded).categories;
-                  }
-
                   return Column(
                     children: [
                       // شريط الفئات الأفقي
@@ -77,23 +87,25 @@ class _PosScreenState extends State<PosScreen> {
                         height: 80,
                         padding: const EdgeInsets.symmetric(vertical: 8),
                         color: Colors.grey.shade100,
-                        child: categories.isEmpty
+                        child: _categories.isEmpty
                             ? const Center(child: Text('لا توجد فئات'))
                             : ListView.builder(
                                 scrollDirection: Axis.horizontal,
-                                itemCount: categories.length,
+                                itemCount: _categories.length,
                                 itemBuilder: (context, index) {
-                                  final category = categories[index];
+                                  final category = _categories[index];
                                   final isSelected = _selectedCategory?.id == category.id;
                                   return Padding(
                                     padding: const EdgeInsets.symmetric(horizontal: 4.0),
                                     child: ChoiceChip(
-                                      label: Text(category.name, style: const TextStyle(fontSize: 16)),
+                                      label: Text(category.name, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                                       selected: isSelected,
+                                      selectedColor: Colors.teal.shade200,
                                       onSelected: (selected) {
                                         if (selected) {
                                           setState(() {
                                             _selectedCategory = category;
+                                            _items = []; // تصفير الأصناف حتى يتم التحميل
                                           });
                                           context.read<MenuBloc>().add(FetchItemsEvent(category.id!));
                                         }
@@ -108,48 +120,46 @@ class _PosScreenState extends State<PosScreen> {
                       Expanded(
                         child: Builder(
                           builder: (context) {
-                            if (state is MenuLoading && _selectedCategory == null) {
+                            if (state is MenuLoading) {
                               return const Center(child: CircularProgressIndicator());
                             }
-                            if (state is ItemsLoaded) {
-                              if (state.items.isEmpty) {
-                                return const Center(child: Text('لا توجد أصناف في هذه الفئة'));
-                              }
-                              return GridView.builder(
-                                padding: const EdgeInsets.all(12.0),
-                                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                                  crossAxisCount: 4, // 4 أعمدة للشاشات العريضة
-                                  childAspectRatio: 1.2,
-                                  crossAxisSpacing: 12,
-                                  mainAxisSpacing: 12,
-                                ),
-                                itemCount: state.items.length,
-                                itemBuilder: (context, index) {
-                                  final item = state.items[index];
-                                  return InkWell(
-                                    onTap: () {
-                                      // إضافة الصنف للسلة
-                                      context.read<PosBloc>().add(AddItemToCartEvent(item));
-                                    },
-                                    child: Card(
-                                      elevation: 3,
-                                      color: Colors.teal.shade50,
-                                      child: Column(
-                                        mainAxisAlignment: MainAxisAlignment.center,
-                                        children: [
-                                          const Icon(Icons.fastfood, size: 40, color: Colors.teal),
-                                          const SizedBox(height: 8),
-                                          Text(item.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16), textAlign: TextAlign.center),
-                                          const SizedBox(height: 4),
-                                          Text('${item.price} ج.م', style: const TextStyle(color: Colors.teal, fontWeight: FontWeight.bold)),
-                                        ],
-                                      ),
-                                    ),
-                                  );
-                                },
-                              );
+                            if (_items.isEmpty) {
+                              return const Center(child: Text('لا توجد أصناف في هذه الفئة', style: TextStyle(fontSize: 18)));
                             }
-                            return const Center(child: Text('اختر فئة لعرض الأصناف'));
+                            return GridView.builder(
+                              padding: const EdgeInsets.all(12.0),
+                              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                                crossAxisCount: 4, // 4 أعمدة للشاشات العريضة
+                                childAspectRatio: 1.2,
+                                crossAxisSpacing: 12,
+                                mainAxisSpacing: 12,
+                              ),
+                              itemCount: _items.length,
+                              itemBuilder: (context, index) {
+                                final item = _items[index];
+                                return InkWell(
+                                  onTap: () {
+                                    // إضافة الصنف للسلة
+                                    context.read<PosBloc>().add(AddItemToCartEvent(item));
+                                  },
+                                  child: Card(
+                                    elevation: 3,
+                                    color: Colors.teal.shade50,
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                    child: Column(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: [
+                                        const Icon(Icons.fastfood, size: 40, color: Colors.teal),
+                                        const SizedBox(height: 8),
+                                        Text(item.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16), textAlign: TextAlign.center),
+                                        const SizedBox(height: 4),
+                                        Text('${item.price} ج.م', style: const TextStyle(color: Colors.teal, fontWeight: FontWeight.bold)),
+                                      ],
+                                    ),
+                                  ),
+                                );
+                              },
+                            );
                           },
                         ),
                       ),
@@ -173,7 +183,6 @@ class _PosScreenState extends State<PosScreen> {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(content: Text('تم حفظ الفاتورة بنجاح! (رقم: ${state.orderId})'), backgroundColor: Colors.green),
                     );
-                    // يمكنك هنا مستقبلاً توجيه المستخدم لطباعة الفاتورة
                   } else if (state is PosError) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(content: Text(state.message), backgroundColor: Colors.red),
@@ -184,7 +193,7 @@ class _PosScreenState extends State<PosScreen> {
                   if (state is PosUpdated) {
                     return Column(
                       children: [
-                        // ترويسة السلة (نوع الطلب وتفريغ السلة)
+                        // ترويسة السلة
                         Container(
                           padding: const EdgeInsets.all(8.0),
                           color: Colors.grey.shade200,
@@ -193,8 +202,9 @@ class _PosScreenState extends State<PosScreen> {
                             children: [
                               DropdownButton<String>(
                                 value: state.orderType,
+                                underline: const SizedBox(),
                                 items: ['تيك أواي', 'صالة', 'دليفري']
-                                    .map((type) => DropdownMenuItem(value: type, child: Text(type, style: const TextStyle(fontWeight: FontWeight.bold))))
+                                    .map((type) => DropdownMenuItem(value: type, child: Text(type, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16))))
                                     .toList(),
                                 onChanged: (value) {
                                   if (value != null) {
@@ -250,7 +260,7 @@ class _PosScreenState extends State<PosScreen> {
                                 ),
                         ),
 
-                        // ملخص الحسابات (Totals)
+                        // ملخص الحسابات
                         Container(
                           padding: const EdgeInsets.all(16.0),
                           color: Colors.teal.shade50,
@@ -275,11 +285,11 @@ class _PosScreenState extends State<PosScreen> {
                                   backgroundColor: Colors.teal,
                                   foregroundColor: Colors.white,
                                   padding: const EdgeInsets.symmetric(vertical: 16),
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                                 ),
                                 onPressed: state.cartItems.isEmpty
                                     ? null
                                     : () async {
-                                        // فتح نافذة الدفع
                                         final paymentMethod = await showDialog<String>(
                                           context: context,
                                           barrierDismissible: false,
@@ -287,7 +297,6 @@ class _PosScreenState extends State<PosScreen> {
                                         );
                                         
                                         if (paymentMethod != null && context.mounted) {
-                                          // تأكيد وحفظ الطلب
                                           context.read<PosBloc>().add(SubmitOrderEvent(paymentMethod));
                                         }
                                       },
@@ -316,7 +325,7 @@ class _PosScreenState extends State<PosScreen> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(label, style: const TextStyle(fontSize: 16)),
-          Text('$amount ج.م', style: const TextStyle(fontSize: 16)),
+          Text('$amount ج.م', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
         ],
       ),
     );
