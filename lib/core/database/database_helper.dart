@@ -25,10 +25,10 @@ class DatabaseHelper {
     final dbPath = await getDatabasesPath();
     final path = join(dbPath, 'ahgzly_pos.db');
 
-    // تم رفع الإصدار إلى 2 لإنشاء جدول الإعدادات
+    // تم رفع الإصدار إلى 3 لإنشاء جدول المستخدمين (الصلاحيات)
     return await openDatabase(
       path,
-      version: 2,
+      version: 3,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
@@ -96,7 +96,6 @@ class DatabaseHelper {
       )
     ''');
 
-    // جدول الإعدادات
     await db.execute('''
       CREATE TABLE settings (
         id INTEGER PRIMARY KEY DEFAULT 1,
@@ -107,7 +106,6 @@ class DatabaseHelper {
       )
     ''');
 
-    // إدخال القيم الافتراضية للإعدادات
     await db.insert('settings', {
       'id': 1,
       'tax_rate': 0.14,
@@ -115,9 +113,23 @@ class DatabaseHelper {
       'delivery_fee': 20.0,
       'printer_name': 'EPSON Printer',
     });
+
+    // جدول المستخدمين والصلاحيات
+    await db.execute('''
+      CREATE TABLE users (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        pin TEXT NOT NULL UNIQUE,
+        role TEXT NOT NULL
+      )
+    ''');
+
+    // إدخال المستخدمين الافتراضيين
+    await db.insert('users', {'name': 'مدير النظام', 'pin': '1234', 'role': 'admin'});
+    await db.insert('users', {'name': 'كاشير 1', 'pin': '0000', 'role': 'cashier'});
   }
 
-  // دالة الترقية (تعمل فقط للمستخدمين الذين لديهم الإصدار 1)
+  // دالة الترقية للحفاظ على بياناتك السابقة وإضافة الجدول الجديد
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
     if (oldVersion < 2) {
       await db.execute('''
@@ -129,15 +141,22 @@ class DatabaseHelper {
           printer_name TEXT NOT NULL
         )
       ''');
-      
-      // إدخال القيم الافتراضية للإعدادات
       await db.insert('settings', {
-        'id': 1,
-        'tax_rate': 0.14,
-        'service_rate': 0.12,
-        'delivery_fee': 20.0,
-        'printer_name': 'EPSON Printer',
+        'id': 1, 'tax_rate': 0.14, 'service_rate': 0.12, 'delivery_fee': 20.0, 'printer_name': 'EPSON Printer',
       });
+    }
+    
+    if (oldVersion < 3) {
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS users (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          name TEXT NOT NULL,
+          pin TEXT NOT NULL UNIQUE,
+          role TEXT NOT NULL
+        )
+      ''');
+      await db.insert('users', {'name': 'مدير النظام', 'pin': '1234', 'role': 'admin'});
+      await db.insert('users', {'name': 'كاشير 1', 'pin': '0000', 'role': 'cashier'});
     }
   }
 }

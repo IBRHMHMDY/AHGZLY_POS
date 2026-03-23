@@ -45,3 +45,5 @@ class SubmitOrderEvent extends PosEvent {
 }
 
 class ClearCartEvent extends PosEvent {}
+
+class ReloadSettingsEvent extends PosEvent {}

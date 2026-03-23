@@ -25,6 +25,27 @@ import 'package:ahgzly_pos/features/shift/domain/usecases/get_z_report_usecase.d
 import 'package:ahgzly_pos/features/shift/domain/usecases/close_shift_usecase.dart';
 import 'package:ahgzly_pos/features/shift/presentation/bloc/shift_bloc.dart';
 
+// Settings
+import 'package:ahgzly_pos/features/settings/data/datasources/settings_local_data_source.dart';
+import 'package:ahgzly_pos/features/settings/data/repositories/settings_repository_impl.dart';
+import 'package:ahgzly_pos/features/settings/domain/repositories/settings_repository.dart';
+import 'package:ahgzly_pos/features/settings/domain/usecases/get_settings_usecase.dart';
+import 'package:ahgzly_pos/features/settings/domain/usecases/update_settings_usecase.dart';
+import 'package:ahgzly_pos/features/settings/presentation/bloc/settings_bloc.dart';
+// OrdersHistory
+import 'package:ahgzly_pos/features/orders/data/datasources/orders_local_data_source.dart';
+import 'package:ahgzly_pos/features/orders/data/repositories/orders_repository_impl.dart';
+import 'package:ahgzly_pos/features/orders/domain/repositories/orders_repository.dart';
+import 'package:ahgzly_pos/features/orders/domain/usecases/get_orders_usecase.dart';
+import 'package:ahgzly_pos/features/orders/presentation/bloc/orders_bloc.dart';
+// Auth
+import 'package:ahgzly_pos/features/auth/data/datasources/auth_local_data_source.dart';
+import 'package:ahgzly_pos/features/auth/data/repositories/auth_repository_impl.dart';
+import 'package:ahgzly_pos/features/auth/domain/repositories/auth_repository.dart';
+import 'package:ahgzly_pos/features/auth/domain/usecases/login_usecase.dart';
+import 'package:ahgzly_pos/features/auth/domain/usecases/logout_usecase.dart';
+import 'package:ahgzly_pos/features/auth/presentation/bloc/auth_bloc.dart';
+
 final sl = GetIt.instance;
 
 Future<void> init() async {
@@ -65,7 +86,7 @@ Future<void> init() async {
   // ==========================================
   // Features - POS
   // ==========================================
-  sl.registerFactory(() => PosBloc(saveOrderUseCase: sl()));
+  sl.registerFactory(() => PosBloc(saveOrderUseCase: sl(),getSettingsUseCase: sl(),));
   sl.registerLazySingleton(() => SaveOrderUseCase(sl()));
   sl.registerLazySingleton<PosRepository>(() => PosRepositoryImpl(localDataSource: sl()));
   sl.registerLazySingleton<PosLocalDataSource>(() => PosLocalDataSourceImpl(databaseHelper: sl()));
@@ -78,4 +99,31 @@ Future<void> init() async {
   sl.registerLazySingleton(() => CloseShiftUseCase(sl()));
   sl.registerLazySingleton<ShiftRepository>(() => ShiftRepositoryImpl(localDataSource: sl()),);
   sl.registerLazySingleton<ShiftLocalDataSource>(() => ShiftLocalDataSourceImpl(databaseHelper: sl()),);
+
+  // ==========================================
+  // Features - Settings (الإعدادات)
+  // ==========================================
+  sl.registerFactory(() => SettingsBloc(getSettingsUseCase: sl(), updateSettingsUseCase: sl()));
+  sl.registerLazySingleton(() => GetSettingsUseCase(sl()));
+  sl.registerLazySingleton(() => UpdateSettingsUseCase(sl()));
+  sl.registerLazySingleton<SettingsRepository>(() => SettingsRepositoryImpl(localDataSource: sl()));
+  sl.registerLazySingleton<SettingsLocalDataSource>(() => SettingsLocalDataSourceImpl(databaseHelper: sl()));
+
+  // ==========================================
+  // Features - Orders History (سجل الطلبات)
+  // ==========================================
+  sl.registerFactory(() => OrdersBloc(getOrdersUseCase: sl()));
+  sl.registerLazySingleton(() => GetOrdersUseCase(sl()));
+  sl.registerLazySingleton<OrdersRepository>(() => OrdersRepositoryImpl(localDataSource: sl()));
+  sl.registerLazySingleton<OrdersLocalDataSource>(() => OrdersLocalDataSourceImpl(databaseHelper: sl()));
+  
+  // ==========================================
+  // Features - Auth (المصادقة)
+  // ==========================================
+  // نجعله LazySingleton لكي نتمكن من الوصول إليه في كل الشاشات لمعرفة الصلاحية
+  sl.registerLazySingleton(() => AuthBloc(loginUseCase: sl(), logoutUseCase: sl()));
+  sl.registerLazySingleton(() => LoginUseCase(sl()));
+  sl.registerLazySingleton(() => LogoutUseCase(sl()));
+  sl.registerLazySingleton<AuthRepository>(() => AuthRepositoryImpl(localDataSource: sl()));
+  sl.registerLazySingleton<AuthLocalDataSource>(() => AuthLocalDataSourceImpl(databaseHelper: sl()));
 }

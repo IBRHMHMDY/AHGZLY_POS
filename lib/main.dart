@@ -1,8 +1,11 @@
 import 'dart:io';
+import 'package:ahgzly_pos/core/routing/app_router.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+import 'package:ahgzly_pos/core/di/injection_container.dart';
 import 'core/di/injection_container.dart' as di;
-import 'core/routing/app_router.dart';
+import 'package:ahgzly_pos/features/auth/presentation/bloc/auth_bloc.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -24,15 +27,18 @@ class AhgzlyPosApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp.router(
-      title: 'Ahgzly POS',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.teal),
-        useMaterial3: true,
-        fontFamily: 'Cairo', // يفضل إضافة خط عربي لاحقاً
+    return BlocProvider(
+      create: (_) => sl<AuthBloc>(),
+      child: MaterialApp.router(
+        debugShowCheckedModeBanner: false,
+        title: 'Ahgzly POS',
+        theme: ThemeData(
+          colorScheme: ColorScheme.fromSeed(seedColor: Colors.teal),
+          useMaterial3: true,
+          fontFamily: 'Cairo',
+        ),
+        routerConfig: AppRouter().appRouter,
       ),
-      routerConfig: AppRouter.router,
     );
-  }
+  }   
 }

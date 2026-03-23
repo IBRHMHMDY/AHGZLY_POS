@@ -30,7 +30,7 @@ class CustomerReceiptWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     // تحديد عرض الفاتورة ليتناسب مع ورق 80mm (حوالي 380 بكسل)
     return Container(
-      width: 380,
+      width: 382,
       color: Colors.white,
       padding: const EdgeInsets.all(16.0),
       child: Directionality(
@@ -63,7 +63,7 @@ class CustomerReceiptWidget extends StatelessWidget {
                 )),
             const Text('----------------------------------------', style: TextStyle(color: Colors.black)),
             _buildRow('الإجمالي الفرعي:', subTotal),
-            _buildRow('ضريبة (14%):', taxAmount),
+            _buildRow('ضريبة (%):', taxAmount),
             if (serviceFee > 0) _buildRow('خدمة الصالة:', serviceFee),
             if (deliveryFee > 0) _buildRow('رسوم التوصيل:', deliveryFee),
             const Divider(color: Colors.black, thickness: 2),
