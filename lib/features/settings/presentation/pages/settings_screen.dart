@@ -1,3 +1,5 @@
+import 'dart:io';
+import 'package:ahgzly_pos/core/database/database_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:ahgzly_pos/core/services/backup_service.dart';
@@ -21,9 +23,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
   late TextEditingController _printerController;
   late TextEditingController _restaurantNameController;
   late TextEditingController _taxNumberController;
-  
+
   String _selectedPrintMode = 'ask';
-  bool _isInit = false; 
+  bool _isInit = false;
   final BackupService _backupService = BackupService();
 
   @override
@@ -54,7 +56,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(success ? 'تم حفظ النسخة الاحتياطية بنجاح' : 'فشل حفظ النسخة أو تم الإلغاء'),
+        content: Text(
+          success
+              ? 'تم حفظ النسخة الاحتياطية بنجاح'
+              : 'فشل حفظ النسخة أو تم الإلغاء',
+        ),
         backgroundColor: success ? Colors.green : Colors.red,
       ),
     );
@@ -66,7 +72,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
     if (success) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('تمت استعادة النسخة بنجاح. يرجى إعادة تشغيل التطبيق بالكامل.'),
+          content: Text(
+            'تمت استعادة النسخة بنجاح. يرجى إعادة تشغيل التطبيق بالكامل.',
+          ),
           backgroundColor: Colors.green,
           duration: Duration(seconds: 5),
         ),
@@ -90,10 +98,52 @@ class _SettingsScreenState extends State<SettingsScreen> {
         printerName: _printerController.text.trim(),
         restaurantName: _restaurantNameController.text.trim(),
         taxNumber: _taxNumberController.text.trim(),
-        printMode: _selectedPrintMode, 
+        printMode: _selectedPrintMode,
       );
       context.read<SettingsBloc>().add(SaveSettingsEvent(newSettings));
     }
+  }
+
+  void _deactivateLicense() {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Row(
+          children: [
+            Icon(Icons.warning, color: Colors.red),
+            SizedBox(width: 8),
+            Text('إلغاء التفعيل!', style: TextStyle(color: Colors.red)),
+          ],
+        ),
+        content: const Text(
+          'هل أنت متأكد من إلغاء تفعيل البرنامج على هذا الجهاز؟\nسيتم إغلاق البرنامج فوراً ولن يفتح مجدداً إلا بمفتاح تفعيل جديد.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('تراجع'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () async {
+              // 1. تصفير قاعدة البيانات
+              final db = await DatabaseHelper().database;
+              await db.update('license', {
+                'is_activated': 0,
+                'license_key': '',
+              }, where: 'id = 1');
+
+              // 2. إغلاق البرنامج بقوة (للكمبيوتر)
+              exit(0);
+            },
+            child: const Text('تأكيد وإغلاق البرنامج'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -105,7 +155,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
           children: [
             Icon(Icons.settings),
             SizedBox(width: 8),
-            Text('إعدادات النظام', style: TextStyle(fontWeight: FontWeight.bold)),
+            Text(
+              'إعدادات النظام',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
           ],
         ),
         backgroundColor: Colors.teal,
@@ -115,12 +168,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
         listener: (context, state) {
           if (state is SettingsSavedSuccess) {
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('تم حفظ الإعدادات بنجاح.'), backgroundColor: Colors.green),
+              const SnackBar(
+                content: Text('تم حفظ الإعدادات بنجاح.'),
+                backgroundColor: Colors.green,
+              ),
             );
             Navigator.pop(context);
           } else if (state is SettingsError) {
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('خطأ: ${state.message}'), backgroundColor: Colors.red),
+              SnackBar(
+                content: Text('خطأ: ${state.message}'),
+                backgroundColor: Colors.red,
+              ),
             );
           }
         },
@@ -150,22 +209,42 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         title: 'البيانات الأساسية',
                         icon: Icons.store,
                         children: [
-                          _buildTextField(_restaurantNameController, 'اسم المطعم (يظهر في الفاتورة)', 'مثال: مطعم الشيف'),
+                          _buildTextField(
+                            _restaurantNameController,
+                            'اسم المطعم (يظهر في الفاتورة)',
+                            'مثال: مطعم الشيف',
+                          ),
                           const SizedBox(height: 16),
-                          _buildTextField(_taxNumberController, 'الرقم الضريبي', 'مثال: 123-456-789'),
+                          _buildTextField(
+                            _taxNumberController,
+                            'الرقم الضريبي',
+                            'مثال: 123-456-789',
+                          ),
                         ],
                       ),
                       const SizedBox(height: 24),
-                      
+
                       _SettingsSectionCard(
                         title: 'الرسوم والضرائب',
                         icon: Icons.account_balance_wallet,
                         children: [
-                          _buildTextField(_taxController, 'نسبة الضريبة المضافة (%)', 'مثال: 14'),
+                          _buildTextField(
+                            _taxController,
+                            'نسبة الضريبة المضافة (%)',
+                            'مثال: 14',
+                          ),
                           const SizedBox(height: 16),
-                          _buildTextField(_serviceController, 'نسبة خدمة الصالة (%)', 'مثال: 12'),
+                          _buildTextField(
+                            _serviceController,
+                            'نسبة خدمة الصالة (%)',
+                            'مثال: 12',
+                          ),
                           const SizedBox(height: 16),
-                          _buildTextField(_deliveryController, 'رسوم التوصيل الثابتة (ج.م)', 'مثال: 20'),
+                          _buildTextField(
+                            _deliveryController,
+                            'رسوم التوصيل الثابتة (ج.م)',
+                            'مثال: 20',
+                          ),
                         ],
                       ),
                       const SizedBox(height: 24),
@@ -174,19 +253,37 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         title: 'الأجهزة والطباعة',
                         icon: Icons.print,
                         children: [
-                          _buildTextField(_printerController, 'اسم طابعة الويندوز (USB Printer Name)', 'EPSON Printer'),
+                          _buildTextField(
+                            _printerController,
+                            'اسم طابعة الويندوز (USB Printer Name)',
+                            'EPSON Printer',
+                          ),
                           const SizedBox(height: 16),
                           DropdownButtonFormField<String>(
                             value: _selectedPrintMode,
                             decoration: InputDecoration(
-                              labelText: 'وضع الطباعة بعد الدفع', 
-                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                              labelText: 'وضع الطباعة بعد الدفع',
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
                             ),
                             items: const [
-                              DropdownMenuItem(value: 'ask', child: Text('اسأل أولاً (عرض نافذة الطباعة)')),
-                              DropdownMenuItem(value: 'customer', child: Text('طباعة فاتورة العميل تلقائياً')),
-                              DropdownMenuItem(value: 'kitchen', child: Text('طباعة بون المطبخ تلقائياً')),
-                              DropdownMenuItem(value: 'both', child: Text('طباعة العميل والمطبخ تلقائياً')),
+                              DropdownMenuItem(
+                                value: 'ask',
+                                child: Text('اسأل أولاً (عرض نافذة الطباعة)'),
+                              ),
+                              DropdownMenuItem(
+                                value: 'customer',
+                                child: Text('طباعة فاتورة العميل تلقائياً'),
+                              ),
+                              DropdownMenuItem(
+                                value: 'kitchen',
+                                child: Text('طباعة بون المطبخ تلقائياً'),
+                              ),
+                              DropdownMenuItem(
+                                value: 'both',
+                                child: Text('طباعة العميل والمطبخ تلقائياً'),
+                              ),
                             ],
                             onChanged: (val) {
                               if (val != null) {
@@ -197,22 +294,30 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         ],
                       ),
                       const SizedBox(height: 32),
-                      
+
                       ElevatedButton.icon(
                         style: ElevatedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 20), 
-                          backgroundColor: Colors.teal, 
+                          padding: const EdgeInsets.symmetric(vertical: 20),
+                          backgroundColor: Colors.teal,
                           foregroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
                           elevation: 4,
                         ),
                         icon: const Icon(Icons.save, size: 28),
-                        label: const Text('حفظ الإعدادات', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                        label: const Text(
+                          'حفظ الإعدادات',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                         onPressed: _saveSettings,
                       ),
-                      
+
                       const SizedBox(height: 48),
-                      
+
                       _SettingsSectionCard(
                         title: 'النسخ الاحتياطي (الأمان)',
                         icon: Icons.security,
@@ -223,13 +328,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
                               Expanded(
                                 child: ElevatedButton.icon(
                                   style: ElevatedButton.styleFrom(
-                                    backgroundColor: Colors.blue.shade800, 
-                                    foregroundColor: Colors.white, 
-                                    padding: const EdgeInsets.symmetric(vertical: 20),
-                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                    backgroundColor: Colors.blue.shade800,
+                                    foregroundColor: Colors.white,
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 20,
+                                    ),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
                                   ),
                                   icon: const Icon(Icons.download),
-                                  label: const Text('إنشاء نسخة احتياطية', style: TextStyle(fontSize: 16)),
+                                  label: const Text(
+                                    'إنشاء نسخة احتياطية',
+                                    style: TextStyle(fontSize: 16),
+                                  ),
                                   onPressed: _handleBackup,
                                 ),
                               ),
@@ -237,17 +349,53 @@ class _SettingsScreenState extends State<SettingsScreen> {
                               Expanded(
                                 child: ElevatedButton.icon(
                                   style: ElevatedButton.styleFrom(
-                                    backgroundColor: Colors.orange.shade800, 
-                                    foregroundColor: Colors.white, 
-                                    padding: const EdgeInsets.symmetric(vertical: 20),
-                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                    backgroundColor: Colors.orange.shade800,
+                                    foregroundColor: Colors.white,
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 20,
+                                    ),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
                                   ),
                                   icon: const Icon(Icons.upload),
-                                  label: const Text('استعادة نسخة سابقة', style: TextStyle(fontSize: 16)),
+                                  label: const Text(
+                                    'استعادة نسخة سابقة',
+                                    style: TextStyle(fontSize: 16),
+                                  ),
                                   onPressed: _handleRestore,
                                 ),
                               ),
                             ],
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 48),
+                      _SettingsSectionCard(
+                        title: 'إدارة التراخيص (خطر)',
+                        icon: Icons.key_off,
+                        titleColor: Colors.red.shade900,
+                        children: [
+                          SizedBox(
+                            width: double.infinity,
+                            child: OutlinedButton.icon(
+                              style: OutlinedButton.styleFrom(
+                                foregroundColor: Colors.red,
+                                side: const BorderSide(color: Colors.red),
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 20,
+                                ),
+                              ),
+                              icon: const Icon(Icons.phonelink_erase),
+                              label: const Text(
+                                'إلغاء تفعيل النسخة الحالية (للنقل لجهاز آخر)',
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              onPressed: _deactivateLicense,
+                            ),
                           ),
                         ],
                       ),
@@ -263,13 +411,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  Widget _buildTextField(TextEditingController controller, String label, String hint) {
+  Widget _buildTextField(
+    TextEditingController controller,
+    String label,
+    String hint,
+  ) {
     return TextFormField(
       controller: controller,
       style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
       decoration: InputDecoration(
-        labelText: label, 
-        hintText: hint, 
+        labelText: label,
+        hintText: hint,
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
         filled: true,
         fillColor: Colors.grey.shade50,
@@ -308,7 +460,7 @@ class _SettingsSectionCard extends StatelessWidget {
             color: Colors.black.withOpacity(0.05),
             blurRadius: 15,
             offset: const Offset(0, 5),
-          )
+          ),
         ],
       ),
       child: Column(
@@ -319,10 +471,10 @@ class _SettingsSectionCard extends StatelessWidget {
               Icon(icon, color: titleColor ?? Colors.teal, size: 28),
               const SizedBox(width: 12),
               Text(
-                title, 
+                title,
                 style: TextStyle(
-                  fontSize: 20, 
-                  fontWeight: FontWeight.bold, 
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
                   color: titleColor ?? Colors.black87,
                 ),
               ),

@@ -26,7 +26,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 8,
+      version: 9, // تم رفع الإصدار إلى 9
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
@@ -45,23 +45,33 @@ class DatabaseHelper {
     await db.insert('users', {'name': 'كاشير 1', 'pin': '0000', 'role': 'cashier'});
     await db.execute('''CREATE TABLE expenses (id INTEGER PRIMARY KEY AUTOINCREMENT, amount REAL NOT NULL, reason TEXT NOT NULL, created_at TEXT NOT NULL)''');
     
-    // جدول حماية النسخة
-    await db.execute('''CREATE TABLE license (id INTEGER PRIMARY KEY DEFAULT 1, is_activated INTEGER NOT NULL DEFAULT 0, license_key TEXT NOT NULL DEFAULT "")''');
-    await db.insert('license', {'id': 1, 'is_activated': 0});
+    // تسجيل تاريخ بدء الفترة التجريبية بالوقت والساعة
+    await db.execute('''CREATE TABLE license (id INTEGER PRIMARY KEY DEFAULT 1, is_activated INTEGER NOT NULL DEFAULT 0, license_key TEXT NOT NULL DEFAULT "", trial_start_date TEXT NOT NULL DEFAULT "")''');
+    await db.insert('license', {'id': 1, 'is_activated': 0, 'trial_start_date': DateTime.now().toIso8601String()});
   }
 
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
-    // ... الترقيات السابقة
     if (oldVersion < 2) { await db.execute('''CREATE TABLE IF NOT EXISTS settings (id INTEGER PRIMARY KEY DEFAULT 1, tax_rate REAL NOT NULL, service_rate REAL NOT NULL, delivery_fee REAL NOT NULL, printer_name TEXT NOT NULL)'''); await db.insert('settings', {'id': 1, 'tax_rate': 0.14, 'service_rate': 0.12, 'delivery_fee': 20.0, 'printer_name': 'EPSON Printer'}); }
     if (oldVersion < 3) { await db.execute('''CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, pin TEXT NOT NULL UNIQUE, role TEXT NOT NULL)'''); await db.insert('users', {'name': 'مدير النظام', 'pin': '1234', 'role': 'admin'}); await db.insert('users', {'name': 'كاشير 1', 'pin': '0000', 'role': 'cashier'}); }
     if (oldVersion < 4) { await db.execute('ALTER TABLE settings ADD COLUMN restaurant_name TEXT DEFAULT "مـطـعـم احـجـزلـي"'); await db.execute('ALTER TABLE settings ADD COLUMN tax_number TEXT DEFAULT "123-456-789"'); }
     if (oldVersion < 5) { await db.execute('ALTER TABLE settings ADD COLUMN print_mode TEXT DEFAULT "ask"'); }
     if (oldVersion < 6) { await db.execute('ALTER TABLE orders ADD COLUMN discount REAL DEFAULT 0.0'); }
     if (oldVersion < 7) { await db.execute('ALTER TABLE orders ADD COLUMN customer_name TEXT DEFAULT ""'); await db.execute('ALTER TABLE orders ADD COLUMN customer_phone TEXT DEFAULT ""'); await db.execute('ALTER TABLE orders ADD COLUMN customer_address TEXT DEFAULT ""'); await db.execute('''CREATE TABLE IF NOT EXISTS expenses (id INTEGER PRIMARY KEY AUTOINCREMENT, amount REAL NOT NULL, reason TEXT NOT NULL, created_at TEXT NOT NULL)'''); }
+    if (oldVersion < 8) { await db.execute('''CREATE TABLE IF NOT EXISTS license (id INTEGER PRIMARY KEY DEFAULT 1, is_activated INTEGER NOT NULL DEFAULT 0, license_key TEXT NOT NULL DEFAULT "")'''); await db.insert('license', {'id': 1, 'is_activated': 0}); }
     
-    if (oldVersion < 8) {
-      await db.execute('''CREATE TABLE IF NOT EXISTS license (id INTEGER PRIMARY KEY DEFAULT 1, is_activated INTEGER NOT NULL DEFAULT 0, license_key TEXT NOT NULL DEFAULT "")''');
-      await db.insert('license', {'id': 1, 'is_activated': 0});
+    // ترقية الإصدار 9
+    if (oldVersion < 9) {
+      await db.execute('ALTER TABLE license ADD COLUMN trial_start_date TEXT DEFAULT ""');
+      await db.update('license', {'trial_start_date': DateTime.now().toIso8601String()}, where: 'id = 1');
     }
+  }
+
+  // دالة العقاب: مسح البيانات المالية فقط وترك الأصناف والإعدادات
+  Future<void> clearFinancialData() async {
+    final db = await database;
+    await db.delete('orders');
+    await db.delete('order_items');
+    await db.delete('expenses');
+    await db.delete('shifts');
   }
 }

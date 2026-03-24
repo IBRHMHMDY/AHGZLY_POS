@@ -5,7 +5,9 @@ import 'package:go_router/go_router.dart';
 import 'dart:io';
 
 class LicenseScreen extends StatefulWidget {
-  const LicenseScreen({super.key});
+  final bool isTrialExpired;
+
+  const LicenseScreen({super.key, this.isTrialExpired = false});
 
   @override
   State<LicenseScreen> createState() => _LicenseScreenState();
@@ -32,7 +34,6 @@ class _LicenseScreenState extends State<LicenseScreen> {
       _deviceId = 'TEST-DEVICE-ID-12345';
     }
     
-    // إزالة أي رموز غير الأرقام والحروف الإنجليزية قبل القص
     if (mounted) {
       setState(() {
         _shortId = _deviceId.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '').substring(0, 6).toUpperCase();
@@ -58,49 +59,55 @@ class _LicenseScreenState extends State<LicenseScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey.shade100, // متناسق مع باقي النظام
+      backgroundColor: Colors.grey.shade100,
       body: Center(
         child: Container(
-          width: 500,
+          width: 550,
           padding: const EdgeInsets.all(40),
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(24),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.05),
-                blurRadius: 20,
-                offset: const Offset(0, 10),
-              )
-            ],
+            boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 20, offset: const Offset(0, 10))],
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
+              if (widget.isTrialExpired)
+                Container(
+                  margin: const EdgeInsets.only(bottom: 24),
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(color: Colors.red.shade50, borderRadius: BorderRadius.circular(12), border: Border.all(color: Colors.red.shade200)),
+                  child: const Row(
+                    children: [
+                      Icon(Icons.block, color: Colors.red, size: 32),
+                      SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          'انتهت الفترة التجريبية (37 يوم) وتم إيقاف النظام وحذف البيانات المالية. يرجى التفعيل لاستعادة الوصول للنظام.',
+                          style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold, fontSize: 16),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              
               Container(
                 padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.teal.shade50,
-                  shape: BoxShape.circle,
-                ),
+                decoration: BoxDecoration(color: Colors.teal.shade50, shape: BoxShape.circle),
                 child: const Icon(Icons.security_outlined, size: 72, color: Colors.teal),
               ),
               const SizedBox(height: 24),
               const Text('تفعيل النظام', style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.black87)),
               const SizedBox(height: 12),
               const Text(
-                'هذه النسخة غير مفعلة.\nيرجى إرسال رقم الجهاز للمطور للحصول على مفتاح التفعيل.',
+                'يرجى إرسال رقم الجهاز للمطور للحصول على مفتاح التفعيل.',
                 textAlign: TextAlign.center,
                 style: TextStyle(color: Colors.grey, fontSize: 16, height: 1.5),
               ),
               const SizedBox(height: 32),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                decoration: BoxDecoration(
-                  color: Colors.grey.shade50,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.grey.shade200),
-                ),
+                decoration: BoxDecoration(color: Colors.grey.shade50, borderRadius: BorderRadius.circular(12), border: Border.all(color: Colors.grey.shade200)),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [

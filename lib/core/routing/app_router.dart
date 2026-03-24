@@ -9,13 +9,32 @@ import 'package:ahgzly_pos/features/orders/presentation/pages/orders_screen.dart
 import 'package:ahgzly_pos/features/expenses/presentation/pages/expenses_screen.dart';
 
 class AppRouter {
-  // نستقبل حالة التفعيل لنقرر أين نوجه المستخدم
-  static GoRouter getRouter(bool isActivated) {
+  static GoRouter getRouter({
+    required bool isActivated, 
+    required bool isTrialExpired, 
+    required int elapsedDays,
+  }) {
+    String initialLoc = '/';
+    
+    // إذا لم يكن مفعلاً، وانتهت الفترة أو تم التلاعب، يُجبر على شاشة التفعيل
+    if (!isActivated && isTrialExpired) {
+      initialLoc = '/license';
+    }
+
     return GoRouter(
-      initialLocation: isActivated ? '/' : '/license',
+      initialLocation: initialLoc,
       routes: [
-        GoRoute(path: '/license', builder: (context, state) => const LicenseScreen()),
-        GoRoute(path: '/', builder: (context, state) => const LoginScreen()),
+        GoRoute(
+          path: '/license', 
+          builder: (context, state) => LicenseScreen(isTrialExpired: isTrialExpired)
+        ),
+        GoRoute(
+          path: '/', 
+          builder: (context, state) => LoginScreen(
+            isActivated: isActivated, 
+            elapsedDays: elapsedDays
+          )
+        ),
         GoRoute(path: '/pos', builder: (context, state) => const PosScreen()),
         GoRoute(path: '/menu', builder: (context, state) => const MenuScreen()),
         GoRoute(path: '/settings', builder: (context, state) => const SettingsScreen()),

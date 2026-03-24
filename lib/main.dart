@@ -2,7 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:window_manager/window_manager.dart';
-import 'package:flutter_localizations/flutter_localizations.dart'; // ⬅️ الاستيراد الجديد
+import 'package:flutter_localizations/flutter_localizations.dart';
 
 import 'package:ahgzly_pos/core/database/database_helper.dart';
 import 'package:ahgzly_pos/core/di/injection_container.dart' as di;
@@ -19,7 +19,6 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await di.init();
 
-  // 1. تهيئة نافذة الويندوز (تكبير الشاشة Kiosk Mode)
   if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
     await windowManager.ensureInitialized();
     WindowOptions windowOptions = const WindowOptions(
@@ -34,24 +33,73 @@ void main() async {
     windowManager.waitUntilReadyToShow(windowOptions, () async {
       await windowManager.show();
       await windowManager.focus();
-      await windowManager.maximize(); // تكبير الشاشة بالكامل للكاشير
+      await windowManager.maximize(); 
     });
   }
 
-  // 2. التحقق من التفعيل (License Check)
-  final db = await DatabaseHelper().database;
+  // 🪄 نظام فحص التراخيص والفترة التجريبية (المحمي ضد التلاعب)
+  final dbHelper = DatabaseHelper();
+  final db = await dbHelper.database;
   final licenseData = await db.query('license');
+  
   bool isActivated = false;
+  bool isTrialExpired = false;
+  int elapsedDays = 0;
+
   if (licenseData.isNotEmpty) {
     isActivated = licenseData.first['is_activated'] == 1;
+    final trialStartStr = licenseData.first['trial_start_date'] as String;
+
+    if (!isActivated && trialStartStr.isNotEmpty) {
+      try {
+        final trialStart = DateTime.parse(trialStartStr);
+        final difference = DateTime.now().difference(trialStart);
+        elapsedDays = difference.inDays;
+
+        // حماية التلاعب بالزمن: إذا رجع بالزمن للوراء (سالب) أو تجاوز 37 يوم
+        if (elapsedDays > 37 || elapsedDays < 0) {
+          isTrialExpired = true;
+          await dbHelper.clearFinancialData(); // تنفيذ العقوبة
+        }
+      } catch (e) {
+        // حماية إضافية: إذا قام المستخدم بتعديل التاريخ في قاعدة البيانات لنص غير مفهوم
+        isTrialExpired = true;
+        await dbHelper.clearFinancialData();
+      }
+    }
+  } else {
+    // 🚨🚨 ثغرة الحذف: تم اكتشاف تلاعب حيث قام المستخدم بحذف السجل بالكامل!
+    isTrialExpired = true; 
+    
+    // إعادة إنشاء السجل ولكن بتاريخ منتهي (منذ 40 يوماً) لضمان عدم عودته للعمل
+    await db.insert('license', {
+      'id': 1,
+      'is_activated': 0,
+      'license_key': '',
+      'trial_start_date': DateTime.now().subtract(const Duration(days: 40)).toIso8601String()
+    });
+    
+    await dbHelper.clearFinancialData(); // تنفيذ العقوبة فوراً
   }
 
-  runApp(AhgzlyPosApp(isActivated: isActivated));
+  runApp(MyApp(
+    isActivated: isActivated,
+    isTrialExpired: isTrialExpired,
+    elapsedDays: elapsedDays,
+  ));
 }
 
-class AhgzlyPosApp extends StatelessWidget {
+class MyApp extends StatelessWidget {
   final bool isActivated;
-  const AhgzlyPosApp({super.key, required this.isActivated});
+  final bool isTrialExpired;
+  final int elapsedDays;
+
+  const MyApp({
+    super.key, 
+    required this.isActivated,
+    required this.isTrialExpired,
+    required this.elapsedDays,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -73,20 +121,20 @@ class AhgzlyPosApp extends StatelessWidget {
           useMaterial3: true,
           fontFamily: 'Cairo', 
         ),
-        // ==========================================
-        // 🪄 السحر هنا: تحويل التطبيق بالكامل للغة العربية (RTL)
-        // ==========================================
         localizationsDelegates: const [
           GlobalMaterialLocalizations.delegate,
           GlobalWidgetsLocalizations.delegate,
           GlobalCupertinoLocalizations.delegate,
         ],
-        supportedLocales: const [
-          Locale('ar', 'EG'), // دعم اللغة العربية - مصر
-        ],
-        // locale: const Locale('ar', 'EG'), // إجبار النظام على العمل بالعربية
-        // ==========================================
-        routerConfig: AppRouter.getRouter(isActivated),
+        supportedLocales: const [Locale('ar', 'EG')],
+        locale: const Locale('ar', 'EG'),
+        
+        // تمرير حالات الترخيص للموجه
+        routerConfig: AppRouter.getRouter(
+          isActivated: isActivated, 
+          isTrialExpired: isTrialExpired, 
+          elapsedDays: elapsedDays,
+        ),
       ),
     );
   }

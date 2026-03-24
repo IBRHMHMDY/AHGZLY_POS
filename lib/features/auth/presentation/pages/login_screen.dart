@@ -6,7 +6,14 @@ import 'package:ahgzly_pos/features/auth/presentation/bloc/auth_event.dart';
 import 'package:ahgzly_pos/features/auth/presentation/bloc/auth_state.dart';
 
 class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key});
+  final bool isActivated;
+  final int elapsedDays;
+
+  const LoginScreen({
+    super.key, 
+    required this.isActivated, 
+    required this.elapsedDays,
+  });
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
@@ -15,12 +22,49 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   String _pin = '';
 
+  @override
+  void initState() {
+    super.initState();
+    // 🪄 إظهار إنذار إذا تجاوز 30 يوماً ولم يتجاوز 37 يوماً
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!widget.isActivated && widget.elapsedDays > 30 && widget.elapsedDays <= 37) {
+        int daysLeft = 37 - widget.elapsedDays;
+        _showTrialWarning(daysLeft);
+      }
+    });
+  }
+
+  void _showTrialWarning(int daysLeft) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Row(
+          children: [
+            Icon(Icons.warning_amber_rounded, color: Colors.orange, size: 28),
+            SizedBox(width: 8),
+            Text('تحذير: انتهاء الفترة التجريبية', style: TextStyle(color: Colors.orange, fontWeight: FontWeight.bold)),
+          ],
+        ),
+        content: Text(
+          'النسخة غير مفعلة، يرجى تشغيل (مدير التراخيص) للتفعيل.\nيتبقى لك $daysLeft أيام فقط قبل إيقاف النظام وتصفير كافة البيانات المالية.',
+          style: const TextStyle(fontSize: 16, height: 1.5, fontWeight: FontWeight.bold),
+        ),
+        actions: [
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.teal, foregroundColor: Colors.white),
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('متابعة العمل مؤقتاً', style: TextStyle(fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
+    );
+  }
+
   void _onKeypadTap(String value) {
     if (_pin.length < 4) {
-      setState(() {
-        _pin += value;
-      });
-      // تسجيل الدخول تلقائياً عند اكتمال 4 أرقام
+      setState(() => _pin += value);
       if (_pin.length == 4) {
         context.read<AuthBloc>().add(LoginEvent(_pin));
       }
@@ -29,57 +73,40 @@ class _LoginScreenState extends State<LoginScreen> {
 
   void _onBackspaceTap() {
     if (_pin.isNotEmpty) {
-      setState(() {
-        _pin = _pin.substring(0, _pin.length - 1);
-      });
+      setState(() => _pin = _pin.substring(0, _pin.length - 1));
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey.shade100, // توحيد لون الخلفية مع النظام
+      backgroundColor: Colors.grey.shade100,
       body: BlocListener<AuthBloc, AuthState>(
         listener: (context, state) {
           if (state is AuthAuthenticated) {
-            context.go('/pos'); // الانتقال للكاشير بعد النجاح
+            context.go('/pos');
           } else if (state is AuthError) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(state.message), backgroundColor: Colors.red),
-            );
-            setState(() {
-              _pin = ''; // تفريغ الخانة عند الخطأ
-            });
+            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(state.message), backgroundColor: Colors.red));
+            setState(() => _pin = '');
           }
         },
         child: Center(
-          // 🪄 إضافة SingleChildScrollView لحماية الشاشة من أي Overflow عمودي
           child: SingleChildScrollView(
             child: Container(
-              // 🪄 استخدام constraints ليكون العرض مرناً (Responsive) وليس ثابتاً
               constraints: const BoxConstraints(maxWidth: 450),
-              margin: const EdgeInsets.all(16), // مسافة أمان حتى لا يلتصق بالحواف
+              margin: const EdgeInsets.all(16),
               padding: const EdgeInsets.all(40),
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(24),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
-                    blurRadius: 20,
-                    offset: const Offset(0, 10),
-                  )
-                ],
+                boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 20, offset: const Offset(0, 10))],
               ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Container(
                     padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Colors.teal.shade50,
-                      shape: BoxShape.circle,
-                    ),
+                    decoration: BoxDecoration(color: Colors.teal.shade50, shape: BoxShape.circle),
                     child: const Icon(Icons.lock_outline, size: 64, color: Colors.teal),
                   ),
                   const SizedBox(height: 24),
@@ -88,18 +115,12 @@ class _LoginScreenState extends State<LoginScreen> {
                   const Text('أدخل الرمز السري (PIN) للمتابعة', style: TextStyle(fontSize: 16, color: Colors.grey), textAlign: TextAlign.center),
                   const SizedBox(height: 40),
                   
-                  // استخدام Widget منفصل لدوائر الرقم السري
                   _PinIndicatorWidget(pinLength: _pin.length),
-                  
                   const SizedBox(height: 40),
                   
-                  // إجبار لوحة الأرقام فقط لتكون من اليسار لليمين (LTR)
                   Directionality(
                     textDirection: TextDirection.ltr,
-                    child: _NumpadWidget(
-                      onKeypadTap: _onKeypadTap,
-                      onBackspaceTap: _onBackspaceTap,
-                    ),
+                    child: _NumpadWidget(onKeypadTap: _onKeypadTap, onBackspaceTap: _onBackspaceTap),
                   ),
                 ],
               ),
@@ -111,13 +132,8 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 }
 
-// ==========================================
-// Widgets المعزولة لتطبيق مبدأ Clean Code
-// ==========================================
-
 class _PinIndicatorWidget extends StatelessWidget {
   final int pinLength;
-
   const _PinIndicatorWidget({required this.pinLength});
 
   @override
@@ -129,18 +145,12 @@ class _PinIndicatorWidget extends StatelessWidget {
         return AnimatedContainer(
           duration: const Duration(milliseconds: 200),
           margin: const EdgeInsets.symmetric(horizontal: 12),
-          width: 24,
-          height: 24,
+          width: 24, height: 24,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
             color: isActive ? Colors.teal : Colors.grey.shade200,
-            border: Border.all(
-              color: isActive ? Colors.teal : Colors.grey.shade300,
-              width: 2,
-            ),
-            boxShadow: isActive
-                ? [BoxShadow(color: Colors.teal.withOpacity(0.4), blurRadius: 8, offset: const Offset(0, 4))]
-                : [],
+            border: Border.all(color: isActive ? Colors.teal : Colors.grey.shade300, width: 2),
+            boxShadow: isActive ? [BoxShadow(color: Colors.teal.withOpacity(0.4), blurRadius: 8, offset: const Offset(0, 4))] : [],
           ),
         );
       }),
@@ -151,40 +161,26 @@ class _PinIndicatorWidget extends StatelessWidget {
 class _NumpadWidget extends StatelessWidget {
   final Function(String) onKeypadTap;
   final VoidCallback onBackspaceTap;
-
   const _NumpadWidget({required this.onKeypadTap, required this.onBackspaceTap});
 
   @override
   Widget build(BuildContext context) {
     return Column(
       children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [_buildKey('1'), _buildKey('2'), _buildKey('3')],
-        ),
+        Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: [_buildKey('1'), _buildKey('2'), _buildKey('3')]),
         const SizedBox(height: 20),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [_buildKey('4'), _buildKey('5'), _buildKey('6')],
-        ),
+        Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: [_buildKey('4'), _buildKey('5'), _buildKey('6')]),
         const SizedBox(height: 20),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [_buildKey('7'), _buildKey('8'), _buildKey('9')],
-        ),
+        Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: [_buildKey('7'), _buildKey('8'), _buildKey('9')]),
         const SizedBox(height: 20),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
-            const SizedBox(width: 80), // مسافة فارغة
+            const SizedBox(width: 80),
             _buildKey('0'),
             SizedBox(
-              width: 80,
-              height: 80,
-              child: IconButton(
-                icon: const Icon(Icons.backspace_outlined, size: 32, color: Colors.redAccent),
-                onPressed: onBackspaceTap,
-              ),
+              width: 80, height: 80,
+              child: IconButton(icon: const Icon(Icons.backspace_outlined, size: 32, color: Colors.redAccent), onPressed: onBackspaceTap),
             ),
           ],
         ),
@@ -197,16 +193,12 @@ class _NumpadWidget extends StatelessWidget {
       onTap: () => onKeypadTap(number),
       borderRadius: BorderRadius.circular(40),
       child: Container(
-        width: 80,
-        height: 80,
+        width: 80, height: 80,
         alignment: Alignment.center,
         decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: Colors.grey.shade50,
+          shape: BoxShape.circle, color: Colors.grey.shade50,
           border: Border.all(color: Colors.grey.shade200),
-          boxShadow: [
-            BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 4, offset: const Offset(0, 2))
-          ],
+          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 4, offset: const Offset(0, 2))],
         ),
         child: Text(number, style: const TextStyle(fontSize: 32, fontWeight: FontWeight.w600, color: Colors.black87)),
       ),
