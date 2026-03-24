@@ -1,3 +1,4 @@
+import 'dart:io'; // ⬅️ إضافة هامة للتعامل مع أوامر النظام
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -25,7 +26,6 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   void initState() {
     super.initState();
-    // 🪄 إظهار إنذار إذا تجاوز 30 يوماً ولم يتجاوز 37 يوماً
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!widget.isActivated && widget.elapsedDays > 30 && widget.elapsedDays <= 37) {
         int daysLeft = 37 - widget.elapsedDays;
@@ -62,6 +62,43 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
+  // 🪄 نافذة تأكيد الإغلاق (في حال أراد الخروج قبل تسجيل الدخول)
+  void _showExitConfirmation(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Row(
+          children: [
+            Icon(Icons.power_settings_new, color: Colors.red, size: 28),
+            SizedBox(width: 8),
+            Text('إغلاق النظام', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
+          ],
+        ),
+        content: const Text(
+          'هل أنت متأكد من أنك تريد إغلاق البرنامج بالكامل؟',
+          style: TextStyle(fontSize: 16),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('إلغاء', style: TextStyle(color: Colors.grey, fontSize: 16, fontWeight: FontWeight.bold)),
+          ),
+          ElevatedButton.icon(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+            icon: const Icon(Icons.exit_to_app),
+            label: const Text('تأكيد الإغلاق', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+            onPressed: () => exit(0),
+          ),
+        ],
+      ),
+    );
+  }
+
   void _onKeypadTap(String value) {
     if (_pin.length < 4) {
       setState(() => _pin += value);
@@ -81,6 +118,16 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.grey.shade100,
+      // 🪄 إضافة زر عائم لإغلاق البرنامج من شاشة الدخول
+      floatingActionButton: FloatingActionButton.extended(
+        backgroundColor: Colors.red.shade50,
+        foregroundColor: Colors.red,
+        elevation: 0,
+        icon: const Icon(Icons.power_settings_new),
+        label: const Text('إغلاق البرنامج', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+        onPressed: () => _showExitConfirmation(context),
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.startFloat, // وضعه في أسفل اليسار
       body: BlocListener<AuthBloc, AuthState>(
         listener: (context, state) {
           if (state is AuthAuthenticated) {

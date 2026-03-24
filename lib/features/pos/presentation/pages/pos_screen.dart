@@ -1,3 +1,4 @@
+import 'dart:io'; // ⬅️ إضافة هامة للتعامل مع أوامر النظام
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -12,7 +13,6 @@ import 'package:ahgzly_pos/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:ahgzly_pos/features/auth/presentation/bloc/auth_event.dart';
 import 'package:ahgzly_pos/features/auth/presentation/bloc/auth_state.dart';
 
-// استيراد الـ Widgets المعزولة
 import 'package:ahgzly_pos/features/pos/presentation/widgets/categories_section.dart';
 import 'package:ahgzly_pos/features/pos/presentation/widgets/items_section.dart';
 import 'package:ahgzly_pos/features/pos/presentation/widgets/cart_section.dart';
@@ -33,6 +33,43 @@ class _PosScreenState extends State<PosScreen> {
   void initState() {
     super.initState();
     context.read<MenuBloc>().add(FetchCategoriesEvent());
+  }
+
+  // 🪄 نافذة تأكيد الإغلاق
+  void _showExitConfirmation(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Row(
+          children: [
+            Icon(Icons.power_settings_new, color: Colors.red, size: 28),
+            SizedBox(width: 8),
+            Text('إغلاق النظام', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
+          ],
+        ),
+        content: const Text(
+          'هل أنت متأكد من أنك تريد إغلاق البرنامج بالكامل؟',
+          style: TextStyle(fontSize: 16),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('إلغاء', style: TextStyle(color: Colors.grey, fontSize: 16, fontWeight: FontWeight.bold)),
+          ),
+          ElevatedButton.icon(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+            icon: const Icon(Icons.exit_to_app),
+            label: const Text('تأكيد الإغلاق', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+            onPressed: () => exit(0), // أمر الإغلاق الفوري للبرنامج
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -81,7 +118,7 @@ class _PosScreenState extends State<PosScreen> {
             ),
             const Expanded(
               flex: 2,
-              child: CartSection(), // السلة مفصولة تماماً هنا
+              child: CartSection(), 
             ),
           ],
         ),
@@ -129,15 +166,24 @@ class _PosScreenState extends State<PosScreen> {
                   ),
                 ],
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                  padding: const EdgeInsets.symmetric(horizontal: 4.0),
                   child: ElevatedButton.icon(
-                    style: ElevatedButton.styleFrom(backgroundColor: Colors.red.shade50, foregroundColor: Colors.red, elevation: 0),
-                    icon: const Icon(Icons.logout),
-                    label: const Text('خروج', style: TextStyle(fontWeight: FontWeight.bold)),
+                    style: ElevatedButton.styleFrom(backgroundColor: Colors.orange.shade50, foregroundColor: Colors.orange.shade800, elevation: 0),
+                    icon: const Icon(Icons.switch_account),
+                    label: const Text('تبديل المستخدم', style: TextStyle(fontWeight: FontWeight.bold)),
                     onPressed: () {
                       context.read<AuthBloc>().add(LogoutEvent());
                       context.go('/');
                     },
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                  child: ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(backgroundColor: Colors.red.shade50, foregroundColor: Colors.red, elevation: 0),
+                    icon: const Icon(Icons.power_settings_new),
+                    label: const Text('إغلاق البرنامج', style: TextStyle(fontWeight: FontWeight.bold)),
+                    onPressed: () => _showExitConfirmation(context),
                   ),
                 ),
               ],

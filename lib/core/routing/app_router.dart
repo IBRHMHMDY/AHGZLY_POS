@@ -14,15 +14,21 @@ class AppRouter {
     required bool isTrialExpired, 
     required int elapsedDays,
   }) {
-    String initialLoc = '/';
-    
-    // إذا لم يكن مفعلاً، وانتهت الفترة أو تم التلاعب، يُجبر على شاشة التفعيل
-    if (!isActivated && isTrialExpired) {
-      initialLoc = '/license';
-    }
-
     return GoRouter(
-      initialLocation: initialLoc,
+      initialLocation: (!isActivated && isTrialExpired) ? '/license' : '/',
+      
+      // 🪄 الحارس الأمني الإجباري (Guard) الذي يستحيل تخطيه
+      redirect: (context, state) {
+        final isGoingToLicense = state.matchedLocation == '/license';
+        
+        // إذا كانت النسخة غير مفعلة وانتهت أو تم التلاعب بها، يُمنع الدخول لأي شاشة ويُجبر على شاشة التفعيل
+        if (!isActivated && isTrialExpired && !isGoingToLicense) {
+          return '/license';
+        }
+        
+        return null; // السماح بالمرور في الحالات الطبيعية
+      },
+      
       routes: [
         GoRoute(
           path: '/license', 

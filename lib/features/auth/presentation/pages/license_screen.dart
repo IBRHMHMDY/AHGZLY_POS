@@ -1,8 +1,7 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:ahgzly_pos/core/database/database_helper.dart';
-import 'package:go_router/go_router.dart';
-import 'dart:io';
 
 class LicenseScreen extends StatefulWidget {
   final bool isTrialExpired;
@@ -41,14 +40,50 @@ class _LicenseScreenState extends State<LicenseScreen> {
     }
   }
 
-  void _verifyKey() async {
+void _verifyKey() async {
     final expectedKey = "AHGZLY-$_shortId-2026";
     
     if (_keyController.text.trim() == expectedKey) {
       setState(() => _isLoading = true);
+      
+      // تحديث قاعدة البيانات
       final db = await DatabaseHelper().database;
       await db.update('license', {'is_activated': 1, 'license_key': expectedKey}, where: 'id = 1');
-      if (mounted) context.go('/');
+      
+      // إيقاف التحميل وإظهار رسالة النجاح
+      if (mounted) {
+        setState(() => _isLoading = false);
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (ctx) => AlertDialog(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            title: const Row(
+              children: [
+                Icon(Icons.check_circle, color: Colors.green, size: 28),
+                SizedBox(width: 8),
+                Text('تم التفعيل بنجاح!', style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold)),
+              ],
+            ),
+            content: const Text(
+              'مبروك! تم تفعيل نسختك بشكل دائم.\nسيتم إغلاق البرنامج الآن لتطبيق إعدادات التفعيل. يرجى إعادة تشغيله.',
+              style: TextStyle(fontSize: 16, height: 1.5),
+            ),
+            actions: [
+              ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.teal, 
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                ),
+                icon: const Icon(Icons.power_settings_new),
+                label: const Text('إغلاق البرنامج', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                onPressed: () => exit(0), // يقوم بإغلاق البرنامج فوراً
+              ),
+            ],
+          ),
+        );
+      }
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('مفتاح التفعيل غير صحيح! تواصل مع الدعم الفني.'), backgroundColor: Colors.red),
