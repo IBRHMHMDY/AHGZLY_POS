@@ -29,8 +29,8 @@ class _PosScreenState extends State<PosScreen> {
   List<Category> _categories = [];
   List<Item> _items = [];
   
-  // حفظ بيانات السلة قبل التفريغ لغرض الطباعة
   PosUpdated? _lastOrderState;
+  Map<String, dynamic>? _lastCustomerData;
 
   @override
   void initState() {
@@ -38,9 +38,6 @@ class _PosScreenState extends State<PosScreen> {
     context.read<MenuBloc>().add(FetchCategoriesEvent());
   }
 
-  // ----------------------------------------------------
-  // دالة الطباعة التلقائية في الخلفية
-  // ----------------------------------------------------
   void _handleAutoPrint(BuildContext context, int orderId, PosUpdated orderState, String mode) async {
     final printerService = sl<PrinterService>();
     bool customerSuccess = true;
@@ -64,6 +61,9 @@ class _PosScreenState extends State<PosScreen> {
           total: orderState.total,
           restaurantName: orderState.restaurantName,
           taxNumber: orderState.taxNumber,
+          customerName: _lastCustomerData?['name'] ?? '',
+          customerPhone: _lastCustomerData?['phone'] ?? '',
+          customerAddress: _lastCustomerData?['address'] ?? '',
         ),
       );
     }
@@ -91,9 +91,6 @@ class _PosScreenState extends State<PosScreen> {
     }
   }
 
-  // ----------------------------------------------------
-  // دالة إظهار نافذة الطباعة اليدوية (اسأل أولاً)
-  // ----------------------------------------------------
   void _showPrintDialog(BuildContext context, int orderId, PosUpdated previousState) {
     showDialog(
       context: context,
@@ -127,6 +124,9 @@ class _PosScreenState extends State<PosScreen> {
                       total: previousState.total,
                       restaurantName: previousState.restaurantName,
                       taxNumber: previousState.taxNumber,
+                      customerName: _lastCustomerData?['name'] ?? '',
+                      customerPhone: _lastCustomerData?['phone'] ?? '',
+                      customerAddress: _lastCustomerData?['address'] ?? '',
                     ),
                   );
                 },
@@ -153,9 +153,6 @@ class _PosScreenState extends State<PosScreen> {
     );
   }
 
-  // ----------------------------------------------------
-  // دالة إظهار نافذة الخصم (Discount)
-  // ----------------------------------------------------
   void _showDiscountDialog(BuildContext context) {
     final controller = TextEditingController();
     showDialog(
@@ -187,9 +184,6 @@ class _PosScreenState extends State<PosScreen> {
     );
   }
 
-  // ----------------------------------------------------
-  // بناء صفوف ملخص الفاتورة
-  // ----------------------------------------------------
   Widget _buildSummaryRow(String label, double amount, {bool isDiscount = false}) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4.0),
@@ -265,9 +259,6 @@ class _PosScreenState extends State<PosScreen> {
         textDirection: TextDirection.rtl,
         child: Row(
           children: [
-            // ==========================================
-            // القسم الأول: الفئات (Categories)
-            // ==========================================
             Expanded(
               flex: 1,
               child: Container(
@@ -316,9 +307,6 @@ class _PosScreenState extends State<PosScreen> {
               ),
             ),
             const VerticalDivider(width: 1),
-            // ==========================================
-            // القسم الثاني: الأصناف (Items)
-            // ==========================================
             Expanded(
               flex: 3,
               child: BlocBuilder<MenuBloc, MenuState>(
@@ -364,9 +352,6 @@ class _PosScreenState extends State<PosScreen> {
               ),
             ),
             const VerticalDivider(width: 1),
-            // ==========================================
-            // القسم الثالث: سلة المشتريات (Cart & Checkout)
-            // ==========================================
             Expanded(
               flex: 2,
               child: BlocConsumer<PosBloc, PosState>(
@@ -396,7 +381,6 @@ class _PosScreenState extends State<PosScreen> {
                   if (state is PosUpdated) {
                     return Column(
                       children: [
-                        // تحديد نوع الطلب والتفريغ
                         Container(
                           padding: const EdgeInsets.all(16),
                           color: Colors.grey.shade200,
@@ -424,7 +408,6 @@ class _PosScreenState extends State<PosScreen> {
                             ],
                           ),
                         ),
-                        // قائمة الأصناف في السلة
                         Expanded(
                           child: state.cartItems.isEmpty
                               ? const Center(child: Text('السلة فارغة', style: TextStyle(fontSize: 18, color: Colors.grey)))
@@ -472,7 +455,6 @@ class _PosScreenState extends State<PosScreen> {
                                   },
                                 ),
                         ),
-                        // ملخص الفاتورة وأزرار الدفع والخصم
                         Container(
                           padding: const EdgeInsets.all(16),
                           decoration: const BoxDecoration(
@@ -512,14 +494,20 @@ class _PosScreenState extends State<PosScreen> {
                                       ),
                                       onPressed: state.cartItems.isEmpty ? null : () async {
                                         final previousState = state; 
-                                        final paymentMethod = await showDialog<String>(
+                                        final result = await showDialog<Map<String, dynamic>>(
                                           context: context, 
                                           barrierDismissible: false, 
-                                          builder: (_) => CheckoutDialog(totalAmount: previousState.total),
+                                          builder: (_) => CheckoutDialog(totalAmount: previousState.total, orderType: previousState.orderType),
                                         );
-                                        if (paymentMethod != null && context.mounted) {
+                                        if (result != null && context.mounted) {
                                           _lastOrderState = previousState; 
-                                          context.read<PosBloc>().add(SubmitOrderEvent(paymentMethod));
+                                          _lastCustomerData = result;
+                                          context.read<PosBloc>().add(SubmitOrderEvent(
+                                            result['method'],
+                                            customerName: result['name'],
+                                            customerPhone: result['phone'],
+                                            customerAddress: result['address'],
+                                          ));
                                         }
                                       },
                                       child: const Text('دفــع وطباعة', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),

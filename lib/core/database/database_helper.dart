@@ -16,7 +16,7 @@ class DatabaseHelper {
     return _database!;
   }
 
-Future<Database> _initDatabase() async {
+  Future<Database> _initDatabase() async {
     if (Platform.isWindows || Platform.isLinux) {
       sqfliteFfiInit();
       databaseFactory = databaseFactoryFfi;
@@ -24,10 +24,9 @@ Future<Database> _initDatabase() async {
     final dbPath = await getDatabasesPath();
     final path = join(dbPath, 'ahgzly_pos.db');
 
-    // تم رفع الإصدار إلى 6 لدعم الخصومات
     return await openDatabase(
       path,
-      version: 6,
+      version: 7,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
@@ -150,7 +149,22 @@ Future<Database> _initDatabase() async {
       await db.execute('ALTER TABLE settings ADD COLUMN print_mode TEXT DEFAULT "ask"');
     }
     if (oldVersion < 6) {
-      await db.execute('ALTER TABLE orders ADD COLUMN discount REAL DEFAULT 0.0'); // إضافة الخصم
+      await db.execute('ALTER TABLE orders ADD COLUMN discount REAL DEFAULT 0.0');
+    }
+    if (oldVersion < 7) {
+      // 1. إضافة بيانات الدليفري لجدول الطلبات
+      await db.execute('ALTER TABLE orders ADD COLUMN customer_name TEXT DEFAULT ""');
+      await db.execute('ALTER TABLE orders ADD COLUMN customer_phone TEXT DEFAULT ""');
+      await db.execute('ALTER TABLE orders ADD COLUMN customer_address TEXT DEFAULT ""');
+      // 2. إنشاء جدول المصروفات
+      await db.execute('''
+        CREATE TABLE expenses (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          amount REAL NOT NULL,
+          reason TEXT NOT NULL,
+          created_at TEXT NOT NULL
+        )
+      ''');
     }
   }
 }

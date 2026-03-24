@@ -38,10 +38,25 @@ class ChangeOrderTypeEvent extends PosEvent {
 }
 
 class SubmitOrderEvent extends PosEvent {
-  final String paymentMethod; // 'كاش', 'فيزا', 'InstaPay'
-  const SubmitOrderEvent(this.paymentMethod);
+  final String paymentMethod;
+  final String customerName;
+  final String customerPhone;
+  final String customerAddress;
+
+  const SubmitOrderEvent(
+    this.paymentMethod, {
+    this.customerName = '',
+    this.customerPhone = '',
+    this.customerAddress = '',
+  });
+
   @override
-  List<Object> get props => [paymentMethod];
+  List<Object> get props => [
+    paymentMethod,
+    customerName,
+    customerPhone,
+    customerAddress,
+  ];
 }
 
 class ClearCartEvent extends PosEvent {}

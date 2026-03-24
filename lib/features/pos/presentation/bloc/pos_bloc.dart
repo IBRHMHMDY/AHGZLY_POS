@@ -17,7 +17,8 @@ class PosBloc extends Bloc<PosEvent, PosState> {
   double _currentDiscount = 0.0; // الخصم الحالي
   AppSettings? _settings;
 
-  PosBloc({required this.saveOrderUseCase, required this.getSettingsUseCase}) : super(PosInitial()) {
+  PosBloc({required this.saveOrderUseCase, required this.getSettingsUseCase})
+    : super(PosInitial()) {
     on<AddItemToCartEvent>(_onAddItemToCart);
     on<UpdateCartItemQuantityEvent>(_onUpdateCartItemQuantity);
     on<RemoveItemFromCartEvent>(_onRemoveItemFromCart);
@@ -37,34 +38,54 @@ class PosBloc extends Bloc<PosEvent, PosState> {
   Future<void> _initSettings() async {
     final result = await getSettingsUseCase(NoParams());
     result.fold(
-      (failure) => _settings = const AppSettings(taxRate: 0.14, serviceRate: 0.12, deliveryFee: 20.0, printerName: 'EPSON Printer', restaurantName: 'مـطـعـم احـجـزلـي', taxNumber: '123-456-789', printMode: 'ask'),
+      (failure) => _settings = const AppSettings(
+        taxRate: 0.14,
+        serviceRate: 0.12,
+        deliveryFee: 20.0,
+        printerName: 'EPSON Printer',
+        restaurantName: 'مـطـعـم احـجـزلـي',
+        taxNumber: '123-456-789',
+        printMode: 'ask',
+      ),
       (settings) => _settings = settings,
     );
     _emitUpdatedCart();
   }
 
   void _onAddItemToCart(AddItemToCartEvent event, Emitter<PosState> emit) {
-    final existingIndex = _currentCart.indexWhere((c) => c.item.id == event.item.id);
+    final existingIndex = _currentCart.indexWhere(
+      (c) => c.item.id == event.item.id,
+    );
     if (existingIndex >= 0) {
       final currentItem = _currentCart[existingIndex];
-      _currentCart[existingIndex] = currentItem.copyWith(quantity: currentItem.quantity + 1);
+      _currentCart[existingIndex] = currentItem.copyWith(
+        quantity: currentItem.quantity + 1,
+      );
     } else {
       _currentCart.add(CartItem(item: event.item, quantity: 1));
     }
     _emitUpdatedCart(emit: emit);
   }
 
-  void _onUpdateCartItemQuantity(UpdateCartItemQuantityEvent event, Emitter<PosState> emit) {
+  void _onUpdateCartItemQuantity(
+    UpdateCartItemQuantityEvent event,
+    Emitter<PosState> emit,
+  ) {
     if (event.quantity <= 0) {
       _currentCart.removeAt(event.index);
     } else {
       final currentItem = _currentCart[event.index];
-      _currentCart[event.index] = currentItem.copyWith(quantity: event.quantity);
+      _currentCart[event.index] = currentItem.copyWith(
+        quantity: event.quantity,
+      );
     }
     _emitUpdatedCart(emit: emit);
   }
 
-  void _onRemoveItemFromCart(RemoveItemFromCartEvent event, Emitter<PosState> emit) {
+  void _onRemoveItemFromCart(
+    RemoveItemFromCartEvent event,
+    Emitter<PosState> emit,
+  ) {
     _currentCart.removeAt(event.index);
     _emitUpdatedCart(emit: emit);
   }
@@ -86,12 +107,24 @@ class PosBloc extends Bloc<PosEvent, PosState> {
     _emitUpdatedCart(emit: emit);
   }
 
-  Future<void> _onSubmitOrder(SubmitOrderEvent event, Emitter<PosState> emit) async {
+  Future<void> _onSubmitOrder(
+    SubmitOrderEvent event,
+    Emitter<PosState> emit,
+  ) async {
     if (_currentCart.isEmpty) return;
     emit(PosLoading());
     final calculations = _calculateTotals();
-    
-    final List<OrderItem> orderItems = _currentCart.map((c) => OrderItem(itemId: c.item.id!, quantity: c.quantity, unitPrice: c.item.price, notes: c.notes)).toList();
+
+    final List<OrderItem> orderItems = _currentCart
+        .map(
+          (c) => OrderItem(
+            itemId: c.item.id!,
+            quantity: c.quantity,
+            unitPrice: c.item.price,
+            notes: c.notes,
+          ),
+        )
+        .toList();
 
     final order = Order(
       orderType: _currentOrderType,
@@ -104,6 +137,9 @@ class PosBloc extends Bloc<PosEvent, PosState> {
       paymentMethod: event.paymentMethod,
       status: 'مكتمل',
       createdAt: DateTime.now().toIso8601String(),
+      customerName: event.customerName, // جديد
+      customerPhone: event.customerPhone, // جديد
+      customerAddress: event.customerAddress, // جديد
       items: orderItems,
     );
 
@@ -125,7 +161,7 @@ class PosBloc extends Bloc<PosEvent, PosState> {
   }
 
   void _emitUpdatedCart({Emitter<PosState>? emit}) {
-    if (_settings == null) return; 
+    if (_settings == null) return;
     final calculations = _calculateTotals();
     final state = PosUpdated(
       cartItems: List.from(_currentCart),
@@ -141,8 +177,8 @@ class PosBloc extends Bloc<PosEvent, PosState> {
       printMode: _settings!.printMode,
     );
     if (emit != null) {
-      emit(state); 
-    }else{ 
+      emit(state);
+    } else {
       this.emit(state);
     }
   }
@@ -154,7 +190,10 @@ class PosBloc extends Bloc<PosEvent, PosState> {
     }
 
     double discountAmount = _currentDiscount;
-    if (discountAmount > subTotal) discountAmount = subTotal; // منع خصم أكبر من السعر
+    if (discountAmount > subTotal){
+      discountAmount = subTotal; // منع خصم أكبر من السعر
+    }
+      
 
     double taxableAmount = subTotal - discountAmount; // الضرائب تُحسب بعد الخصم
 
@@ -163,9 +202,11 @@ class PosBloc extends Bloc<PosEvent, PosState> {
     final delivery = _settings?.deliveryFee ?? 20.0;
 
     double taxAmount = taxableAmount * tax;
-    double serviceFee = (_currentOrderType == 'صالة') ? (taxableAmount * service) : 0.0;
+    double serviceFee = (_currentOrderType == 'صالة')
+        ? (taxableAmount * service)
+        : 0.0;
     double deliveryFee = (_currentOrderType == 'دليفري') ? delivery : 0.0;
-    
+
     double total = taxableAmount + taxAmount + serviceFee + deliveryFee;
 
     return {

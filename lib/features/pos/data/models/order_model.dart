@@ -13,6 +13,9 @@ class OrderModel extends Order {
     required super.paymentMethod,
     required super.status,
     required super.createdAt,
+    super.customerName,
+    super.customerPhone,
+    super.customerAddress,
     required super.items,
   });
 
@@ -28,8 +31,12 @@ class OrderModel extends Order {
       paymentMethod: entity.paymentMethod,
       status: entity.status,
       createdAt: entity.createdAt,
-      // تحويل قائمة الـ Entities إلى Models
-      items: entity.items.map((item) => OrderItemModel.fromEntity(item)).toList(),
+      customerName: entity.customerName,
+      customerPhone: entity.customerPhone,
+      customerAddress: entity.customerAddress,
+      items: entity.items
+          .map((item) => OrderItemModel.fromEntity(item))
+          .toList(),
     );
   }
 
@@ -45,6 +52,9 @@ class OrderModel extends Order {
       'payment_method': paymentMethod,
       'status': status,
       'created_at': createdAt,
+      'customer_name': customerName,
+      'customer_phone': customerPhone,
+      'customer_address': customerAddress,
     };
   }
 }

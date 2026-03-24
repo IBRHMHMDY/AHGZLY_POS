@@ -1,32 +1,29 @@
 import 'package:equatable/equatable.dart';
 
 class ShiftReport extends Equatable {
-  final String startTime;
-  final String endTime;
+  final double totalSales;
   final double totalCash;
   final double totalVisa;
   final double totalInstaPay;
-  final double totalSales;
+  final double totalExpenses; // إضافة إجمالي المصروفات
   final int totalOrders;
 
   const ShiftReport({
-    required this.startTime,
-    required this.endTime,
+    required this.totalSales,
     required this.totalCash,
     required this.totalVisa,
     required this.totalInstaPay,
-    required this.totalSales,
+    required this.totalExpenses,
     required this.totalOrders,
   });
 
   @override
   List<Object?> get props => [
-        startTime,
-        endTime,
+        totalSales,
         totalCash,
         totalVisa,
         totalInstaPay,
-        totalSales,
+        totalExpenses,
         totalOrders,
       ];
 }

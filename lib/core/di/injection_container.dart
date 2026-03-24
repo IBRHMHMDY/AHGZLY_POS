@@ -1,7 +1,6 @@
 import 'package:get_it/get_it.dart';
 import 'package:ahgzly_pos/core/database/database_helper.dart';
 import 'package:ahgzly_pos/core/services/printer_service.dart'; // تأكد من وجود الـ import
-
 // Menu Imports
 import 'package:ahgzly_pos/features/menu/data/datasources/menu_local_data_source.dart';
 import 'package:ahgzly_pos/features/menu/data/repositories/menu_repository_impl.dart';
@@ -9,14 +8,12 @@ import 'package:ahgzly_pos/features/menu/domain/repositories/menu_repository.dar
 import 'package:ahgzly_pos/features/menu/domain/usecases/category_usecases.dart';
 import 'package:ahgzly_pos/features/menu/domain/usecases/item_usecases.dart';
 import 'package:ahgzly_pos/features/menu/presentation/bloc/menu_bloc.dart';
-
 // POS Imports
 import 'package:ahgzly_pos/features/pos/data/datasources/pos_local_data_source.dart';
 import 'package:ahgzly_pos/features/pos/data/repositories/pos_repository_impl.dart';
 import 'package:ahgzly_pos/features/pos/domain/repositories/pos_repository.dart';
 import 'package:ahgzly_pos/features/pos/domain/usecases/save_order_usecase.dart';
 import 'package:ahgzly_pos/features/pos/presentation/bloc/pos_bloc.dart';
-
 // Shifts Management
 import 'package:ahgzly_pos/features/shift/data/datasources/shift_local_data_source.dart';
 import 'package:ahgzly_pos/features/shift/data/repositories/shift_repository_impl.dart';
@@ -24,7 +21,6 @@ import 'package:ahgzly_pos/features/shift/domain/repositories/shift_repository.d
 import 'package:ahgzly_pos/features/shift/domain/usecases/get_z_report_usecase.dart';
 import 'package:ahgzly_pos/features/shift/domain/usecases/close_shift_usecase.dart';
 import 'package:ahgzly_pos/features/shift/presentation/bloc/shift_bloc.dart';
-
 // Settings
 import 'package:ahgzly_pos/features/settings/data/datasources/settings_local_data_source.dart';
 import 'package:ahgzly_pos/features/settings/data/repositories/settings_repository_impl.dart';
@@ -46,6 +42,14 @@ import 'package:ahgzly_pos/features/auth/domain/repositories/auth_repository.dar
 import 'package:ahgzly_pos/features/auth/domain/usecases/login_usecase.dart';
 import 'package:ahgzly_pos/features/auth/domain/usecases/logout_usecase.dart';
 import 'package:ahgzly_pos/features/auth/presentation/bloc/auth_bloc.dart';
+// Expenses
+import 'package:ahgzly_pos/features/expenses/data/datasources/expenses_local_data_source.dart';
+import 'package:ahgzly_pos/features/expenses/data/repositories/expenses_repository_impl.dart';
+import 'package:ahgzly_pos/features/expenses/domain/repositories/expenses_repository.dart';
+import 'package:ahgzly_pos/features/expenses/domain/usecases/get_today_expenses_usecase.dart';
+import 'package:ahgzly_pos/features/expenses/domain/usecases/add_expense_usecase.dart';
+import 'package:ahgzly_pos/features/expenses/domain/usecases/delete_expense_usecase.dart';
+import 'package:ahgzly_pos/features/expenses/presentation/bloc/expenses_bloc.dart';
 
 final sl = GetIt.instance;
 
@@ -55,7 +59,6 @@ Future<void> init() async {
   // ==========================================
   sl.registerLazySingleton<DatabaseHelper>(() => DatabaseHelper());
 
-  // تأكد أن هذا السطر موجود هنا وليس داخل دالة أخرى
   sl.registerLazySingleton<PrinterService>(() => PrinterService());
 
   // ==========================================
@@ -73,7 +76,6 @@ Future<void> init() async {
       deleteItem: sl(),
     ),
   );
-
   sl.registerLazySingleton(() => GetCategoriesUseCase(sl()));
   sl.registerLazySingleton(() => AddCategoryUseCase(sl()));
   sl.registerLazySingleton(() => UpdateCategoryUseCase(sl()));
@@ -163,5 +165,25 @@ Future<void> init() async {
   );
   sl.registerLazySingleton<AuthLocalDataSource>(
     () => AuthLocalDataSourceImpl(databaseHelper: sl()),
+  );
+
+  // ==========================================
+  // Features - Expenses (المصروفات)
+  // ==========================================
+  sl.registerFactory(
+    () => ExpensesBloc(
+      getTodayExpensesUseCase: sl(),
+      addExpenseUseCase: sl(),
+      deleteExpenseUseCase: sl(),
+    ),
+  );
+  sl.registerLazySingleton(() => GetTodayExpensesUseCase(sl()));
+  sl.registerLazySingleton(() => AddExpenseUseCase(sl()));
+  sl.registerLazySingleton(() => DeleteExpenseUseCase(sl()));
+  sl.registerLazySingleton<ExpensesRepository>(
+    () => ExpensesRepositoryImpl(localDataSource: sl()),
+  );
+  sl.registerLazySingleton<ExpensesLocalDataSource>(
+    () => ExpensesLocalDataSourceImpl(databaseHelper: sl()),
   );
 }

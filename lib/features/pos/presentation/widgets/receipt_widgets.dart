@@ -25,21 +25,39 @@ class CustomerReceiptWidget extends StatelessWidget {
   final double total;
   final String restaurantName;
   final String taxNumber;
+  final String customerName;
+  final String customerPhone;
+  final String customerAddress;
 
   const CustomerReceiptWidget({
-    super.key, required this.orderId, required this.orderType, required this.items,
-    required this.subTotal, required this.discountAmount, required this.taxAmount, required this.serviceFee,
-    required this.deliveryFee, required this.total, required this.restaurantName, required this.taxNumber,
+    super.key,
+    required this.orderId,
+    required this.orderType,
+    required this.items,
+    required this.subTotal,
+    required this.discountAmount,
+    required this.taxAmount,
+    required this.serviceFee,
+    required this.deliveryFee,
+    required this.total,
+    required this.restaurantName,
+    required this.taxNumber,
+    this.customerName = '',
+    this.customerPhone = '',
+    this.customerAddress = '',
   });
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 350, color: Colors.white, padding: const EdgeInsets.all(16.0),
+      width: 350,
+      color: Colors.white,
+      padding: const EdgeInsets.all(16.0),
       child: Directionality(
         textDirection: TextDirection.rtl,
         child: Column(
-          mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Text(restaurantName, style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.black)),
             Text('الرقم الضريبي: $taxNumber', style: const TextStyle(fontSize: 14, color: Colors.black)),
@@ -76,6 +94,13 @@ class CustomerReceiptWidget extends StatelessWidget {
                 Text('$total ج.م', style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.black)),
               ],
             ),
+            if (orderType == 'دليفري' && (customerName.isNotEmpty || customerPhone.isNotEmpty || customerAddress.isNotEmpty)) ...[
+              const Divider(color: Colors.black, thickness: 2),
+              const Text('بيانات التوصيل:', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black)),
+              if (customerName.isNotEmpty) Text('الاسم: $customerName', style: const TextStyle(fontSize: 16, color: Colors.black)),
+              if (customerPhone.isNotEmpty) Text('الهاتف: $customerPhone', style: const TextStyle(fontSize: 16, color: Colors.black, fontWeight: FontWeight.bold)),
+              if (customerAddress.isNotEmpty) Text('العنوان: $customerAddress', style: const TextStyle(fontSize: 16, color: Colors.black)),
+            ],
             const SizedBox(height: 20),
             const Text('شكراً لزيارتكم!', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black)),
             Text(DateTime.now().toString().substring(0, 16), style: const TextStyle(fontSize: 14, color: Colors.black)),
@@ -90,16 +115,25 @@ class KitchenReceiptWidget extends StatelessWidget {
   final int orderId;
   final String orderType;
   final List<CartItem> items;
-  const KitchenReceiptWidget({super.key, required this.orderId, required this.orderType, required this.items});
+  
+  const KitchenReceiptWidget({
+    super.key,
+    required this.orderId,
+    required this.orderType,
+    required this.items,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 350, color: Colors.white, padding: const EdgeInsets.all(16.0),
+      width: 350,
+      color: Colors.white,
+      padding: const EdgeInsets.all(16.0),
       child: Directionality(
         textDirection: TextDirection.rtl,
         child: Column(
-          mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             const Text('بـون مـطـبـخ', style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Colors.black)),
             const Divider(color: Colors.black, thickness: 3),
@@ -129,16 +163,25 @@ class CustomerHistoryReceiptWidget extends StatelessWidget {
   final OrderHistory order;
   final String restaurantName;
   final String taxNumber;
-  const CustomerHistoryReceiptWidget({super.key, required this.order, required this.restaurantName, required this.taxNumber});
+  
+  const CustomerHistoryReceiptWidget({
+    super.key,
+    required this.order,
+    required this.restaurantName,
+    required this.taxNumber,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 350, color: Colors.white, padding: const EdgeInsets.all(16.0),
+      width: 350,
+      color: Colors.white,
+      padding: const EdgeInsets.all(16.0),
       child: Directionality(
         textDirection: TextDirection.rtl,
         child: Column(
-          mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Text(restaurantName, style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.black)),
             Text('الرقم الضريبي: $taxNumber', style: const TextStyle(fontSize: 14, color: Colors.black)),
@@ -182,20 +225,29 @@ class CustomerHistoryReceiptWidget extends StatelessWidget {
   }
 }
 
-// ---------------- الفاتورة الجديدة لتقرير الوردية ----------------
 class ZReportReceiptWidget extends StatelessWidget {
   final ShiftReport report;
   final String restaurantName;
-  const ZReportReceiptWidget({super.key, required this.report, required this.restaurantName});
+  
+  const ZReportReceiptWidget({
+    super.key,
+    required this.report,
+    required this.restaurantName,
+  });
 
   @override
   Widget build(BuildContext context) {
+    final netCash = report.totalCash - report.totalExpenses;
+
     return Container(
-      width: 350, color: Colors.white, padding: const EdgeInsets.all(16.0),
+      width: 350,
+      color: Colors.white,
+      padding: const EdgeInsets.all(16.0),
       child: Directionality(
         textDirection: TextDirection.rtl,
         child: Column(
-          mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Text(restaurantName, style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.black)),
             const SizedBox(height: 10),
@@ -203,9 +255,19 @@ class ZReportReceiptWidget extends StatelessWidget {
             const Divider(color: Colors.black, thickness: 2),
             const SizedBox(height: 10),
             _buildRow('إجمالي المبيعات:', report.totalSales),
-            _buildRow('مبيعات الكاش:', report.totalCash),
             _buildRow('مبيعات الفيزا:', report.totalVisa),
             _buildRow('مبيعات إنستاباي:', report.totalInstaPay),
+            const Divider(color: Colors.black, thickness: 1),
+            _buildRow('إجمالي الكاش المستلم:', report.totalCash),
+            _buildRow('إجمالي المصروفات:', -report.totalExpenses),
+            const Divider(color: Colors.black, thickness: 2),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text('صافي الدرج (كاش):', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black)),
+                Text('${netCash.toStringAsFixed(2)} ج.م', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black)),
+              ],
+            ),
             const Divider(color: Colors.black, thickness: 2),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
