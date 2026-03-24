@@ -29,6 +29,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   @override
   void initState() {
     super.initState();
+    context.read<SettingsBloc>().add(LoadSettingsEvent());
     _taxController = TextEditingController();
     _serviceController = TextEditingController();
     _deliveryController = TextEditingController();

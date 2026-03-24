@@ -38,7 +38,7 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.teal.shade900,
+      backgroundColor: Colors.grey.shade100, // توحيد لون الخلفية مع النظام
       body: BlocListener<AuthBloc, AuthState>(
         listener: (context, state) {
           if (state is AuthAuthenticated) {
@@ -53,67 +53,126 @@ class _LoginScreenState extends State<LoginScreen> {
           }
         },
         child: Center(
-          child: Container(
-            width: 400,
-            padding: const EdgeInsets.all(32),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(24),
-              boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 10)],
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(Icons.lock, size: 64, color: Colors.teal),
-                const SizedBox(height: 16),
-                const Text('تسجيل الدخول', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
-                const SizedBox(height: 8),
-                const Text('أدخل الرمز السري (PIN) للمتابعة', style: TextStyle(color: Colors.grey)),
-                const SizedBox(height: 32),
-                // عرض دوائر الـ PIN
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: List.generate(4, (index) {
-                    return Container(
-                      margin: const EdgeInsets.symmetric(horizontal: 8),
-                      width: 24,
-                      height: 24,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: index < _pin.length ? Colors.teal : Colors.grey.shade300,
-                      ),
-                    );
-                  }),
-                ),
-                const SizedBox(height: 40),
-                // لوحة الأرقام (Numpad)
-                _buildNumpad(),
-              ],
+          // 🪄 إضافة SingleChildScrollView لحماية الشاشة من أي Overflow عمودي
+          child: SingleChildScrollView(
+            child: Container(
+              // 🪄 استخدام constraints ليكون العرض مرناً (Responsive) وليس ثابتاً
+              constraints: const BoxConstraints(maxWidth: 450),
+              margin: const EdgeInsets.all(16), // مسافة أمان حتى لا يلتصق بالحواف
+              padding: const EdgeInsets.all(40),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(24),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 20,
+                    offset: const Offset(0, 10),
+                  )
+                ],
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.teal.shade50,
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(Icons.lock_outline, size: 64, color: Colors.teal),
+                  ),
+                  const SizedBox(height: 24),
+                  const Text('تسجيل الدخول', style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.black87)),
+                  const SizedBox(height: 8),
+                  const Text('أدخل الرمز السري (PIN) للمتابعة', style: TextStyle(fontSize: 16, color: Colors.grey), textAlign: TextAlign.center),
+                  const SizedBox(height: 40),
+                  
+                  // استخدام Widget منفصل لدوائر الرقم السري
+                  _PinIndicatorWidget(pinLength: _pin.length),
+                  
+                  const SizedBox(height: 40),
+                  
+                  // إجبار لوحة الأرقام فقط لتكون من اليسار لليمين (LTR)
+                  Directionality(
+                    textDirection: TextDirection.ltr,
+                    child: _NumpadWidget(
+                      onKeypadTap: _onKeypadTap,
+                      onBackspaceTap: _onBackspaceTap,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
       ),
     );
   }
+}
 
-  Widget _buildNumpad() {
+// ==========================================
+// Widgets المعزولة لتطبيق مبدأ Clean Code
+// ==========================================
+
+class _PinIndicatorWidget extends StatelessWidget {
+  final int pinLength;
+
+  const _PinIndicatorWidget({required this.pinLength});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: List.generate(4, (index) {
+        final isActive = index < pinLength;
+        return AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          margin: const EdgeInsets.symmetric(horizontal: 12),
+          width: 24,
+          height: 24,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: isActive ? Colors.teal : Colors.grey.shade200,
+            border: Border.all(
+              color: isActive ? Colors.teal : Colors.grey.shade300,
+              width: 2,
+            ),
+            boxShadow: isActive
+                ? [BoxShadow(color: Colors.teal.withOpacity(0.4), blurRadius: 8, offset: const Offset(0, 4))]
+                : [],
+          ),
+        );
+      }),
+    );
+  }
+}
+
+class _NumpadWidget extends StatelessWidget {
+  final Function(String) onKeypadTap;
+  final VoidCallback onBackspaceTap;
+
+  const _NumpadWidget({required this.onKeypadTap, required this.onBackspaceTap});
+
+  @override
+  Widget build(BuildContext context) {
     return Column(
       children: [
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [_buildKey('1'), _buildKey('2'), _buildKey('3')],
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 20),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [_buildKey('4'), _buildKey('5'), _buildKey('6')],
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 20),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [_buildKey('7'), _buildKey('8'), _buildKey('9')],
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 20),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
@@ -123,8 +182,8 @@ class _LoginScreenState extends State<LoginScreen> {
               width: 80,
               height: 80,
               child: IconButton(
-                icon: const Icon(Icons.backspace, size: 32, color: Colors.red),
-                onPressed: _onBackspaceTap,
+                icon: const Icon(Icons.backspace_outlined, size: 32, color: Colors.redAccent),
+                onPressed: onBackspaceTap,
               ),
             ),
           ],
@@ -135,7 +194,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
   Widget _buildKey(String number) {
     return InkWell(
-      onTap: () => _onKeypadTap(number),
+      onTap: () => onKeypadTap(number),
       borderRadius: BorderRadius.circular(40),
       child: Container(
         width: 80,
@@ -143,9 +202,13 @@ class _LoginScreenState extends State<LoginScreen> {
         alignment: Alignment.center,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          color: Colors.grey.shade100,
+          color: Colors.grey.shade50,
+          border: Border.all(color: Colors.grey.shade200),
+          boxShadow: [
+            BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 4, offset: const Offset(0, 2))
+          ],
         ),
-        child: Text(number, style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold)),
+        child: Text(number, style: const TextStyle(fontSize: 32, fontWeight: FontWeight.w600, color: Colors.black87)),
       ),
     );
   }

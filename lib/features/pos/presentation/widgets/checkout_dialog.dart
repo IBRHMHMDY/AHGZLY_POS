@@ -4,11 +4,7 @@ class CheckoutDialog extends StatefulWidget {
   final double totalAmount;
   final String orderType;
 
-  const CheckoutDialog({
-    super.key,
-    required this.totalAmount,
-    required this.orderType,
-  });
+  const CheckoutDialog({super.key, required this.totalAmount, required this.orderType});
 
   @override
   State<CheckoutDialog> createState() => _CheckoutDialogState();
@@ -63,22 +59,11 @@ class _CheckoutDialogState extends State<CheckoutDialog> {
               if (isDelivery) ...[
                 const Text('بيانات العميل (دليفري)', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.orange)),
                 const Divider(),
-                TextField(
-                  controller: _phoneController,
-                  keyboardType: TextInputType.phone,
-                  decoration: const InputDecoration(labelText: 'رقم الهاتف', prefixIcon: Icon(Icons.phone)),
-                ),
+                TextField(controller: _phoneController, keyboardType: TextInputType.phone, decoration: const InputDecoration(labelText: 'رقم الهاتف', prefixIcon: Icon(Icons.phone))),
                 const SizedBox(height: 10),
-                TextField(
-                  controller: _nameController,
-                  decoration: const InputDecoration(labelText: 'اسم العميل', prefixIcon: Icon(Icons.person)),
-                ),
+                TextField(controller: _nameController, decoration: const InputDecoration(labelText: 'اسم العميل', prefixIcon: Icon(Icons.person))),
                 const SizedBox(height: 10),
-                TextField(
-                  controller: _addressController,
-                  maxLines: 2,
-                  decoration: const InputDecoration(labelText: 'العنوان بالتفصيل', prefixIcon: Icon(Icons.location_on)),
-                ),
+                TextField(controller: _addressController, maxLines: 2, decoration: const InputDecoration(labelText: 'العنوان بالتفصيل', prefixIcon: Icon(Icons.location_on))),
                 const SizedBox(height: 20),
               ],
               Container(
@@ -96,35 +81,22 @@ class _CheckoutDialogState extends State<CheckoutDialog> {
               DropdownButtonFormField<String>(
                 value: _selectedMethod,
                 decoration: const InputDecoration(labelText: 'طريقة الدفع', border: OutlineInputBorder()),
-                items: ['كاش', 'فيزا', 'InstaPay']
-                    .map((m) => DropdownMenuItem(value: m, child: Text(m)))
-                    .toList(),
+                items: ['كاش', 'فيزا', 'InstaPay'].map((m) => DropdownMenuItem(value: m, child: Text(m))).toList(),
                 onChanged: (val) {
-                  if (val != null) {
-                    setState(() {
-                      _selectedMethod = val;
-                      if (val != 'كاش') {
-                        _paidController.text = widget.totalAmount.toString();
-                      }
-                    });
-                  }
+                  if (val != null) setState(() { _selectedMethod = val; if (val != 'كاش') _paidController.text = widget.totalAmount.toString(); });
                 },
               ),
               const SizedBox(height: 20),
               if (_selectedMethod == 'كاش') ...[
                 TextFormField(
-                  controller: _paidController,
-                  keyboardType: TextInputType.number,
+                  controller: _paidController, keyboardType: TextInputType.number,
                   style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                   decoration: const InputDecoration(labelText: 'المبلغ المدفوع (من العميل)', border: OutlineInputBorder(), prefixIcon: Icon(Icons.money)),
                 ),
                 const SizedBox(height: 20),
                 Container(
                   padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: _change >= 0 ? Colors.green.shade50 : Colors.red.shade50,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
+                  decoration: BoxDecoration(color: _change >= 0 ? Colors.green.shade50 : Colors.red.shade50, borderRadius: BorderRadius.circular(8)),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [

@@ -18,7 +18,7 @@ class ExpensesLocalDataSourceImpl implements ExpensesLocalDataSource {
     // نجلب مصروفات اليوم فقط لكي لا نخلط بين الورديات والأيام السابقة
     final result = await db.query(
       'expenses',
-      where: 'date(created_at) = date("now", "localtime")',
+      where: "date(created_at) = date('now', 'localtime')",
       orderBy: 'id DESC',
     );
     return result.map((e) => ExpenseModel.fromMap(e)).toList();
