@@ -1,28 +1,44 @@
 import 'package:ahgzly_pos/core/database/database_helper.dart';
+import 'package:ahgzly_pos/core/utils/hash_util.dart';
 import 'package:ahgzly_pos/features/auth/data/models/user_model.dart';
 
 abstract class AuthLocalDataSource {
-  Future<UserModel> loginWithPin(String pin);
+  Future<UserModel> login(String pin);
+  Future<void> logout();
 }
 
 class AuthLocalDataSourceImpl implements AuthLocalDataSource {
-  final DatabaseHelper databaseHelper;
+  final DatabaseHelper dbHelper;
 
-  AuthLocalDataSourceImpl({required this.databaseHelper});
+  AuthLocalDataSourceImpl({required this.dbHelper});
 
   @override
-  Future<UserModel> loginWithPin(String pin) async {
-    final db = await databaseHelper.database;
-    final result = await db.query(
-      'users',
-      where: 'pin = ?',
-      whereArgs: [pin],
-    );
+  Future<UserModel> login(String pin) async {
+    try {
+      final db = await dbHelper.database;
+      
+      // تشفير الـ PIN المدخل من قبل المستخدم قبل البحث في قاعدة البيانات
+      final String hashedPin = HashUtil.generatePinHash(pin);
 
-    if (result.isNotEmpty) {
-      return UserModel.fromMap(result.first);
-    } else {
-      throw Exception('الرمز السري غير صحيح');
+      final List<Map<String, dynamic>> maps = await db.query(
+        'users',
+        where: 'pin = ?',
+        whereArgs: [hashedPin],
+      );
+
+      if (maps.isNotEmpty) {
+        return UserModel.fromMap(maps.first);
+      } else {
+        throw Exception('الرقم السري غير صحيح');
+      }
+    } catch (e) {
+      throw Exception('خطأ في قاعدة البيانات: $e');
     }
+  }
+
+  @override
+  Future<void> logout() async {
+    // يمكن إضافة منطق إضافي هنا لتسجيل الخروج (مثلاً مسح التوكن أو الجلسة الحالية من الذاكرة)
+    return Future.value();
   }
 }

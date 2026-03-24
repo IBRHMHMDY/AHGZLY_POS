@@ -1,5 +1,5 @@
 import 'dart:typed_data';
-import 'package:ahgzly_pos/core/di/injection_container.dart';
+import 'package:ahgzly_pos/core/di/dependency_injection.dart';
 import 'package:ahgzly_pos/core/usecases/usecase.dart';
 import 'package:ahgzly_pos/features/settings/domain/usecases/get_settings_usecase.dart';
 import 'package:flutter/material.dart';

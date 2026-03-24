@@ -7,7 +7,9 @@ abstract class AuthEvent extends Equatable {
 
 class LoginEvent extends AuthEvent {
   final String pin;
-  LoginEvent(this.pin);
+  
+  LoginEvent({required this.pin});
+  
   @override
   List<Object> get props => [pin];
 }

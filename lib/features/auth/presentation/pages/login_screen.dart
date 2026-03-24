@@ -7,14 +7,8 @@ import 'package:ahgzly_pos/features/auth/presentation/bloc/auth_event.dart';
 import 'package:ahgzly_pos/features/auth/presentation/bloc/auth_state.dart';
 
 class LoginScreen extends StatefulWidget {
-  final bool isActivated;
-  final int elapsedDays;
-
-  const LoginScreen({
-    super.key, 
-    required this.isActivated, 
-    required this.elapsedDays,
-  });
+  // تم إزالة باراميترات الترخيص لأنها أصبحت مسؤولية شاشة Splash
+  const LoginScreen({super.key});
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
@@ -22,45 +16,6 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   String _pin = '';
-
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!widget.isActivated && widget.elapsedDays > 30 && widget.elapsedDays <= 37) {
-        int daysLeft = 37 - widget.elapsedDays;
-        _showTrialWarning(daysLeft);
-      }
-    });
-  }
-
-  void _showTrialWarning(int daysLeft) {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Row(
-          children: [
-            Icon(Icons.warning_amber_rounded, color: Colors.orange, size: 28),
-            SizedBox(width: 8),
-            Text('تحذير: انتهاء الفترة التجريبية', style: TextStyle(color: Colors.orange, fontWeight: FontWeight.bold)),
-          ],
-        ),
-        content: Text(
-          'النسخة غير مفعلة، يرجى تشغيل (مدير التراخيص) للتفعيل.\nيتبقى لك $daysLeft أيام فقط قبل إيقاف النظام وتصفير كافة البيانات المالية.',
-          style: const TextStyle(fontSize: 16, height: 1.5, fontWeight: FontWeight.bold),
-        ),
-        actions: [
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.teal, foregroundColor: Colors.white),
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('متابعة العمل مؤقتاً', style: TextStyle(fontWeight: FontWeight.bold)),
-          ),
-        ],
-      ),
-    );
-  }
 
   // 🪄 نافذة تأكيد الإغلاق (في حال أراد الخروج قبل تسجيل الدخول)
   void _showExitConfirmation(BuildContext context) {
@@ -103,7 +58,7 @@ class _LoginScreenState extends State<LoginScreen> {
     if (_pin.length < 4) {
       setState(() => _pin += value);
       if (_pin.length == 4) {
-        context.read<AuthBloc>().add(LoginEvent(_pin));
+        context.read<AuthBloc>().add(LoginEvent(pin: _pin)); // تم التصحيح لتمرير الباراميتر المسمى pin
       }
     }
   }

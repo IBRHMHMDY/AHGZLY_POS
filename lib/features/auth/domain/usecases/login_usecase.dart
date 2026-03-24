@@ -11,6 +11,6 @@ class LoginUseCase implements UseCase<User, String> {
 
   @override
   Future<Either<Failure, User>> call(String pin) {
-    return repository.loginWithPin(pin);
+    return repository.login(pin);
   }
 }

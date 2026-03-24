@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:ahgzly_pos/core/di/injection_container.dart';
+import 'package:ahgzly_pos/core/di/dependency_injection.dart';
 import 'package:ahgzly_pos/core/services/printer_service.dart';
 import 'package:ahgzly_pos/core/usecases/usecase.dart';
 import 'package:ahgzly_pos/features/pos/presentation/widgets/receipt_widgets.dart';

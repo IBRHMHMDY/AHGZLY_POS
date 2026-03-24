@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:ahgzly_pos/core/di/injection_container.dart';
+import 'package:ahgzly_pos/core/di/dependency_injection.dart';
 import 'package:ahgzly_pos/core/services/printer_service.dart';
 import 'package:ahgzly_pos/core/usecases/usecase.dart';
 import 'package:ahgzly_pos/features/orders/domain/entities/order_history.dart';

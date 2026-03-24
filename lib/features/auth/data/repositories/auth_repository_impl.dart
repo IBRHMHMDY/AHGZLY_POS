@@ -10,9 +10,9 @@ class AuthRepositoryImpl implements AuthRepository {
   AuthRepositoryImpl({required this.localDataSource});
 
   @override
-  Future<Either<Failure, User>> loginWithPin(String pin) async {
+  Future<Either<Failure, User>> login(String pin) async {
     try {
-      final user = await localDataSource.loginWithPin(pin);
+      final user = await localDataSource.login(pin);
       return Right(user);
     } catch (e) {
       return Left(DatabaseFailure('فشل تسجيل الدخول: الرمز السري غير صحيح'));

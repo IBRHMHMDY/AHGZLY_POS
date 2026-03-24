@@ -1,6 +1,6 @@
 import 'package:path/path.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
-import 'dart:io';
+import 'package:ahgzly_pos/core/utils/hash_util.dart';
 
 class DatabaseHelper {
   static final DatabaseHelper _instance = DatabaseHelper._internal();
@@ -17,18 +17,17 @@ class DatabaseHelper {
   }
 
   Future<Database> _initDatabase() async {
-    if (Platform.isWindows || Platform.isLinux) {
-      sqfliteFfiInit();
-      databaseFactory = databaseFactoryFfi;
-    }
     final dbPath = await getDatabasesPath();
     final path = join(dbPath, 'ahgzly_pos.db');
 
     return await openDatabase(
       path,
-      version: 9, // تم رفع الإصدار إلى 9
+      version: 10, // تم رفع الإصدار لتطبيق التشفير
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
+      onConfigure: (db) async {
+        await db.execute('PRAGMA foreign_keys = ON');
+      },
     );
   }
 
@@ -40,12 +39,17 @@ class DatabaseHelper {
     await db.execute('''CREATE TABLE shifts (id INTEGER PRIMARY KEY AUTOINCREMENT, start_time TEXT NOT NULL, end_time TEXT NOT NULL, total_cash REAL NOT NULL, total_visa REAL NOT NULL, total_sales REAL NOT NULL, status TEXT NOT NULL)''');
     await db.execute('''CREATE TABLE settings (id INTEGER PRIMARY KEY DEFAULT 1, tax_rate REAL NOT NULL, service_rate REAL NOT NULL, delivery_fee REAL NOT NULL, printer_name TEXT NOT NULL, restaurant_name TEXT NOT NULL, tax_number TEXT NOT NULL, print_mode TEXT NOT NULL)''');
     await db.insert('settings', {'id': 1, 'tax_rate': 0.14, 'service_rate': 0.12, 'delivery_fee': 20.0, 'printer_name': 'EPSON Printer', 'restaurant_name': 'مـطـعـم احـجـزلـي', 'tax_number': '123-456-789', 'print_mode': 'ask'});
+    
     await db.execute('''CREATE TABLE users (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, pin TEXT NOT NULL UNIQUE, role TEXT NOT NULL)''');
-    await db.insert('users', {'name': 'مدير النظام', 'pin': '1234', 'role': 'admin'});
-    await db.insert('users', {'name': 'كاشير 1', 'pin': '0000', 'role': 'cashier'});
+    
+    // تشفير الأرقام السرية الافتراضية
+    final adminHashedPin = HashUtil.generatePinHash('1234');
+    final cashierHashedPin = HashUtil.generatePinHash('0000');
+    await db.insert('users', {'name': 'مدير النظام', 'pin': adminHashedPin, 'role': 'admin'});
+    await db.insert('users', {'name': 'كاشير 1', 'pin': cashierHashedPin, 'role': 'cashier'});
+    
     await db.execute('''CREATE TABLE expenses (id INTEGER PRIMARY KEY AUTOINCREMENT, amount REAL NOT NULL, reason TEXT NOT NULL, created_at TEXT NOT NULL)''');
     
-    // تسجيل تاريخ بدء الفترة التجريبية بالوقت والساعة
     await db.execute('''CREATE TABLE license (id INTEGER PRIMARY KEY DEFAULT 1, is_activated INTEGER NOT NULL DEFAULT 0, license_key TEXT NOT NULL DEFAULT "", trial_start_date TEXT NOT NULL DEFAULT "")''');
     await db.insert('license', {'id': 1, 'is_activated': 0, 'trial_start_date': DateTime.now().toIso8601String()});
   }
@@ -58,20 +62,26 @@ class DatabaseHelper {
     if (oldVersion < 6) { await db.execute('ALTER TABLE orders ADD COLUMN discount REAL DEFAULT 0.0'); }
     if (oldVersion < 7) { await db.execute('ALTER TABLE orders ADD COLUMN customer_name TEXT DEFAULT ""'); await db.execute('ALTER TABLE orders ADD COLUMN customer_phone TEXT DEFAULT ""'); await db.execute('ALTER TABLE orders ADD COLUMN customer_address TEXT DEFAULT ""'); await db.execute('''CREATE TABLE IF NOT EXISTS expenses (id INTEGER PRIMARY KEY AUTOINCREMENT, amount REAL NOT NULL, reason TEXT NOT NULL, created_at TEXT NOT NULL)'''); }
     if (oldVersion < 8) { await db.execute('''CREATE TABLE IF NOT EXISTS license (id INTEGER PRIMARY KEY DEFAULT 1, is_activated INTEGER NOT NULL DEFAULT 0, license_key TEXT NOT NULL DEFAULT "")'''); await db.insert('license', {'id': 1, 'is_activated': 0}); }
-    
-    // ترقية الإصدار 9
     if (oldVersion < 9) {
       await db.execute('ALTER TABLE license ADD COLUMN trial_start_date TEXT DEFAULT ""');
       await db.update('license', {'trial_start_date': DateTime.now().toIso8601String()}, where: 'id = 1');
     }
-  }
-
-  // دالة العقاب: مسح البيانات المالية فقط وترك الأصناف والإعدادات
-  Future<void> clearFinancialData() async {
-    final db = await database;
-    await db.delete('orders');
-    await db.delete('order_items');
-    await db.delete('expenses');
-    await db.delete('shifts');
+    if (oldVersion < 10) {
+      // Migration: تحويل الأرقام السرية القديمة إلى أرقام مشفرة
+      final List<Map<String, dynamic>> users = await db.query('users');
+      for (var user in users) {
+        final String currentPin = user['pin'] as String;
+        // طول الـ SHA-256 هو 64 حرف، نتحقق حتى لا نقوم بتشفير المشفر مسبقاً عن طريق الخطأ
+        if (currentPin.length != 64) {
+          final String hashedPin = HashUtil.generatePinHash(currentPin);
+          await db.update(
+            'users',
+            {'pin': hashedPin},
+            where: 'id = ?',
+            whereArgs: [user['id']],
+          );
+        }
+      }
+    }
   }
 }
