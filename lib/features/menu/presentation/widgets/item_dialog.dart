@@ -1,11 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:ahgzly_pos/features/menu/domain/entities/item.dart';
+import 'package:ahgzly_pos/features/menu/domain/entities/category.dart';
 
 class ItemDialog extends StatefulWidget {
   final Item? item;
-  final int categoryId;
+  final int initialCategoryId;
+  final List<Category> categories;
 
-  const ItemDialog({super.key, this.item, required this.categoryId});
+  const ItemDialog({
+    super.key, 
+    this.item, 
+    required this.initialCategoryId, 
+    required this.categories,
+  });
 
   @override
   State<ItemDialog> createState() => _ItemDialogState();
@@ -15,12 +22,14 @@ class _ItemDialogState extends State<ItemDialog> {
   final _formKey = GlobalKey<FormState>();
   late TextEditingController _nameController;
   late TextEditingController _priceController;
+  late int _selectedCategoryId;
 
   @override
   void initState() {
     super.initState();
     _nameController = TextEditingController(text: widget.item?.name ?? '');
     _priceController = TextEditingController(text: widget.item?.price.toString() ?? '');
+    _selectedCategoryId = widget.item?.categoryId ?? widget.initialCategoryId;
   }
 
   @override
@@ -33,51 +42,83 @@ class _ItemDialogState extends State<ItemDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: Text(widget.item == null ? 'إضافة صنف جديد' : 'تعديل الصنف'),
-      content: Form(
-        key: _formKey,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextFormField(
-              controller: _nameController,
-              decoration: const InputDecoration(
-                labelText: 'اسم الصنف',
-                border: OutlineInputBorder(),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      title: Row(
+        children: [
+          Icon(widget.item == null ? Icons.fastfood : Icons.edit, color: Colors.teal),
+          const SizedBox(width: 8),
+          Text(widget.item == null ? 'إضافة صنف جديد' : 'تعديل ونقل الصنف', style: const TextStyle(fontWeight: FontWeight.bold)),
+        ],
+      ),
+      content: SingleChildScrollView(
+        child: Form(
+          key: _formKey,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextFormField(
+                controller: _nameController,
+                style: const TextStyle(fontWeight: FontWeight.bold),
+                decoration: InputDecoration(
+                  labelText: 'اسم الصنف',
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                  prefixIcon: const Icon(Icons.restaurant_menu),
+                ),
+                validator: (value) => value == null || value.trim().isEmpty ? 'مطلوب' : null,
               ),
-              validator: (value) {
-                if (value == null || value.trim().isEmpty) return 'يرجى إدخال اسم الصنف';
-                return null;
-              },
-            ),
-            const SizedBox(height: 16),
-            TextFormField(
-              controller: _priceController,
-              keyboardType: TextInputType.number,
-              decoration: const InputDecoration(
-                labelText: 'السعر',
-                border: OutlineInputBorder(),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: _priceController,
+                keyboardType: TextInputType.number,
+                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                decoration: InputDecoration(
+                  labelText: 'السعر (ج.م)',
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                  prefixIcon: const Icon(Icons.attach_money),
+                ),
+                validator: (value) {
+                  if (value == null || value.trim().isEmpty) return 'مطلوب';
+                  if (double.tryParse(value) == null) return 'رقم غير صحيح';
+                  return null;
+                },
               ),
-              validator: (value) {
-                if (value == null || value.trim().isEmpty) return 'يرجى إدخال السعر';
-                if (double.tryParse(value) == null) return 'يرجى إدخال رقم صحيح';
-                return null;
-              },
-            ),
-          ],
+              const SizedBox(height: 16),
+              DropdownButtonFormField<int>(
+                value: _selectedCategoryId,
+                decoration: InputDecoration(
+                  labelText: 'تخصيص للفئة',
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                  prefixIcon: const Icon(Icons.category),
+                ),
+                items: widget.categories.map((c) => DropdownMenuItem(value: c.id, child: Text(c.name, style: const TextStyle(fontWeight: FontWeight.bold)))).toList(),
+                onChanged: (val) {
+                  if (val != null) {
+                    setState(() => _selectedCategoryId = val);
+                  }
+                },
+              ),
+            ],
+          ),
         ),
       ),
+      actionsPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('إلغاء'),
+          child: const Text('إلغاء', style: TextStyle(color: Colors.red, fontSize: 16)),
         ),
         ElevatedButton(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.teal,
+            foregroundColor: Colors.white,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+          ),
           onPressed: () {
             if (_formKey.currentState!.validate()) {
               final newItem = Item(
                 id: widget.item?.id,
-                categoryId: widget.categoryId,
+                categoryId: _selectedCategoryId,
                 name: _nameController.text.trim(),
                 price: double.parse(_priceController.text.trim()),
                 createdAt: widget.item?.createdAt ?? DateTime.now().toIso8601String(),
@@ -86,7 +127,7 @@ class _ItemDialogState extends State<ItemDialog> {
               Navigator.pop(context, newItem);
             }
           },
-          child: const Text('حفظ'),
+          child: const Text('حفظ', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
         ),
       ],
     );
