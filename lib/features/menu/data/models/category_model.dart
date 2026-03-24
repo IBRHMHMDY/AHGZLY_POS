@@ -13,7 +13,7 @@ class CategoryModel extends Category {
     return CategoryModel(
       id: map['id'],
       name: map['name'],
-      imagePath: map['image_path'],
+      imagePath: map.containsKey('image_path') ? map['image_path'] : null,
       createdAt: map['created_at'],
       updatedAt: map['updated_at'],
     );
@@ -23,7 +23,7 @@ class CategoryModel extends Category {
     return {
       if (id != null) 'id': id,
       'name': name,
-      'image_path': imagePath,
+      // 'image_path': imagePath,
       'created_at': createdAt,
       'updated_at': updatedAt,
     };

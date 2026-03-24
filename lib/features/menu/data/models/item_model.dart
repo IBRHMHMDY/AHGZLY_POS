@@ -17,7 +17,7 @@ class ItemModel extends Item {
       categoryId: map['category_id'],
       name: map['name'],
       price: map['price'],
-      imagePath: map['image_path'],
+      imagePath: map.containsKey('image_path') ? map['image_path'] : null,
       createdAt: map['created_at'],
       updatedAt: map['updated_at'],
     );
@@ -29,7 +29,7 @@ class ItemModel extends Item {
       'category_id': categoryId,
       'name': name,
       'price': price,
-      'image_path': imagePath,
+      // 'image_path': imagePath,
       'created_at': createdAt,
       'updated_at': updatedAt,
     };
