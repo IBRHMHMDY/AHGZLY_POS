@@ -1,9 +1,9 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:ahgzly_pos/core/usecases/usecase.dart';
-import 'package:ahgzly_pos/features/auth/domain/usecases/login_usecase.dart';
-import 'package:ahgzly_pos/features/auth/domain/usecases/logout_usecase.dart';
-import 'package:ahgzly_pos/features/auth/presentation/bloc/auth_event.dart';
-import 'package:ahgzly_pos/features/auth/presentation/bloc/auth_state.dart';
+import '../../../../core/usecases/usecase.dart'; // أضفنا هذا السطر لاستيراد NoParams
+import '../../domain/usecases/login_usecase.dart';
+import '../../domain/usecases/logout_usecase.dart';
+import 'auth_event.dart';
+import 'auth_state.dart';
 
 class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final LoginUseCase loginUseCase;
@@ -14,20 +14,27 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     required this.logoutUseCase,
   }) : super(AuthInitial()) {
     
-    on<LoginEvent>((event, emit) async {
+    on<LoginSubmittedEvent>((event, emit) async {
       emit(AuthLoading());
-      final failureOrUser = await loginUseCase(event.pin);
       
-      failureOrUser.fold(
-        (failure) => emit(AuthError(failure.message)),
-        (user) => emit(AuthAuthenticated(user)),
+      final result = await loginUseCase(event.pin);
+      
+      result.fold(
+        (failure) => emit(AuthError(message: failure.message)),
+        (user) => emit(AuthAuthenticated(user: user)),
       );
     });
 
     on<LogoutEvent>((event, emit) async {
       emit(AuthLoading());
-      await logoutUseCase(NoParams());
-      emit(AuthUnauthenticated());
+      
+      // تم الإصلاح هنا بتمرير NoParams()
+      final result = await logoutUseCase(NoParams()); 
+      
+      result.fold(
+        (failure) => emit(AuthError(message: failure.message)),
+        (_) => emit(AuthUnauthenticated()),
+      );
     });
   }
 }

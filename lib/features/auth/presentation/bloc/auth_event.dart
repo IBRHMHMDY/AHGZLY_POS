@@ -1,17 +1,11 @@
-import 'package:equatable/equatable.dart';
+import 'package:flutter/foundation.dart';
 
-abstract class AuthEvent extends Equatable {
-  @override
-  List<Object> get props => [];
-}
+@immutable
+abstract class AuthEvent {}
 
-class LoginEvent extends AuthEvent {
+class LoginSubmittedEvent extends AuthEvent {
   final String pin;
-  
-  LoginEvent({required this.pin});
-  
-  @override
-  List<Object> get props => [pin];
+  LoginSubmittedEvent({required this.pin});
 }
 
 class LogoutEvent extends AuthEvent {}

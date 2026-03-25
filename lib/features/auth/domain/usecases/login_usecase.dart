@@ -1,8 +1,8 @@
 import 'package:dartz/dartz.dart';
-import 'package:ahgzly_pos/core/error/failures.dart';
-import 'package:ahgzly_pos/core/usecases/usecase.dart';
-import 'package:ahgzly_pos/features/auth/domain/entities/user.dart';
-import 'package:ahgzly_pos/features/auth/domain/repositories/auth_repository.dart';
+import '../../../../core/error/failures.dart';
+import '../../../../core/usecases/usecase.dart';
+import '../entities/user.dart';
+import '../repositories/auth_repository.dart';
 
 class LoginUseCase implements UseCase<User, String> {
   final AuthRepository repository;
@@ -10,7 +10,7 @@ class LoginUseCase implements UseCase<User, String> {
   LoginUseCase(this.repository);
 
   @override
-  Future<Either<Failure, User>> call(String pin) {
-    return repository.login(pin);
+  Future<Either<Failure, User>> call(String pin) async {
+    return await repository.login(pin);
   }
 }

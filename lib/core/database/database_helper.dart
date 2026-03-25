@@ -22,7 +22,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 10, // تم رفع الإصدار لتطبيق التشفير
+      version: 10, // تم رفع الإصدار لتطبيق التشفير مع الـ Salt
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
       onConfigure: (db) async {
@@ -40,13 +40,41 @@ class DatabaseHelper {
     await db.execute('''CREATE TABLE settings (id INTEGER PRIMARY KEY DEFAULT 1, tax_rate REAL NOT NULL, service_rate REAL NOT NULL, delivery_fee REAL NOT NULL, printer_name TEXT NOT NULL, restaurant_name TEXT NOT NULL, tax_number TEXT NOT NULL, print_mode TEXT NOT NULL)''');
     await db.insert('settings', {'id': 1, 'tax_rate': 0.14, 'service_rate': 0.12, 'delivery_fee': 20.0, 'printer_name': 'EPSON Printer', 'restaurant_name': 'مـطـعـم احـجـزلـي', 'tax_number': '123-456-789', 'print_mode': 'ask'});
     
-    await db.execute('''CREATE TABLE users (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, pin TEXT NOT NULL UNIQUE, role TEXT NOT NULL)''');
+    // إنشاء جدول المستخدمين التجاري الجديد (يحتوي على Security & Lockout Fields)
+    await db.execute('''
+      CREATE TABLE users (
+        id INTEGER PRIMARY KEY AUTOINCREMENT, 
+        name TEXT NOT NULL, 
+        pin_hash TEXT NOT NULL, 
+        salt TEXT NOT NULL, 
+        role TEXT NOT NULL,
+        is_active INTEGER NOT NULL DEFAULT 1,
+        failed_attempts INTEGER NOT NULL DEFAULT 0,
+        lockout_until TEXT
+      )
+    ''');
     
-    // تشفير الأرقام السرية الافتراضية
-    final adminHashedPin = HashUtil.generatePinHash('1234');
-    final cashierHashedPin = HashUtil.generatePinHash('0000');
-    await db.insert('users', {'name': 'مدير النظام', 'pin': adminHashedPin, 'role': 'admin'});
-    await db.insert('users', {'name': 'كاشير 1', 'pin': cashierHashedPin, 'role': 'cashier'});
+    // توليد وتشفير الأرقام السرية الافتراضية مع الـ Salt
+    final adminSalt = HashUtil.generateSalt();
+    final adminHashedPin = HashUtil.generatePinHash('123456', adminSalt);
+    
+    final cashierSalt = HashUtil.generateSalt();
+    final cashierHashedPin = HashUtil.generatePinHash('000000', cashierSalt);
+    
+    await db.insert('users', {
+      'name': 'مدير النظام', 
+      'pin_hash': adminHashedPin, 
+      'salt': adminSalt,
+      'role': 'admin',
+      'is_active': 1
+    });
+    await db.insert('users', {
+      'name': 'كاشير 1', 
+      'pin_hash': cashierHashedPin, 
+      'salt': cashierSalt,
+      'role': 'cashier',
+      'is_active': 1
+    });
     
     await db.execute('''CREATE TABLE expenses (id INTEGER PRIMARY KEY AUTOINCREMENT, amount REAL NOT NULL, reason TEXT NOT NULL, created_at TEXT NOT NULL)''');
     
@@ -55,6 +83,7 @@ class DatabaseHelper {
   }
 
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
+    // ... التحديثات القديمة (1 إلى 9) تظل كما هي ...
     if (oldVersion < 2) { await db.execute('''CREATE TABLE IF NOT EXISTS settings (id INTEGER PRIMARY KEY DEFAULT 1, tax_rate REAL NOT NULL, service_rate REAL NOT NULL, delivery_fee REAL NOT NULL, printer_name TEXT NOT NULL)'''); await db.insert('settings', {'id': 1, 'tax_rate': 0.14, 'service_rate': 0.12, 'delivery_fee': 20.0, 'printer_name': 'EPSON Printer'}); }
     if (oldVersion < 3) { await db.execute('''CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, pin TEXT NOT NULL UNIQUE, role TEXT NOT NULL)'''); await db.insert('users', {'name': 'مدير النظام', 'pin': '1234', 'role': 'admin'}); await db.insert('users', {'name': 'كاشير 1', 'pin': '0000', 'role': 'cashier'}); }
     if (oldVersion < 4) { await db.execute('ALTER TABLE settings ADD COLUMN restaurant_name TEXT DEFAULT "مـطـعـم احـجـزلـي"'); await db.execute('ALTER TABLE settings ADD COLUMN tax_number TEXT DEFAULT "123-456-789"'); }
@@ -67,16 +96,29 @@ class DatabaseHelper {
       await db.update('license', {'trial_start_date': DateTime.now().toIso8601String()}, where: 'id = 1');
     }
     if (oldVersion < 10) {
-      // Migration: تحويل الأرقام السرية القديمة إلى أرقام مشفرة
+      // Migration 10: تحويل هيكل المستخدمين القديم للجديد الآمن (Salt + Hash + Lockout)
+      // 1. إضافة الأعمدة الجديدة
+      await db.execute('ALTER TABLE users ADD COLUMN salt TEXT DEFAULT ""');
+      await db.execute('ALTER TABLE users ADD COLUMN pin_hash TEXT DEFAULT ""');
+      await db.execute('ALTER TABLE users ADD COLUMN is_active INTEGER DEFAULT 1');
+      await db.execute('ALTER TABLE users ADD COLUMN failed_attempts INTEGER DEFAULT 0');
+      await db.execute('ALTER TABLE users ADD COLUMN lockout_until TEXT');
+
       final List<Map<String, dynamic>> users = await db.query('users');
       for (var user in users) {
         final String currentPin = user['pin'] as String;
-        // طول الـ SHA-256 هو 64 حرف، نتحقق حتى لا نقوم بتشفير المشفر مسبقاً عن طريق الخطأ
-        if (currentPin.length != 64) {
-          final String hashedPin = HashUtil.generatePinHash(currentPin);
+        
+        // إذا لم يكن مشفراً بالطريقة الجديدة (للتأكد)
+        if (currentPin.length < 64) {
+          final newSalt = HashUtil.generateSalt();
+          final newHashedPin = HashUtil.generatePinHash(currentPin, newSalt);
+          
           await db.update(
             'users',
-            {'pin': hashedPin},
+            {
+              'salt': newSalt,
+              'pin_hash': newHashedPin,
+            },
             where: 'id = ?',
             whereArgs: [user['id']],
           );

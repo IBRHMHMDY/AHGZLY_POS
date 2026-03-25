@@ -1,10 +1,14 @@
 import 'package:get_it/get_it.dart';
 
 // ==========================================
-// Core Imports
+// Core & Security Imports
 // ==========================================
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:ahgzly_pos/core/database/database_helper.dart';
 import 'package:ahgzly_pos/core/services/printer_service.dart';
+import 'package:ahgzly_pos/core/services/security/crypto_service.dart';
+import 'package:ahgzly_pos/core/services/security/device_security_service.dart';
+import 'package:ahgzly_pos/core/services/security/time_guard_service.dart';
 
 // ==========================================
 // License Feature Imports
@@ -90,31 +94,45 @@ final sl = GetIt.instance;
 
 Future<void> init() async {
   // ==========================================
-  // Core & Database
+  // Core & Security (تمت إضافتها هنا)
   // ==========================================
   sl.registerLazySingleton<DatabaseHelper>(() => DatabaseHelper());
   sl.registerLazySingleton<PrinterService>(() => PrinterService());
+  sl.registerLazySingleton<FlutterSecureStorage>(() => const FlutterSecureStorage());
+  sl.registerLazySingleton<CryptoService>(() => CryptoService());
+  sl.registerLazySingleton<DeviceSecurityService>(() => DeviceSecurityService(sl()));
+  sl.registerLazySingleton<TimeGuardService>(() => TimeGuardService(sl()));
 
   // ==========================================
   // Features: License
   // ==========================================
   sl.registerLazySingleton<LicenseLocalDataSource>(
-    () => LicenseLocalDataSourceImpl(dbHelper: sl()),
+    () => LicenseLocalDataSourceImpl(secureStorage: sl()),
   );
   sl.registerLazySingleton<LicenseRepository>(
     () => LicenseRepositoryImpl(localDataSource: sl()),
   );
-  sl.registerLazySingleton(() => CheckLicenseStatusUseCase(sl()));
+  sl.registerLazySingleton(
+    () => CheckLicenseStatusUseCase(
+      cryptoService: sl(),
+      deviceSecurityService: sl(),
+      repository: sl(),
+      timeGuardService: sl(),
+    ),
+  );
   sl.registerLazySingleton(() => ActivateLicenseUseCase(sl()));
   sl.registerFactory(
-    () => LicenseBloc(checkLicenseStatusUseCase: sl(), activateLicenseUseCase: sl()),
+    () => LicenseBloc(
+      checkLicenseStatusUseCase: sl(),
+      activateLicenseUseCase: sl(),
+    ),
   );
 
   // ==========================================
   // Features: Auth
   // ==========================================
   sl.registerLazySingleton<AuthLocalDataSource>(
-    () => AuthLocalDataSourceImpl(dbHelper: sl()),
+    () => AuthLocalDataSourceImpl(databaseHelper: sl(), secureStorage: sl()),
   );
   sl.registerLazySingleton<AuthRepository>(
     () => AuthRepositoryImpl(localDataSource: sl()),
@@ -142,8 +160,7 @@ Future<void> init() async {
   sl.registerLazySingleton(() => AddItemUseCase(sl()));
   sl.registerLazySingleton(() => UpdateItemUseCase(sl()));
   sl.registerLazySingleton(() => DeleteItemUseCase(sl()));
-  
-  // تصحيح الباراميترات لتتطابق مع menu_bloc.dart
+
   sl.registerFactory(
     () => MenuBloc(
       getCategories: sl(),
@@ -167,13 +184,9 @@ Future<void> init() async {
     () => PosRepositoryImpl(localDataSource: sl()),
   );
   sl.registerLazySingleton(() => SaveOrderUseCase(sl()));
-  
-  // تصحيح الباراميترات لتتطابق مع pos_bloc.dart
+
   sl.registerFactory(
-    () => PosBloc(
-      saveOrderUseCase: sl(),
-      getSettingsUseCase: sl(),
-    ),
+    () => PosBloc(saveOrderUseCase: sl(), getSettingsUseCase: sl()),
   );
 
   // ==========================================
@@ -188,10 +201,7 @@ Future<void> init() async {
   sl.registerLazySingleton(() => GetSettingsUseCase(sl()));
   sl.registerLazySingleton(() => UpdateSettingsUseCase(sl()));
   sl.registerFactory(
-    () => SettingsBloc(
-      getSettingsUseCase: sl(),
-      updateSettingsUseCase: sl(),
-    ),
+    () => SettingsBloc(getSettingsUseCase: sl(), updateSettingsUseCase: sl()),
   );
 
   // ==========================================
@@ -206,10 +216,7 @@ Future<void> init() async {
   sl.registerLazySingleton(() => GetZReportUseCase(sl()));
   sl.registerLazySingleton(() => CloseShiftUseCase(sl()));
   sl.registerFactory(
-    () => ShiftBloc(
-      getZReportUseCase: sl(),
-      closeShiftUseCase: sl(),
-    ),
+    () => ShiftBloc(getZReportUseCase: sl(), closeShiftUseCase: sl()),
   );
 
   // ==========================================
@@ -224,10 +231,7 @@ Future<void> init() async {
   sl.registerLazySingleton(() => GetOrdersUseCase(sl()));
   sl.registerLazySingleton(() => RefundOrderUseCase(sl()));
   sl.registerFactory(
-    () => OrdersBloc(
-      getOrdersUseCase: sl(),
-      refundOrderUseCase: sl(),
-    ),
+    () => OrdersBloc(getOrdersUseCase: sl(), refundOrderUseCase: sl()),
   );
 
   // ==========================================

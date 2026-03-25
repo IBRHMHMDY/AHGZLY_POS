@@ -1,8 +1,7 @@
 import 'package:dartz/dartz.dart';
-import 'package:ahgzly_pos/core/error/failures.dart';
-import 'package:ahgzly_pos/features/license/domain/entities/license.dart';
+import '../../../../core/error/failures.dart';
 
 abstract class LicenseRepository {
-  Future<Either<Failure, License>> checkLicenseStatus();
-  Future<Either<Failure, void>> activateLicense(String licenseKey);
+  Future<Either<Failure, String?>> getSavedLicense();
+  Future<Either<Failure, void>> activateLicense(String secureLicenseKey);
 }

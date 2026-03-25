@@ -1,6 +1,6 @@
+import 'package:go_router/go_router.dart';
 import 'package:ahgzly_pos/features/auth/presentation/pages/login_screen.dart';
 import 'package:ahgzly_pos/features/splash/presentation/pages/splash_screen.dart';
-import 'package:go_router/go_router.dart';
 import 'package:ahgzly_pos/features/license/presentation/pages/license_screen.dart';
 import 'package:ahgzly_pos/features/pos/presentation/pages/pos_screen.dart';
 import 'package:ahgzly_pos/features/menu/presentation/pages/menu_screen.dart';
@@ -10,44 +10,64 @@ import 'package:ahgzly_pos/features/expenses/presentation/pages/expenses_screen.
 import 'package:ahgzly_pos/features/settings/presentation/pages/settings_screen.dart';
 
 class AppRouter {
+  // --------------------------------------------------------
+  // 1. Route Constants (Type-Safe Paths)
+  // --------------------------------------------------------
+  static const String splashPath = '/';
+  static const String licensePath = '/license';
+  static const String loginPath = '/login';
+  static const String posPath = '/pos';
+  static const String menuPath = '/menu';
+  static const String ordersPath = '/orders';
+  static const String shiftPath = '/shift';
+  static const String expensesPath = '/expenses';
+  static const String settingsPath = '/settings';
+
+  // --------------------------------------------------------
+  // 2. Router Configuration
+  // --------------------------------------------------------
   static GoRouter getRouter() {
     return GoRouter(
-      initialLocation: '/',
+      initialLocation: splashPath,
       routes: [
         GoRoute(
-          path: '/',
+          path: splashPath,
           builder: (context, state) => const SplashScreen(),
         ),
         GoRoute(
-          path: '/license',
-          builder: (context, state) => const LicenseScreen(),
+          path: licensePath,
+          builder: (context, state) {
+            // استقبال رسالة الخطأ (إن وجدت) من الـ extra parameter
+            final errorMessage = state.extra as String?;
+            return LicenseScreen(errorMessage: errorMessage);
+          },
         ),
         GoRoute(
-          path: '/login',
+          path: loginPath,
           builder: (context, state) => const LoginScreen(),
         ),
         GoRoute(
-          path: '/pos',
+          path: posPath,
           builder: (context, state) => const PosScreen(),
         ),
         GoRoute(
-          path: '/menu',
+          path: menuPath,
           builder: (context, state) => const MenuScreen(),
         ),
         GoRoute(
-          path: '/orders',
+          path: ordersPath,
           builder: (context, state) => const OrdersScreen(),
         ),
         GoRoute(
-          path: '/shift',
+          path: shiftPath,
           builder: (context, state) => const ShiftReportScreen(),
         ),
         GoRoute(
-          path: '/expenses',
+          path: expensesPath,
           builder: (context, state) => const ExpensesScreen(),
         ),
         GoRoute(
-          path: '/settings',
+          path: settingsPath,
           builder: (context, state) => const SettingsScreen(),
         ),
       ],

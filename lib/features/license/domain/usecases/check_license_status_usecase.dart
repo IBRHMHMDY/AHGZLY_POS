@@ -1,16 +1,54 @@
 import 'package:dartz/dartz.dart';
-import 'package:ahgzly_pos/core/error/failures.dart';
-import 'package:ahgzly_pos/core/usecases/usecase.dart';
-import 'package:ahgzly_pos/features/license/domain/entities/license.dart';
-import 'package:ahgzly_pos/features/license/domain/repositories/license_repository.dart';
+import '../../../../core/error/failures.dart';
+import '../../../../core/services/security/crypto_service.dart';
+import '../../../../core/services/security/device_security_service.dart';
+import '../../../../core/services/security/time_guard_service.dart';
+import '../repositories/license_repository.dart';
 
-class CheckLicenseStatusUseCase implements UseCase<License, NoParams> {
+class CheckLicenseStatusUseCase {
   final LicenseRepository repository;
+  final CryptoService cryptoService;
+  final DeviceSecurityService deviceSecurityService;
+  final TimeGuardService timeGuardService;
 
-  CheckLicenseStatusUseCase(this.repository);
+  CheckLicenseStatusUseCase({
+    required this.repository,
+    required this.cryptoService,
+    required this.deviceSecurityService,
+    required this.timeGuardService,
+  });
 
-  @override
-  Future<Either<Failure, License>> call(NoParams params) async {
-    return await repository.checkLicenseStatus();
+  Future<Either<Failure, bool>> execute() async {
+    final isTampered = await timeGuardService.isTimeTampered();
+    if (isTampered) {
+      return const Left(SecurityFailure('تم اكتشاف تلاعب في وقت النظام. تم إيقاف الترخيص أمنياً.'));
+    }
+
+    final encodedLicenseEither = await repository.getSavedLicense();
+    return encodedLicenseEither.fold(
+      (failure) => Left(failure),
+      (encodedLicense) async {
+        if (encodedLicense == null || encodedLicense.isEmpty) {
+          return const Right(false); 
+        }
+
+        final payload = cryptoService.decodeAndVerifyLicense(encodedLicense);
+        if (payload == null) {
+          return const Left(SecurityFailure('بيانات الترخيص غير صالحة أو تم التلاعب بها.'));
+        }
+
+        final currentDeviceId = await deviceSecurityService.getUniqueDeviceId();
+        if (payload['device_id'] != currentDeviceId) {
+          return const Left(SecurityFailure('هذا الترخيص مخصص لجهاز آخر ولا يمكن استخدامه هنا.'));
+        }
+
+        final expiryDate = DateTime.parse(payload['expiry_date']);
+        if (DateTime.now().isAfter(expiryDate)) {
+          return const Left(LicenseExpiredFailure('لقد انتهت صلاحية الترخيص الخاص بك. يرجى التجديد.'));
+        }
+
+        return const Right(true);
+      },
+    );
   }
 }

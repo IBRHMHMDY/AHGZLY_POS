@@ -1,13 +1,12 @@
-import 'dart:io'; // ⬅️ إضافة هامة للتعامل مع أوامر النظام
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:ahgzly_pos/features/auth/presentation/bloc/auth_bloc.dart';
-import 'package:ahgzly_pos/features/auth/presentation/bloc/auth_event.dart';
-import 'package:ahgzly_pos/features/auth/presentation/bloc/auth_state.dart';
+import '../../../../core/routing/app_router.dart';
+import '../bloc/auth_bloc.dart';
+import '../bloc/auth_event.dart';
+import '../bloc/auth_state.dart';
 
 class LoginScreen extends StatefulWidget {
-  // تم إزالة باراميترات الترخيص لأنها أصبحت مسؤولية شاشة Splash
   const LoginScreen({super.key});
 
   @override
@@ -16,194 +15,139 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   String _pin = '';
+  static const int _maxPinLength = 6;
 
-  // 🪄 نافذة تأكيد الإغلاق (في حال أراد الخروج قبل تسجيل الدخول)
-  void _showExitConfirmation(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Row(
-          children: [
-            Icon(Icons.power_settings_new, color: Colors.red, size: 28),
-            SizedBox(width: 8),
-            Text('إغلاق النظام', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
-          ],
-        ),
-        content: const Text(
-          'هل أنت متأكد من أنك تريد إغلاق البرنامج بالكامل؟',
-          style: TextStyle(fontSize: 16),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('إلغاء', style: TextStyle(color: Colors.grey, fontSize: 16, fontWeight: FontWeight.bold)),
-          ),
-          ElevatedButton.icon(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            ),
-            icon: const Icon(Icons.exit_to_app),
-            label: const Text('تأكيد الإغلاق', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-            onPressed: () => exit(0),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _onKeypadTap(String value) {
-    if (_pin.length < 4) {
-      setState(() => _pin += value);
-      if (_pin.length == 4) {
-        context.read<AuthBloc>().add(LoginEvent(pin: _pin)); // تم التصحيح لتمرير الباراميتر المسمى pin
-      }
+  void _onKeypadPressed(String value) {
+    if (_pin.length < _maxPinLength) {
+      setState(() {
+        _pin += value;
+      });
     }
   }
 
-  void _onBackspaceTap() {
+  void _onDeletePressed() {
     if (_pin.isNotEmpty) {
-      setState(() => _pin = _pin.substring(0, _pin.length - 1));
+      setState(() {
+        _pin = _pin.substring(0, _pin.length - 1);
+      });
+    }
+  }
+
+  void _onSubmit() {
+    if (_pin.isNotEmpty) {
+      context.read<AuthBloc>().add(LoginSubmittedEvent(pin: _pin));
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey.shade100,
-      // 🪄 إضافة زر عائم لإغلاق البرنامج من شاشة الدخول
-      floatingActionButton: FloatingActionButton.extended(
-        backgroundColor: Colors.red.shade50,
-        foregroundColor: Colors.red,
-        elevation: 0,
-        icon: const Icon(Icons.power_settings_new),
-        label: const Text('إغلاق البرنامج', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-        onPressed: () => _showExitConfirmation(context),
-      ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.startFloat, // وضعه في أسفل اليسار
-      body: BlocListener<AuthBloc, AuthState>(
+      backgroundColor: Colors.grey[100],
+      body: BlocConsumer<AuthBloc, AuthState>(
         listener: (context, state) {
           if (state is AuthAuthenticated) {
-            context.go('/pos');
+            context.go(AppRouter.posPath);
           } else if (state is AuthError) {
-            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(state.message), backgroundColor: Colors.red));
-            setState(() => _pin = '');
+            // مسح الـ PIN عند الخطأ
+            setState(() { _pin = ''; });
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(state.message), backgroundColor: Colors.red),
+            );
           }
         },
-        child: Center(
-          child: SingleChildScrollView(
+        builder: (context, state) {
+          return Center(
             child: Container(
-              constraints: const BoxConstraints(maxWidth: 450),
-              margin: const EdgeInsets.all(16),
-              padding: const EdgeInsets.all(40),
+              width: 400,
+              padding: const EdgeInsets.all(32),
               decoration: BoxDecoration(
                 color: Colors.white,
-                borderRadius: BorderRadius.circular(24),
-                boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 20, offset: const Offset(0, 10))],
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 20, spreadRadius: 5),
+                ],
               ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(color: Colors.teal.shade50, shape: BoxShape.circle),
-                    child: const Icon(Icons.lock_outline, size: 64, color: Colors.teal),
+                  const Icon(Icons.lock_person, size: 64, color: Colors.blueAccent),
+                  const SizedBox(height: 16),
+                  const Text(
+                    'Enter PIN',
+                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                   ),
+                  const SizedBox(height: 32),
+                  
+                  // حقل عرض الـ PIN (نقاط مخفية)
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: List.generate(_maxPinLength, (index) {
+                      return Container(
+                        margin: const EdgeInsets.symmetric(horizontal: 8),
+                        width: 20,
+                        height: 20,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: index < _pin.length ? Colors.blueAccent : Colors.grey[300],
+                        ),
+                      );
+                    }),
+                  ),
+                  const SizedBox(height: 40),
+
+                  // لوحة الأرقام (Numpad)
+                  GridView.count(
+                    shrinkWrap: true,
+                    crossAxisCount: 3,
+                    childAspectRatio: 1.5,
+                    mainAxisSpacing: 16,
+                    crossAxisSpacing: 16,
+                    physics: const NeverScrollableScrollPhysics(),
+                    children: [
+                      _buildNumpadButton('1'), _buildNumpadButton('2'), _buildNumpadButton('3'),
+                      _buildNumpadButton('4'), _buildNumpadButton('5'), _buildNumpadButton('6'),
+                      _buildNumpadButton('7'), _buildNumpadButton('8'), _buildNumpadButton('9'),
+                      _buildIconButton(Icons.backspace_outlined, _onDeletePressed, Colors.redAccent),
+                      _buildNumpadButton('0'),
+                      _buildIconButton(Icons.check, _onSubmit, Colors.green),
+                    ],
+                  ),
+                  
                   const SizedBox(height: 24),
-                  const Text('تسجيل الدخول', style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.black87)),
-                  const SizedBox(height: 8),
-                  const Text('أدخل الرمز السري (PIN) للمتابعة', style: TextStyle(fontSize: 16, color: Colors.grey), textAlign: TextAlign.center),
-                  const SizedBox(height: 40),
-                  
-                  _PinIndicatorWidget(pinLength: _pin.length),
-                  const SizedBox(height: 40),
-                  
-                  Directionality(
-                    textDirection: TextDirection.ltr,
-                    child: _NumpadWidget(onKeypadTap: _onKeypadTap, onBackspaceTap: _onBackspaceTap),
-                  ),
+                  if (state is AuthLoading)
+                    const CircularProgressIndicator(),
                 ],
               ),
             ),
-          ),
-        ),
+          );
+        },
       ),
     );
   }
-}
 
-class _PinIndicatorWidget extends StatelessWidget {
-  final int pinLength;
-  const _PinIndicatorWidget({required this.pinLength});
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: List.generate(4, (index) {
-        final isActive = index < pinLength;
-        return AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          margin: const EdgeInsets.symmetric(horizontal: 12),
-          width: 24, height: 24,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: isActive ? Colors.teal : Colors.grey.shade200,
-            border: Border.all(color: isActive ? Colors.teal : Colors.grey.shade300, width: 2),
-            boxShadow: isActive ? [BoxShadow(color: Colors.teal.withOpacity(0.4), blurRadius: 8, offset: const Offset(0, 4))] : [],
-          ),
-        );
-      }),
-    );
-  }
-}
-
-class _NumpadWidget extends StatelessWidget {
-  final Function(String) onKeypadTap;
-  final VoidCallback onBackspaceTap;
-  const _NumpadWidget({required this.onKeypadTap, required this.onBackspaceTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: [_buildKey('1'), _buildKey('2'), _buildKey('3')]),
-        const SizedBox(height: 20),
-        Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: [_buildKey('4'), _buildKey('5'), _buildKey('6')]),
-        const SizedBox(height: 20),
-        Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: [_buildKey('7'), _buildKey('8'), _buildKey('9')]),
-        const SizedBox(height: 20),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [
-            const SizedBox(width: 80),
-            _buildKey('0'),
-            SizedBox(
-              width: 80, height: 80,
-              child: IconButton(icon: const Icon(Icons.backspace_outlined, size: 32, color: Colors.redAccent), onPressed: onBackspaceTap),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-
-  Widget _buildKey(String number) {
-    return InkWell(
-      onTap: () => onKeypadTap(number),
-      borderRadius: BorderRadius.circular(40),
-      child: Container(
-        width: 80, height: 80,
-        alignment: Alignment.center,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle, color: Colors.grey.shade50,
-          border: Border.all(color: Colors.grey.shade200),
-          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 4, offset: const Offset(0, 2))],
-        ),
-        child: Text(number, style: const TextStyle(fontSize: 32, fontWeight: FontWeight.w600, color: Colors.black87)),
+  Widget _buildNumpadButton(String number) {
+    return ElevatedButton(
+      onPressed: () => _onKeypadPressed(number),
+      style: ElevatedButton.styleFrom(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        backgroundColor: Colors.grey[50],
+        foregroundColor: Colors.black87,
+        elevation: 1,
       ),
+      child: Text(number, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+    );
+  }
+
+  Widget _buildIconButton(IconData icon, VoidCallback onPressed, Color color) {
+    return ElevatedButton(
+      onPressed: onPressed,
+      style: ElevatedButton.styleFrom(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        backgroundColor: color.withOpacity(0.1),
+        foregroundColor: color,
+        elevation: 0,
+      ),
+      child: Icon(icon, size: 28),
     );
   }
 }

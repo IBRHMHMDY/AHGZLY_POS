@@ -1,5 +1,4 @@
 import 'package:flutter/foundation.dart';
-import 'package:ahgzly_pos/features/license/domain/entities/license.dart';
 
 @immutable
 abstract class LicenseState {}
@@ -8,14 +7,12 @@ class LicenseInitial extends LicenseState {}
 
 class LicenseLoading extends LicenseState {}
 
-class LicenseValidState extends LicenseState {
-  final License license;
-  LicenseValidState({required this.license});
-}
+class LicenseValidState extends LicenseState {}
 
-class LicenseExpiredState extends LicenseState {
-  final License license;
-  LicenseExpiredState({required this.license});
+// تم دمج حالات الانتهاء والتلاعب في حالة واحدة للرفض مع تمرير السبب
+class LicenseInvalidState extends LicenseState {
+  final String message;
+  LicenseInvalidState({required this.message});
 }
 
 class LicenseActivationSuccessState extends LicenseState {}

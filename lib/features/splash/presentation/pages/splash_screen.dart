@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:ahgzly_pos/features/license/presentation/bloc/license_bloc.dart';
-import 'package:ahgzly_pos/features/license/presentation/bloc/license_event.dart';
-import 'package:ahgzly_pos/features/license/presentation/bloc/license_state.dart';
+import '../../../../core/routing/app_router.dart';
+import '../../../license/presentation/bloc/license_bloc.dart';
+import '../../../license/presentation/bloc/license_event.dart';
+import '../../../license/presentation/bloc/license_state.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -16,44 +17,35 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
     super.initState();
-    // إرسال حدث فحص الترخيص بمجرد فتح التطبيق
+    // بدء عملية فحص سلامة النظام والترخيص فور فتح التطبيق
     context.read<LicenseBloc>().add(CheckLicenseEvent());
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.teal,
-      body: BlocListener<LicenseBloc, LicenseState>(
-        listener: (context, state) {
-          if (state is LicenseValidState) {
-            // الترخيص ساري أو مفعل -> التوجيه لشاشة تسجيل الدخول
-            context.go('/login');
-          } else if (state is LicenseExpiredState) {
-            // الترخيص منتهي أو غير مفعل -> التوجيه لشاشة التفعيل
-            context.go('/license');
-          } else if (state is LicenseErrorState) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(state.message), backgroundColor: Colors.red),
-            );
-          }
-        },
-        child: const Center(
+    return BlocListener<LicenseBloc, LicenseState>(
+      listener: (context, state) {
+        if (state is LicenseValidState) {
+          // الترخيص صالح والنظام آمن -> توجيه لشاشة الدخول/الكاشير
+          context.go(AppRouter.loginPath); 
+        } else if (state is LicenseInvalidState) {
+          // تم اكتشاف تلاعب، أو انتهى الترخيص -> توجيه إجباري لشاشة التفعيل مع تمرير السبب
+          context.go(AppRouter.licensePath, extra: state.message);
+        }
+      },
+      child: Scaffold(
+        body: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.point_of_sale, size: 100, color: Colors.white),
-              SizedBox(height: 24),
+              const Icon(Icons.point_of_sale, size: 100, color: Colors.blueAccent),
+              const SizedBox(height: 24),
+              const CircularProgressIndicator(),
+              const SizedBox(height: 16),
               Text(
-                'Ahgzly POS',
-                style: TextStyle(
-                  fontSize: 32,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
+                'Verifying System Integrity...',
+                style: Theme.of(context).textTheme.titleMedium,
               ),
-              SizedBox(height: 24),
-              CircularProgressIndicator(color: Colors.white),
             ],
           ),
         ),

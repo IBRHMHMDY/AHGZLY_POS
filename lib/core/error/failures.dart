@@ -1,3 +1,4 @@
+// lib/core/error/failures.dart
 import 'package:equatable/equatable.dart';
 
 abstract class Failure extends Equatable {
@@ -15,4 +16,17 @@ class DatabaseFailure extends Failure {
 
 class CacheFailure extends Failure {
   const CacheFailure(super.message);
+}
+
+class LicenseExpiredFailure extends Failure {
+  const LicenseExpiredFailure(super.message);
+}
+
+class SecurityFailure extends Failure {
+  const SecurityFailure(super.message);
+}
+
+// تمت إضافة هذا الكلاس ليتوافق مع نظام الـ Auth الذي بنيناه
+class AuthFailure extends Failure {
+  const AuthFailure(super.message);
 }
