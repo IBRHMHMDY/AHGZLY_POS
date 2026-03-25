@@ -1,3 +1,5 @@
+import 'package:ahgzly_pos/features/shift/domain/usecases/check_active_shift_usecase.dart';
+import 'package:ahgzly_pos/features/shift/domain/usecases/open_shift_usecase.dart';
 import 'package:get_it/get_it.dart';
 
 // ==========================================
@@ -66,7 +68,6 @@ import 'package:ahgzly_pos/features/shift/data/datasources/shift_local_data_sour
 import 'package:ahgzly_pos/features/shift/data/repositories/shift_repository_impl.dart';
 import 'package:ahgzly_pos/features/shift/domain/repositories/shift_repository.dart';
 import 'package:ahgzly_pos/features/shift/domain/usecases/close_shift_usecase.dart';
-import 'package:ahgzly_pos/features/shift/domain/usecases/get_z_report_usecase.dart';
 import 'package:ahgzly_pos/features/shift/presentation/bloc/shift_bloc.dart';
 
 // ==========================================
@@ -207,16 +208,22 @@ Future<void> init() async {
   // ==========================================
   // Features: Shift
   // ==========================================
-  sl.registerLazySingleton<ShiftLocalDataSource>(
+sl.registerLazySingleton<ShiftLocalDataSource>(
     () => ShiftLocalDataSourceImpl(databaseHelper: sl()),
   );
   sl.registerLazySingleton<ShiftRepository>(
     () => ShiftRepositoryImpl(localDataSource: sl()),
   );
-  sl.registerLazySingleton(() => GetZReportUseCase(sl()));
+  sl.registerLazySingleton(() => CheckActiveShiftUseCase(sl()));
+  sl.registerLazySingleton(() => OpenShiftUseCase(sl()));
   sl.registerLazySingleton(() => CloseShiftUseCase(sl()));
+  
   sl.registerFactory(
-    () => ShiftBloc(getZReportUseCase: sl(), closeShiftUseCase: sl()),
+    () => ShiftBloc(
+      checkActiveShiftUseCase: sl(), 
+      openShiftUseCase: sl(),
+      closeShiftUseCase: sl()
+    ),
   );
 
   // ==========================================

@@ -1,9 +1,10 @@
-import 'package:dartz/dartz.dart';
+import 'package:ahgzly_pos/core/error/exceptions.dart';
 import 'package:ahgzly_pos/core/error/failures.dart';
 import 'package:ahgzly_pos/features/shift/data/datasources/shift_local_data_source.dart';
-import 'package:ahgzly_pos/features/shift/domain/entities/shift_report.dart';
+import 'package:ahgzly_pos/features/shift/domain/entities/shift.dart';
 import 'package:ahgzly_pos/features/shift/domain/repositories/shift_repository.dart';
-import 'package:ahgzly_pos/features/shift/data/models/shift_report_model.dart';
+import 'package:dartz/dartz.dart';
+
 
 class ShiftRepositoryImpl implements ShiftRepository {
   final ShiftLocalDataSource localDataSource;
@@ -11,23 +12,38 @@ class ShiftRepositoryImpl implements ShiftRepository {
   ShiftRepositoryImpl({required this.localDataSource});
 
   @override
-  Future<Either<Failure, ShiftReport>> getZReport() async {
+  Future<Either<Failure, Shift?>> getActiveShift() async {
     try {
-      final report = await localDataSource.getZReport();
-      return Right(report);
+      final shift = await localDataSource.getActiveShift();
+      return Right(shift);
+    } on CacheException catch (e) {
+      return Left(CacheFailure(e.message));
     } catch (e) {
-      return Left(DatabaseFailure('فشل في جلب تقرير الوردية'));
+      return const Left(CacheFailure('حدث خطأ أثناء جلب حالة الوردية.'));
     }
   }
 
   @override
-  Future<Either<Failure, int>> closeShift(ShiftReport report) async {
+  Future<Either<Failure, Shift>> openShift({required double startingCash, required int cashierId}) async {
     try {
-      // استقبال الـ ID وإرجاعه
-      final id = await localDataSource.closeShift(ShiftReportModel.fromEntity(report));
-      return Right(id);
+      final shift = await localDataSource.openShift(startingCash: startingCash, cashierId: cashierId);
+      return Right(shift);
+    } on CacheException catch (e) {
+      return Left(CacheFailure(e.message));
     } catch (e) {
-      return Left(DatabaseFailure('فشل في إغلاق الوردية'));
+      return const Left(CacheFailure('فشل في فتح الوردية.'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, Shift>> closeShift({required int shiftId, required double actualCash}) async {
+    try {
+      final shift = await localDataSource.closeShift(shiftId: shiftId, actualCash: actualCash);
+      return Right(shift);
+    } on CacheException catch (e) {
+      return Left(CacheFailure(e.message));
+    } catch (e) {
+      return const Left(CacheFailure('فشل في إغلاق الوردية.'));
     }
   }
 }

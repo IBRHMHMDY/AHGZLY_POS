@@ -1,33 +1,30 @@
-import 'package:equatable/equatable.dart';
-import 'package:ahgzly_pos/features/shift/domain/entities/shift_report.dart';
+import 'package:flutter/foundation.dart';
+import '../../domain/entities/shift.dart';
 
-abstract class ShiftState extends Equatable {
-  const ShiftState();
-  @override
-  List<Object> get props => [];
-}
+@immutable
+abstract class ShiftState {}
 
 class ShiftInitial extends ShiftState {}
-
 class ShiftLoading extends ShiftState {}
 
-class ZReportLoaded extends ShiftState {
-  final ShiftReport report;
-  const ZReportLoaded(this.report);
-  @override
-  List<Object> get props => [report];
+class ActiveShiftLoaded extends ShiftState {
+  final Shift shift;
+  ActiveShiftLoaded({required this.shift});
+}
+
+class NoActiveShiftState extends ShiftState {}
+
+class ShiftOpenedSuccess extends ShiftState {
+  final Shift shift;
+  ShiftOpenedSuccess({required this.shift});
 }
 
 class ShiftClosedSuccess extends ShiftState {
-  final String message;
-  const ShiftClosedSuccess(this.message);
-  @override
-  List<Object> get props => [message];
+  final Shift closedShift; // يمكن استخدامها لطباعة الزي ريبورت Z-Report فور الإغلاق
+  ShiftClosedSuccess({required this.closedShift});
 }
 
 class ShiftError extends ShiftState {
   final String message;
-  const ShiftError(this.message);
-  @override
-  List<Object> get props => [message];
+  ShiftError({required this.message});
 }

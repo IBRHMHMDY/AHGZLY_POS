@@ -1,8 +1,9 @@
 import 'package:dartz/dartz.dart';
-import 'package:ahgzly_pos/core/error/failures.dart';
-import 'package:ahgzly_pos/features/shift/domain/entities/shift_report.dart';
+import '../../../../core/error/failures.dart';
+import '../entities/shift.dart';
 
 abstract class ShiftRepository {
-  Future<Either<Failure, ShiftReport>> getZReport();
-  Future<Either<Failure, int>> closeShift(ShiftReport report);
+  Future<Either<Failure, Shift?>> getActiveShift();
+  Future<Either<Failure, Shift>> openShift({required double startingCash, required int cashierId});
+  Future<Either<Failure, Shift>> closeShift({required int shiftId, required double actualCash});
 }

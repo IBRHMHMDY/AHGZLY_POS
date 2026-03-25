@@ -1,44 +1,70 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
-class CloseShiftDialog extends StatelessWidget {
-  final VoidCallback onConfirm;
+class CloseShiftDialog extends StatefulWidget {
+  const CloseShiftDialog({super.key});
 
-  const CloseShiftDialog({super.key, required this.onConfirm});
+  @override
+  State<CloseShiftDialog> createState() => _CloseShiftDialogState();
+}
+
+class _CloseShiftDialogState extends State<CloseShiftDialog> {
+  final TextEditingController _actualCashController = TextEditingController();
+
+  void _submit() {
+    final text = _actualCashController.text.trim();
+    if (text.isEmpty) return;
+
+    final actualCash = double.tryParse(text);
+    if (actualCash != null && actualCash >= 0) {
+      Navigator.of(context).pop(actualCash); // نُرجع القيمة للشاشة الرئيسية
+    }
+  }
+
+  @override
+  void dispose() {
+    _actualCashController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       title: const Row(
         children: [
-          Icon(Icons.warning_amber_rounded, color: Colors.red, size: 28),
+          Icon(Icons.lock_clock, color: Colors.redAccent),
           SizedBox(width: 8),
-          Text('تأكيد إغلاق الوردية', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
+          Text('إغلاق الوردية'),
         ],
       ),
-      content: const Text(
-        'هل أنت متأكد من إغلاق الوردية وتصفير العدادات لليوم الجديد؟\nسيتم طباعة التقرير النهائي (Z-Report) تلقائياً قبل التصفير.', 
-        style: TextStyle(fontSize: 16, height: 1.5)
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Text('الرجاء عدّ النقدية الموجودة في الدرج حالياً وكتابة المبلغ الإجمالي (النقدية الفعلية).'),
+          const SizedBox(height: 16),
+          TextField(
+            controller: _actualCashController,
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}'))],
+            decoration: const InputDecoration(
+              labelText: 'النقدية الفعلية في الدرج (EGP)',
+              border: OutlineInputBorder(),
+              prefixIcon: Icon(Icons.money),
+            ),
+            autofocus: true,
+            onSubmitted: (_) => _submit(),
+          ),
+        ],
       ),
-      actionsPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       actions: [
         TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: const Text('إلغاء', style: TextStyle(color: Colors.grey, fontSize: 16)),
+          onPressed: () => Navigator.of(context).pop(), // User canceled
+          child: const Text('إلغاء', style: TextStyle(color: Colors.grey)),
         ),
-        ElevatedButton.icon(
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.red,
-            foregroundColor: Colors.white,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          ),
-          icon: const Icon(Icons.lock_clock),
-          label: const Text('تأكيد الإغلاق والطباعة', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-          onPressed: () {
-            Navigator.pop(context); // إغلاق النافذة أولاً
-            onConfirm(); // تنفيذ دالة الإغلاق والطباعة
-          },
+        ElevatedButton(
+          onPressed: _submit,
+          style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent, foregroundColor: Colors.white),
+          child: const Text('تأكيد وإغلاق'),
         ),
       ],
     );

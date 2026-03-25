@@ -8,6 +8,8 @@ import 'package:ahgzly_pos/features/orders/presentation/pages/orders_screen.dart
 import 'package:ahgzly_pos/features/shift/presentation/pages/shift_report_screen.dart';
 import 'package:ahgzly_pos/features/expenses/presentation/pages/expenses_screen.dart';
 import 'package:ahgzly_pos/features/settings/presentation/pages/settings_screen.dart';
+// تم إضافة استيراد شاشة فتح الوردية
+import 'package:ahgzly_pos/features/shift/presentation/pages/open_shift_screen.dart';
 
 class AppRouter {
   // --------------------------------------------------------
@@ -16,6 +18,7 @@ class AppRouter {
   static const String splashPath = '/';
   static const String licensePath = '/license';
   static const String loginPath = '/login';
+  static const String openShiftPath = '/open-shift'; // تمت الإضافة هنا
   static const String posPath = '/pos';
   static const String menuPath = '/menu';
   static const String ordersPath = '/orders';
@@ -37,7 +40,6 @@ class AppRouter {
         GoRoute(
           path: licensePath,
           builder: (context, state) {
-            // استقبال رسالة الخطأ (إن وجدت) من الـ extra parameter
             final errorMessage = state.extra as String?;
             return LicenseScreen(errorMessage: errorMessage);
           },
@@ -45,6 +47,14 @@ class AppRouter {
         GoRoute(
           path: loginPath,
           builder: (context, state) => const LoginScreen(),
+        ),
+        // تمت إضافة مسار الوردية الافتتاحية مع تمرير الـ ID
+        GoRoute(
+          path: openShiftPath, 
+          builder: (context, state) {
+            final cashierId = state.extra as int? ?? 1; // الافتراضي 1
+            return OpenShiftScreen(cashierId: cashierId);
+          }
         ),
         GoRoute(
           path: posPath,

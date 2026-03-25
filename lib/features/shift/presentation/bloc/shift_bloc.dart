@@ -1,34 +1,58 @@
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:ahgzly_pos/core/usecases/usecase.dart';
-import 'package:ahgzly_pos/features/shift/domain/usecases/get_z_report_usecase.dart';
+import 'package:ahgzly_pos/features/shift/domain/usecases/check_active_shift_usecase.dart';
 import 'package:ahgzly_pos/features/shift/domain/usecases/close_shift_usecase.dart';
-import 'shift_event.dart';
-import 'shift_state.dart';
+import 'package:ahgzly_pos/features/shift/domain/usecases/open_shift_usecase.dart';
+import 'package:ahgzly_pos/features/shift/presentation/bloc/shift_event.dart';
+import 'package:ahgzly_pos/features/shift/presentation/bloc/shift_state.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+
 
 class ShiftBloc extends Bloc<ShiftEvent, ShiftState> {
-  final GetZReportUseCase getZReportUseCase;
+  final CheckActiveShiftUseCase checkActiveShiftUseCase;
+  final OpenShiftUseCase openShiftUseCase;
   final CloseShiftUseCase closeShiftUseCase;
 
   ShiftBloc({
-    required this.getZReportUseCase,
+    required this.checkActiveShiftUseCase,
+    required this.openShiftUseCase,
     required this.closeShiftUseCase,
   }) : super(ShiftInitial()) {
     
-    on<LoadZReportEvent>((event, emit) async {
+    on<CheckActiveShiftEvent>((event, emit) async {
       emit(ShiftLoading());
-      final failureOrReport = await getZReportUseCase(NoParams());
-      failureOrReport.fold(
-        (failure) => emit(ShiftError(failure.message)),
-        (report) => emit(ZReportLoaded(report)),
+      final result = await checkActiveShiftUseCase.execute();
+      result.fold(
+        (failure) => emit(ShiftError(message: failure.message)),
+        (shift) {
+          if (shift != null) {
+            emit(ActiveShiftLoaded(shift: shift));
+          } else {
+            emit(NoActiveShiftState());
+          }
+        },
       );
     });
 
-    on<CloseCurrentShiftEvent>((event, emit) async {
+    on<OpenShiftSubmittedEvent>((event, emit) async {
       emit(ShiftLoading());
-      final failureOrSuccess = await closeShiftUseCase(event.report);
-      failureOrSuccess.fold(
-        (failure) => emit(ShiftError(failure.message)),
-        (shiftId) => emit(const ShiftClosedSuccess('تم إغلاق الوردية وتصفير الصندوق بنجاح')),
+      final result = await openShiftUseCase.execute(
+        startingCash: event.startingCash, 
+        cashierId: event.cashierId
+      );
+      result.fold(
+        (failure) => emit(ShiftError(message: failure.message)),
+        (shift) => emit(ShiftOpenedSuccess(shift: shift)),
+      );
+    });
+
+    on<CloseShiftSubmittedEvent>((event, emit) async {
+      emit(ShiftLoading());
+      final result = await closeShiftUseCase.execute(
+        shiftId: event.shiftId, 
+        actualCash: event.actualCash
+      );
+      result.fold(
+        (failure) => emit(ShiftError(message: failure.message)),
+        (closedShift) => emit(ShiftClosedSuccess(closedShift: closedShift)),
       );
     });
   }

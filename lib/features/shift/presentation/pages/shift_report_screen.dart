@@ -1,19 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:ahgzly_pos/core/di/dependency_injection.dart';
-import 'package:ahgzly_pos/core/services/printer_service.dart';
-import 'package:ahgzly_pos/core/usecases/usecase.dart';
-import 'package:ahgzly_pos/features/pos/presentation/widgets/receipt_widgets.dart';
-import 'package:ahgzly_pos/features/settings/domain/usecases/get_settings_usecase.dart';
-import 'package:ahgzly_pos/features/shift/domain/entities/shift_report.dart';
-import 'package:ahgzly_pos/features/shift/presentation/bloc/shift_bloc.dart';
-import 'package:ahgzly_pos/features/shift/presentation/bloc/shift_event.dart';
-import 'package:ahgzly_pos/features/shift/presentation/bloc/shift_state.dart';
-import 'package:ahgzly_pos/features/shift/presentation/widgets/close_shift_dialog.dart';
+import 'package:intl/intl.dart';
+
+// استيراد مسارات الحقن والطباعة والإعدادات
+import '../../../../core/routing/app_router.dart';
+import '../../../../core/di/dependency_injection.dart';
+import '../../../../core/usecases/usecase.dart';
+import '../../../../core/services/printer_service.dart';
+import '../../../settings/domain/usecases/get_settings_usecase.dart';
+import '../../../pos/presentation/widgets/receipt_widgets.dart';
+
+import '../../domain/entities/shift.dart';
+import '../bloc/shift_bloc.dart';
+import '../bloc/shift_event.dart';
+import '../bloc/shift_state.dart';
+import '../widgets/close_shift_dialog.dart';
 
 class ShiftReportScreen extends StatefulWidget {
-  const ShiftReportScreen({super.key});
+  const ShiftReportScreen({Key? key}) : super(key: key);
 
   @override
   State<ShiftReportScreen> createState() => _ShiftReportScreenState();
@@ -23,218 +28,218 @@ class _ShiftReportScreenState extends State<ShiftReportScreen> {
   @override
   void initState() {
     super.initState();
-    context.read<ShiftBloc>().add(LoadZReportEvent());
+    context.read<ShiftBloc>().add(CheckActiveShiftEvent());
   }
 
-  void _showConfirmationDialog(BuildContext context, ShiftReport report) {
-    showDialog(
+  void _onCloseShiftPressed(int shiftId) async {
+    final double? actualCash = await showDialog<double>(
       context: context,
       barrierDismissible: false,
-      builder: (dialogContext) => CloseShiftDialog(
-        onConfirm: () async {
-          // 1. طباعة التقرير الأخير قبل التصفير
-          final settingsResult = await sl<GetSettingsUseCase>().call(NoParams());
-          String rName = 'مـطـعـم احـجـزلـي';
-          settingsResult.fold((l) => null, (r) => rName = r.restaurantName);
-          await sl<PrinterService>().printReceiptUsb(receiptWidget: ZReportReceiptWidget(report: report, restaurantName: rName));
-          
-          // 2. إغلاق الوردية في قاعدة البيانات
-          if (context.mounted) {
-            context.read<ShiftBloc>().add(CloseCurrentShiftEvent(report));
-          }
-        },
+      builder: (context) => const CloseShiftDialog(),
+    );
+
+    if (actualCash != null && mounted) {
+      context.read<ShiftBloc>().add(
+        CloseShiftSubmittedEvent(shiftId: shiftId, actualCash: actualCash)
+      );
+    }
+  }
+
+  // --- دالة الطباعة الفعلية ---
+  void _printZReport(Shift shift) async {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('جاري تجهيز الطباعة...')),
+    );
+
+    // 1. جلب اسم المطعم من الإعدادات
+    final settingsResult = await sl<GetSettingsUseCase>().call(NoParams());
+    String restaurantName = 'مطعم احجزلي';
+    settingsResult.fold(
+      (failure) => null,
+      (settings) => restaurantName = settings.restaurantName,
+    );
+
+    // 2. تجهيز الفاتورة وإرسالها لخدمة الطباعة
+    final printerService = sl<PrinterService>();
+    final success = await printerService.printReceiptUsb(
+      receiptWidget: ZReportReceiptWidget(
+        shift: shift,
+        restaurantName: restaurantName,
       ),
     );
+
+    if (mounted) {
+      if (success) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('تم إرسال أمر الطباعة بنجاح'), backgroundColor: Colors.green),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('فشل في الطباعة، تأكد من اتصال الطابعة واسمها في الإعدادات'), 
+            backgroundColor: Colors.red,
+            duration: Duration(seconds: 4),
+          ),
+        );
+      }
+    }
   }
+  // -----------------------------
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey.shade100,
       appBar: AppBar(
-        title: const Row(
-          children: [
-            Icon(Icons.analytics),
-            SizedBox(width: 8),
-            Text('تقرير الوردية (Z-Report)', style: TextStyle(fontWeight: FontWeight.bold)),
-          ],
+        title: const Text('الوردية الحالية / Z-Report'),
+        centerTitle: true,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => context.go(AppRouter.posPath),
         ),
-        backgroundColor: Colors.teal,
-        foregroundColor: Colors.white,
       ),
       body: BlocConsumer<ShiftBloc, ShiftState>(
         listener: (context, state) {
-          if (state is ShiftClosedSuccess) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('تم إغلاق الوردية بنجاح!'), backgroundColor: Colors.green),
-            );
-            context.go('/pos');
-          } else if (state is ShiftError) {
-            ScaffoldMessenger.of(context).showSnackBar(
+          if (state is ShiftError) {
+             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(content: Text(state.message), backgroundColor: Colors.red),
             );
           }
         },
         builder: (context, state) {
-          if (state is ShiftLoading) return const Center(child: CircularProgressIndicator());
+          if (state is ShiftLoading) {
+            return const Center(child: CircularProgressIndicator());
+          }
           
-          if (state is ZReportLoaded) {
-            final report = state.report;
-            final netCash = report.totalCash - report.totalExpenses; // صافي الكاش في الدرج
+          if (state is NoActiveShiftState) {
+            return const Center(child: Text('لا توجد وردية نشطة حالياً.', style: TextStyle(fontSize: 18)));
+          }
 
+          if (state is ActiveShiftLoaded) {
+            final shift = state.shift;
             return Center(
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 800),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 24.0, horizontal: 16.0),
-                  child: Column(
-                    children: [
-                      Expanded(
-                        child: GridView.count(
-                          crossAxisCount: 2,
-                          childAspectRatio: 2.3,
-                          crossAxisSpacing: 16,
-                          mainAxisSpacing: 16,
-                          children: [
-                            _buildStatCard('إجمالي المبيعات', report.totalSales, Colors.blue, Icons.point_of_sale),
-                            _buildStatCard('إجمالي عدد الطلبات', report.totalOrders.toDouble(), Colors.grey.shade700, Icons.receipt_long, isCurrency: false),
-                            _buildStatCard('مبيعات الفيزا', report.totalVisa, Colors.orange, Icons.credit_card),
-                            _buildStatCard('مبيعات إنستاباي', report.totalInstaPay, Colors.purple, Icons.send_to_mobile),
-                            _buildStatCard('مبيعات الكاش (قبل المصروفات)', report.totalCash, Colors.teal, Icons.attach_money),
-                            _buildStatCard('المصروفات (خوارج الدرج)', report.totalExpenses, Colors.red, Icons.money_off),
-                          ],
-                        ),
-                      ),
-                      
-                      const SizedBox(height: 16),
-                      
-                      // كارت صافي النقدية بالدرج
-                      Container(
-                        padding: const EdgeInsets.all(24),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          border: Border.all(color: netCash >= 0 ? Colors.green.shade200 : Colors.red.shade200, width: 2),
-                          borderRadius: BorderRadius.circular(16),
-                          boxShadow: [
-                            BoxShadow(color: netCash >= 0 ? Colors.green.withOpacity(0.05) : Colors.red.withOpacity(0.05), blurRadius: 15, offset: const Offset(0, 5))
-                          ],
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Row(
-                              children: [
-                                Icon(Icons.account_balance_wallet, color: netCash >= 0 ? Colors.green : Colors.red, size: 32),
-                                const SizedBox(width: 12),
-                                const Text('صافي النقدية بالدرج (كاش - مصروفات):', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black87)),
-                              ],
-                            ),
-                            Text(
-                              '${netCash.toStringAsFixed(2)} ج.م',
-                              style: TextStyle(
-                                fontSize: 28,
-                                fontWeight: FontWeight.bold,
-                                color: netCash >= 0 ? Colors.green.shade700 : Colors.red.shade700,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      
-                      const SizedBox(height: 24),
-                      
-                      // أزرار الإجراءات
-                      Row(
-                        children: [
-                          Expanded(
-                            child: ElevatedButton.icon(
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.blue.shade700, 
-                                foregroundColor: Colors.white, 
-                                padding: const EdgeInsets.symmetric(vertical: 20),
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                                elevation: 4,
-                              ),
-                              icon: const Icon(Icons.print, size: 24),
-                              label: const Text('طباعة التقرير (X-Report)', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                              onPressed: report.totalOrders == 0 ? null : () async {
-                                final settingsResult = await sl<GetSettingsUseCase>().call(NoParams());
-                                String rName = 'مـطـعـم احـجـزلـي';
-                                settingsResult.fold((l) => null, (r) => rName = r.restaurantName);
-                                
-                                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('جاري طباعة التقرير...')));
-                                await sl<PrinterService>().printReceiptUsb(receiptWidget: ZReportReceiptWidget(report: report, restaurantName: rName));
-                              },
-                            ),
-                          ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: ElevatedButton.icon(
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.red.shade700, 
-                                foregroundColor: Colors.white, 
-                                padding: const EdgeInsets.symmetric(vertical: 20),
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                                elevation: 4,
-                              ),
-                              icon: const Icon(Icons.lock_clock, size: 24),
-                              label: const Text('إغلاق الوردية (Z-Report)', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                              onPressed: report.totalOrders == 0 ? null : () => _showConfirmationDialog(context, report),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.access_time_filled, size: 100, color: Colors.green),
+                  const SizedBox(height: 24),
+                  const Text('الوردية نشطة وتعمل الآن', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 8),
+                  Text('وقت الفتح: ${DateFormat('yyyy-MM-dd hh:mm a').format(shift.startTime)}'),
+                  Text('العهدة الافتتاحية: ${shift.startingCash.toStringAsFixed(2)} EGP'),
+                  const SizedBox(height: 40),
+                  ElevatedButton.icon(
+                    onPressed: () => _onCloseShiftPressed(shift.id),
+                    icon: const Icon(Icons.lock_outline),
+                    label: const Text('إنهاء وإغلاق الوردية (Z-Report)'),
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                      backgroundColor: Colors.redAccent,
+                      foregroundColor: Colors.white,
+                      textStyle: const TextStyle(fontSize: 18),
+                    ),
+                  )
+                ],
               ),
             );
           }
+
+          if (state is ShiftClosedSuccess) {
+            return _buildZReportSummary(state.closedShift);
+          }
+
           return const SizedBox.shrink();
         },
       ),
     );
   }
 
-  Widget _buildStatCard(String title, double value, Color color, IconData icon, {bool isCurrency = true}) {
-    return Card(
-      elevation: 2,
-      shadowColor: Colors.black12,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          border: Border(right: BorderSide(color: color, width: 6)),
-        ),
-        padding: const EdgeInsets.all(16.0),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: color.withOpacity(0.1),
-                shape: BoxShape.circle,
+  Widget _buildZReportSummary(Shift shift) {
+    final isShortage = shift.shortageOrOverage < 0;
+    final isOverage = shift.shortageOrOverage > 0;
+    final diffColor = isShortage ? Colors.red : (isOverage ? Colors.green : Colors.grey.shade800);
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(24.0),
+      child: Center(
+        child: Container(
+          width: 500,
+          padding: const EdgeInsets.all(24.0),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: Colors.grey.shade300),
+            boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 10)],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const Text('ملخص الوردية (Z-Report)', textAlign: TextAlign.center, style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+              const Divider(height: 32, thickness: 2),
+              
+              _buildReportRow('وقت الفتح:', DateFormat('yyyy-MM-dd hh:mm a').format(shift.startTime)),
+              if (shift.endTime != null)
+                _buildReportRow('وقت الإغلاق:', DateFormat('yyyy-MM-dd hh:mm a').format(shift.endTime!)),
+              
+              const Divider(height: 32),
+              _buildReportRow('إجمالي عدد الطلبات:', '${shift.totalOrders} طلب'),
+              _buildReportRow('العهدة الافتتاحية:', '${shift.startingCash.toStringAsFixed(2)} EGP'),
+              _buildReportRow('إجمالي المبيعات:', '${shift.totalSales.toStringAsFixed(2)} EGP'),
+              _buildReportRow('المبيعات الكاش:', '${shift.totalCash.toStringAsFixed(2)} EGP'),
+              _buildReportRow('المبيعات الفيزا:', '${shift.totalVisa.toStringAsFixed(2)} EGP'),
+              _buildReportRow('المبيعات إنستا باي:', '${shift.totalInstapay.toStringAsFixed(2)} EGP'),
+              _buildReportRow('إجمالي المصروفات:', '${shift.totalExpenses.toStringAsFixed(2)} EGP', color: Colors.red),
+              
+              const Divider(height: 32, thickness: 2),
+              _buildReportRow('النقدية المتوقعة في الدرج:', '${shift.expectedCash.toStringAsFixed(2)} EGP', isBold: true),
+              _buildReportRow('النقدية الفعلية (التي تم عدها):', '${shift.actualCash.toStringAsFixed(2)} EGP', isBold: true, color: Colors.blueAccent),
+              
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.all(12),
+                color: diffColor.withOpacity(0.1),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(isShortage ? 'عجز في الدرج:' : (isOverage ? 'زيادة في الدرج:' : 'مطابقة تامة:'), style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: diffColor)),
+                    Text('${shift.shortageOrOverage.abs().toStringAsFixed(2)} EGP', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: diffColor)),
+                  ],
+                ),
               ),
-              child: Icon(icon, color: color, size: 28),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.center,
+
+              const SizedBox(height: 32),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
-                  Text(title, style: TextStyle(fontSize: 15, color: Colors.grey.shade600, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 4),
-                  Text(
-                    isCurrency ? '${value.toStringAsFixed(2)} ج.م' : value.toInt().toString(),
-                    style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.black87),
+                  OutlinedButton.icon(
+                    onPressed: () => context.go(AppRouter.loginPath), 
+                    icon: const Icon(Icons.exit_to_app),
+                    label: const Text('خروج'),
+                  ),
+                  ElevatedButton.icon(
+                    // تم ربط زر الطباعة بالدالة الجديدة
+                    onPressed: () => _printZReport(shift),
+                    icon: const Icon(Icons.print),
+                    label: const Text('طباعة Z-Report'),
+                    style: ElevatedButton.styleFrom(backgroundColor: Colors.blueAccent, foregroundColor: Colors.white),
                   ),
                 ],
-              ),
-            ),
-          ],
+              )
+            ],
+          ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildReportRow(String label, String value, {bool isBold = false, Color? color}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6.0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(label, style: TextStyle(fontSize: 16, fontWeight: isBold ? FontWeight.bold : FontWeight.normal)),
+          Text(value, style: TextStyle(fontSize: 16, fontWeight: isBold ? FontWeight.bold : FontWeight.normal, color: color)),
+        ],
       ),
     );
   }

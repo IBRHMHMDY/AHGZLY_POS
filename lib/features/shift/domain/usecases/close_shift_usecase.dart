@@ -1,16 +1,15 @@
-import 'package:dartz/dartz.dart';
 import 'package:ahgzly_pos/core/error/failures.dart';
-import 'package:ahgzly_pos/core/usecases/usecase.dart';
-import 'package:ahgzly_pos/features/shift/domain/entities/shift_report.dart';
+import 'package:ahgzly_pos/features/shift/domain/entities/shift.dart';
 import 'package:ahgzly_pos/features/shift/domain/repositories/shift_repository.dart';
+import 'package:dartz/dartz.dart';
 
-class CloseShiftUseCase implements UseCase<int, ShiftReport> {
+
+class CloseShiftUseCase {
   final ShiftRepository repository;
-
   CloseShiftUseCase(this.repository);
 
-  @override
-  Future<Either<Failure, int>> call(ShiftReport report) {
-    return repository.closeShift(report);
+  Future<Either<Failure, Shift>> execute({required int shiftId, required double actualCash}) async {
+    if (actualCash < 0) return const Left(CacheFailure('النقدية الفعلية لا يمكن أن تكون بالسالب'));
+    return await repository.closeShift(shiftId: shiftId, actualCash: actualCash);
   }
 }

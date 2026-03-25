@@ -1,7 +1,7 @@
+import 'package:ahgzly_pos/features/shift/domain/entities/shift.dart';
 import 'package:flutter/material.dart';
 import 'package:ahgzly_pos/features/pos/presentation/bloc/pos_state.dart';
 import 'package:ahgzly_pos/features/orders/domain/entities/order_history.dart';
-import 'package:ahgzly_pos/features/shift/domain/entities/shift_report.dart';
 
 Widget _buildRow(String title, double value) {
   return Row(
@@ -226,18 +226,19 @@ class CustomerHistoryReceiptWidget extends StatelessWidget {
 }
 
 class ZReportReceiptWidget extends StatelessWidget {
-  final ShiftReport report;
+  final Shift shift; // تم التحديث لـ Shift
   final String restaurantName;
   
   const ZReportReceiptWidget({
     super.key,
-    required this.report,
+    required this.shift,
     required this.restaurantName,
   });
 
   @override
   Widget build(BuildContext context) {
-    final netCash = report.totalCash - report.totalExpenses;
+    final isShortage = shift.shortageOrOverage < 0;
+    final diffLabel = isShortage ? 'عجز في الدرج:' : (shift.shortageOrOverage > 0 ? 'زيادة في الدرج:' : 'مطابقة تامة:');
 
     return Container(
       width: 350,
@@ -254,18 +255,34 @@ class ZReportReceiptWidget extends StatelessWidget {
             const Text('تقرير إغلاق الوردية (Z-Report)', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black)),
             const Divider(color: Colors.black, thickness: 2),
             const SizedBox(height: 10),
-            _buildRow('إجمالي المبيعات:', report.totalSales),
-            _buildRow('مبيعات الفيزا:', report.totalVisa),
-            _buildRow('مبيعات إنستاباي:', report.totalInstaPay),
+            _buildRow('العهدة الافتتاحية:', shift.startingCash),
+            _buildRow('إجمالي المبيعات:', shift.totalSales),
+            _buildRow('مبيعات الكاش:', shift.totalCash),
+            _buildRow('مبيعات الفيزا:', shift.totalVisa),
+            _buildRow('مبيعات إنستاباي:', shift.totalInstapay),
             const Divider(color: Colors.black, thickness: 1),
-            _buildRow('إجمالي الكاش المستلم:', report.totalCash),
-            _buildRow('إجمالي المصروفات:', -report.totalExpenses),
+            _buildRow('إجمالي المصروفات:', shift.totalExpenses),
             const Divider(color: Colors.black, thickness: 2),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text('صافي الدرج (كاش):', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black)),
-                Text('${netCash.toStringAsFixed(2)} ج.م', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black)),
+                const Text('النقدية المتوقعة:', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black)),
+                Text('${shift.expectedCash.toStringAsFixed(2)} ج.م', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black)),
+              ],
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text('النقدية الفعلية:', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black)),
+                Text('${shift.actualCash.toStringAsFixed(2)} ج.م', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black)),
+              ],
+            ),
+            const Divider(color: Colors.black, thickness: 2),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(diffLabel, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black)),
+                Text('${shift.shortageOrOverage.abs().toStringAsFixed(2)} ج.م', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black)),
               ],
             ),
             const Divider(color: Colors.black, thickness: 2),
@@ -273,7 +290,7 @@ class ZReportReceiptWidget extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 const Text('إجمالي عدد الطلبات:', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black)),
-                Text('${report.totalOrders}', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black)),
+                Text('${shift.totalOrders}', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black)),
               ],
             ),
             const SizedBox(height: 20),

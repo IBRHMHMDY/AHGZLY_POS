@@ -1,17 +1,18 @@
-import 'package:equatable/equatable.dart';
-import 'package:ahgzly_pos/features/shift/domain/entities/shift_report.dart';
+import 'package:flutter/foundation.dart';
 
-abstract class ShiftEvent extends Equatable {
-  const ShiftEvent();
-  @override
-  List<Object> get props => [];
+@immutable
+abstract class ShiftEvent {}
+
+class CheckActiveShiftEvent extends ShiftEvent {}
+
+class OpenShiftSubmittedEvent extends ShiftEvent {
+  final double startingCash;
+  final int cashierId;
+  OpenShiftSubmittedEvent({required this.startingCash, required this.cashierId});
 }
 
-class LoadZReportEvent extends ShiftEvent {}
-
-class CloseCurrentShiftEvent extends ShiftEvent {
-  final ShiftReport report;
-  const CloseCurrentShiftEvent(this.report);
-  @override
-  List<Object> get props => [report];
+class CloseShiftSubmittedEvent extends ShiftEvent {
+  final int shiftId;
+  final double actualCash;
+  CloseShiftSubmittedEvent({required this.shiftId, required this.actualCash});
 }
