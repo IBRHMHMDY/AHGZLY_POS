@@ -1,7 +1,6 @@
 import 'package:ahgzly_pos/core/database/database_helper.dart';
 import 'package:ahgzly_pos/core/error/exceptions.dart';
 import 'package:ahgzly_pos/features/expenses/data/models/expense_model.dart';
-import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 abstract class ExpensesLocalDataSource {
   Future<List<ExpenseModel>> getTodayExpenses();

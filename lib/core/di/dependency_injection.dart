@@ -95,7 +95,7 @@ final sl = GetIt.instance;
 
 Future<void> init() async {
   // ==========================================
-  // Core & Security (تمت إضافتها هنا)
+  // Core & Security 
   // ==========================================
   sl.registerLazySingleton<DatabaseHelper>(() => DatabaseHelper());
   sl.registerLazySingleton<PrinterService>(() => PrinterService());
@@ -184,7 +184,12 @@ Future<void> init() async {
   sl.registerLazySingleton<PosRepository>(
     () => PosRepositoryImpl(localDataSource: sl()),
   );
-  sl.registerLazySingleton(() => SaveOrderUseCase(sl()));
+  
+  // -- التعديل الجوهري هنا: حقن الورديات في المبيعات --
+  sl.registerLazySingleton(() => SaveOrderUseCase(
+    posRepository: sl(),
+    checkActiveShiftUseCase: sl(), 
+  ));
 
   sl.registerFactory(
     () => PosBloc(saveOrderUseCase: sl(), getSettingsUseCase: sl()),
@@ -208,7 +213,7 @@ Future<void> init() async {
   // ==========================================
   // Features: Shift
   // ==========================================
-sl.registerLazySingleton<ShiftLocalDataSource>(
+  sl.registerLazySingleton<ShiftLocalDataSource>(
     () => ShiftLocalDataSourceImpl(databaseHelper: sl()),
   );
   sl.registerLazySingleton<ShiftRepository>(
@@ -250,7 +255,13 @@ sl.registerLazySingleton<ShiftLocalDataSource>(
   sl.registerLazySingleton<ExpensesRepository>(
     () => ExpensesRepositoryImpl(localDataSource: sl()),
   );
-  sl.registerLazySingleton(() => AddExpenseUseCase(sl()));
+  
+  // -- التعديل الجوهري هنا: حقن الورديات في المصروفات --
+  sl.registerLazySingleton(() => AddExpenseUseCase(
+    expensesRepository: sl(),
+    checkActiveShiftUseCase: sl(), 
+  ));
+  
   sl.registerLazySingleton(() => DeleteExpenseUseCase(sl()));
   sl.registerLazySingleton(() => GetTodayExpensesUseCase(sl()));
   sl.registerFactory(

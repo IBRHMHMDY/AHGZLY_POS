@@ -1,54 +1,77 @@
-import 'package:ahgzly_pos/features/expenses/presentation/bloc/expenses_event.dart';
-import 'package:ahgzly_pos/features/expenses/presentation/bloc/expenses_state.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:ahgzly_pos/core/usecases/usecase.dart';
-import 'package:ahgzly_pos/features/expenses/domain/usecases/get_today_expenses_usecase.dart';
+import 'package:ahgzly_pos/core/usecases/usecase.dart'; // لاستيراد NoParams
 import 'package:ahgzly_pos/features/expenses/domain/usecases/add_expense_usecase.dart';
 import 'package:ahgzly_pos/features/expenses/domain/usecases/delete_expense_usecase.dart';
+import 'package:ahgzly_pos/features/expenses/domain/usecases/get_today_expenses_usecase.dart';
+import 'package:ahgzly_pos/features/expenses/presentation/bloc/expenses_event.dart';
+import 'package:ahgzly_pos/features/expenses/presentation/bloc/expenses_state.dart';
 
-// --- BLoC ---
 class ExpensesBloc extends Bloc<ExpensesEvent, ExpensesState> {
-  final GetTodayExpensesUseCase getTodayExpensesUseCase;
   final AddExpenseUseCase addExpenseUseCase;
   final DeleteExpenseUseCase deleteExpenseUseCase;
+  final GetTodayExpensesUseCase getTodayExpensesUseCase;
 
   ExpensesBloc({
-    required this.getTodayExpensesUseCase,
     required this.addExpenseUseCase,
     required this.deleteExpenseUseCase,
+    required this.getTodayExpensesUseCase,
   }) : super(ExpensesInitial()) {
+    on<LoadExpensesEvent>(_onLoadExpenses);
+    on<AddExpenseEvent>(_onAddExpense);
+    on<DeleteExpenseEvent>(_onDeleteExpense);
+  }
+
+  // 1. معالجة جلب مصروفات اليوم
+  Future<void> _onLoadExpenses(LoadExpensesEvent event, Emitter<ExpensesState> emit) async {
+    emit(ExpensesLoading());
     
-    on<LoadExpensesEvent>((event, emit) async {
-      emit(ExpensesLoading());
-      final result = await getTodayExpensesUseCase(NoParams());
-      result.fold(
-        (failure) => emit(ExpensesError(failure.message)),
-        (expenses) {
-          double total = 0.0;
-          for (var e in expenses) {
-            total += e.amount;
-          }
-          emit(ExpensesLoaded(expenses, total));
-        },
-      );
-    });
+    final result = await getTodayExpensesUseCase(NoParams());
+    
+    result.fold(
+      (failure) {
+        emit(ExpensesError(failure.message));
+      },
+      (expenses) {
+        // حساب إجمالي المصروفات لليوم كما يتوقع הـ State لديك
+        final double totalExpenses = expenses.fold(0.0, (sum, item) => sum + item.amount);
+        emit(ExpensesLoaded(expenses, totalExpenses));
+      },
+    );
+  }
 
-    on<AddExpenseEvent>((event, emit) async {
-      emit(ExpensesLoading());
-      final result = await addExpenseUseCase(event.expense);
-      result.fold(
-        (failure) => emit(ExpensesError(failure.message)),
-        (_) => emit(ExpenseOperationSuccess('تم تسجيل المصروف بنجاح')),
-      );
-    });
+  // 2. معالجة إضافة مصروف جديد (وخصمه من الوردية)
+  Future<void> _onAddExpense(AddExpenseEvent event, Emitter<ExpensesState> emit) async {
+    emit(ExpensesLoading());
+    
+    final result = await addExpenseUseCase(event.expense);
+    
+    result.fold(
+      (failure) {
+        emit(ExpensesError(failure.message));
+      },
+      (_) {
+        emit(ExpensesSuccess('تم إضافة المصروف بنجاح وخصمه من الوردية.'));
+        // استدعاء حدث الجلب لتحديث القائمة فوراً بعد النجاح
+        add(LoadExpensesEvent());
+      },
+    );
+  }
 
-    on<DeleteExpenseEvent>((event, emit) async {
-      emit(ExpensesLoading());
-      final result = await deleteExpenseUseCase(event.id);
-      result.fold(
-        (failure) => emit(ExpensesError(failure.message)),
-        (_) => emit(ExpenseOperationSuccess('تم حذف المصروف بنجاح')),
-      );
-    });
+  // 3. معالجة حذف مصروف
+  Future<void> _onDeleteExpense(DeleteExpenseEvent event, Emitter<ExpensesState> emit) async {
+    emit(ExpensesLoading());
+    
+    final result = await deleteExpenseUseCase(event.id);
+    
+    result.fold(
+      (failure) {
+        emit(ExpensesError(failure.message));
+      },
+      (_) {
+        emit(ExpensesSuccess('تم حذف المصروف بنجاح.'));
+        // استدعاء حدث الجلب لتحديث القائمة فوراً بعد الحذف
+        add(LoadExpensesEvent());
+      },
+    );
   }
 }
