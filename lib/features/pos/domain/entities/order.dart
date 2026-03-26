@@ -2,6 +2,7 @@ import 'package:equatable/equatable.dart';
 import 'package:ahgzly_pos/features/pos/domain/entities/order_item.dart';
 
 class Order extends Equatable {
+  final int? shiftId; // تمت الإضافة لربط الطلب بالوردية
   final String orderType;
   final double subTotal;
   final double discount;
@@ -19,13 +20,27 @@ class Order extends Equatable {
   final List<OrderItem> items;
 
   const Order({
-    required this.orderType, required this.subTotal, required this.discount, required this.taxAmount,
-    required this.serviceFee, required this.deliveryFee, required this.total, required this.paymentMethod,
-    required this.status, required this.createdAt, 
-    this.customerName = '', this.customerPhone = '', this.customerAddress = '', 
+    this.shiftId,
+    required this.orderType, 
+    required this.subTotal, 
+    required this.discount, 
+    required this.taxAmount,
+    required this.serviceFee, 
+    required this.deliveryFee, 
+    required this.total, 
+    required this.paymentMethod,
+    required this.status, 
+    required this.createdAt, 
+    this.customerName = '', 
+    this.customerPhone = '', 
+    this.customerAddress = '', 
     required this.items,
   });
 
   @override
-  List<Object?> get props => [orderType, subTotal, discount, taxAmount, serviceFee, deliveryFee, total, paymentMethod, status, createdAt, customerName, customerPhone, customerAddress, items];
+  List<Object?> get props => [
+    shiftId, orderType, subTotal, discount, taxAmount, serviceFee, 
+    deliveryFee, total, paymentMethod, status, createdAt, 
+    customerName, customerPhone, customerAddress, items
+  ];
 }
