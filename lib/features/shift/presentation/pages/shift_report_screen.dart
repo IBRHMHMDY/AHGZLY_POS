@@ -31,16 +31,17 @@ class _ShiftReportScreenState extends State<ShiftReportScreen> {
     context.read<ShiftBloc>().add(CheckActiveShiftEvent());
   }
 
-  void _onCloseShiftPressed(int shiftId) async {
-    final double? actualCash = await showDialog<double>(
+  // تم تعديل الباراميتر هنا ليستقبل كائن Shift كاملاً
+  void _onCloseShiftPressed(Shift shift) async {
+    final actualCash = await showDialog<double>(
       context: context,
       barrierDismissible: false,
-      builder: (context) => const CloseShiftDialog(),
+      builder: (ctx) => CloseShiftDialog(expectedCash: shift.expectedCash), // التمرير صحيح الآن
     );
 
     if (actualCash != null && mounted) {
       context.read<ShiftBloc>().add(
-        CloseShiftSubmittedEvent(shiftId: shiftId, actualCash: actualCash)
+        CloseShiftSubmittedEvent(shiftId: shift.id, actualCash: actualCash) // استخراج الـ ID من الكائن
       );
     }
   }
@@ -55,7 +56,7 @@ class _ShiftReportScreenState extends State<ShiftReportScreen> {
     final settingsResult = await sl<GetSettingsUseCase>().call(NoParams());
     String restaurantName = 'مطعم احجزلي';
     settingsResult.fold(
-      (failure) => null,
+      (failure) {},
       (settings) => restaurantName = settings.restaurantName,
     );
 
@@ -128,7 +129,8 @@ class _ShiftReportScreenState extends State<ShiftReportScreen> {
                   Text('العهدة الافتتاحية: ${shift.startingCash.toStringAsFixed(2)} EGP'),
                   const SizedBox(height: 40),
                   ElevatedButton.icon(
-                    onPressed: () => _onCloseShiftPressed(shift.id),
+                    // تم تعديل الاستدعاء هنا لتمرير كائن الـ shift بدلاً من الـ ID فقط
+                    onPressed: () => _onCloseShiftPressed(shift),
                     icon: const Icon(Icons.lock_outline),
                     label: const Text('إنهاء وإغلاق الوردية (Z-Report)'),
                     style: ElevatedButton.styleFrom(
@@ -216,7 +218,6 @@ class _ShiftReportScreenState extends State<ShiftReportScreen> {
                     label: const Text('خروج'),
                   ),
                   ElevatedButton.icon(
-                    // تم ربط زر الطباعة بالدالة الجديدة
                     onPressed: () => _printZReport(shift),
                     icon: const Icon(Icons.print),
                     label: const Text('طباعة Z-Report'),
