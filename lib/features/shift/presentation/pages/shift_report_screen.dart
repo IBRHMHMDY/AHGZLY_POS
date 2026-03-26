@@ -18,7 +18,7 @@ import '../bloc/shift_state.dart';
 import '../widgets/close_shift_dialog.dart';
 
 class ShiftReportScreen extends StatefulWidget {
-  const ShiftReportScreen({Key? key}) : super(key: key);
+  const ShiftReportScreen({super.key});
 
   @override
   State<ShiftReportScreen> createState() => _ShiftReportScreenState();
