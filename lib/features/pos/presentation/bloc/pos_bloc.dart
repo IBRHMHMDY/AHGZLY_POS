@@ -1,221 +1,214 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:ahgzly_pos/core/usecases/usecase.dart';
+import 'package:ahgzly_pos/core/usecases/usecase.dart'; // لاستيراد NoParams
+import 'package:ahgzly_pos/features/pos/domain/usecases/save_order_usecase.dart';
+import 'package:ahgzly_pos/features/settings/domain/usecases/get_settings_usecase.dart';
+import 'package:ahgzly_pos/features/pos/presentation/bloc/pos_event.dart';
+import 'package:ahgzly_pos/features/pos/presentation/bloc/pos_state.dart';
 import 'package:ahgzly_pos/features/pos/domain/entities/order.dart';
 import 'package:ahgzly_pos/features/pos/domain/entities/order_item.dart';
-import 'package:ahgzly_pos/features/pos/domain/usecases/save_order_usecase.dart';
-import 'package:ahgzly_pos/features/settings/domain/entities/app_settings.dart';
-import 'package:ahgzly_pos/features/settings/domain/usecases/get_settings_usecase.dart';
-import 'pos_event.dart';
-import 'pos_state.dart';
 
 class PosBloc extends Bloc<PosEvent, PosState> {
   final SaveOrderUseCase saveOrderUseCase;
   final GetSettingsUseCase getSettingsUseCase;
 
-  final List<CartItem> _currentCart = [];
-  String _currentOrderType = 'تيك أواي';
-  double _currentDiscount = 0.0; // الخصم الحالي
-  AppSettings? _settings;
+  // --- محتويات السلة وإعداداتها المحفوظة في الذاكرة ---
+  final List<CartItem> _cartItems = [];
+  String _orderType = 'صالة';
+  double _discountAmount = 0.0;
+  
+  // إعدادات افتراضية (سيتم جلبها من قاعدة البيانات)
+  double _taxRate = 0.0;
+  double _serviceRate = 0.0;
+  double _deliveryFee = 0.0;
+  String _restaurantName = '';
+  String _taxNumber = '';
+  String _printMode = 'ask';
 
-  PosBloc({required this.saveOrderUseCase, required this.getSettingsUseCase})
-    : super(PosInitial()) {
-    on<AddItemToCartEvent>(_onAddItemToCart);
-    on<UpdateCartItemQuantityEvent>(_onUpdateCartItemQuantity);
-    on<RemoveItemFromCartEvent>(_onRemoveItemFromCart);
-    on<ChangeOrderTypeEvent>(_onChangeOrderType);
+  PosBloc({
+    required this.saveOrderUseCase,
+    required this.getSettingsUseCase,
+  }) : super(PosInitial()) {
+    
+    // تسجيل مستمعي الأحداث للسلة والدفع
+    on<ReloadSettingsEvent>(_onReloadSettings);
+    on<AddItemToCartEvent>(_onAddItem);
+    on<UpdateCartItemQuantityEvent>(_onUpdateQuantity);
+    on<RemoveItemFromCartEvent>(_onRemoveItem);
+    on<ChangeOrderTypeEvent>(_onChangeType);
+    on<ApplyDiscountEvent>(_onApplyDiscount);
     on<ClearCartEvent>(_onClearCart);
-    on<ApplyDiscountEvent>(_onApplyDiscount); // حدث الخصم
     on<SubmitOrderEvent>(_onSubmitOrder);
-    on<ReloadSettingsEvent>((event, emit) async {
-      final result = await getSettingsUseCase(NoParams());
-      result.fold((failure) {}, (settings) => _settings = settings);
-      _emitUpdatedCart(emit: emit);
-    });
+    on<SaveOrderEvent>(_onSaveOrderLegacy); // للحفاظ على التوافق إذا تم استدعاؤه
 
-    _initSettings();
+    // جلب إعدادات المطعم عند تهيئة البلوك لأول مرة
+    add(ReloadSettingsEvent());
   }
 
-  Future<void> _initSettings() async {
+  // 1. جلب الإعدادات لحساب الضرائب بشكل دقيق
+  Future<void> _onReloadSettings(ReloadSettingsEvent event, Emitter<PosState> emit) async {
     final result = await getSettingsUseCase(NoParams());
     result.fold(
-      (failure) => _settings = const AppSettings(
-        taxRate: 0.14,
-        serviceRate: 0.12,
-        deliveryFee: 20.0,
-        printerName: 'EPSON Printer',
-        restaurantName: 'مـطـعـم احـجـزلـي',
-        taxNumber: '123-456-789',
-        printMode: 'ask',
-      ),
-      (settings) => _settings = settings,
+      (failure) {
+        // الاعتماد على القيم الافتراضية في حال الفشل
+      },
+      (settings) {
+        _taxRate = settings.taxRate;
+        _serviceRate = settings.serviceRate;
+        _deliveryFee = settings.deliveryFee;
+        _restaurantName = settings.restaurantName;
+        _taxNumber = settings.taxNumber;
+        _printMode = settings.printMode;
+        _emitUpdatedState(emit); // تحديث الواجهة فوراً
+      },
     );
-    _emitUpdatedCart();
   }
 
-  void _onAddItemToCart(AddItemToCartEvent event, Emitter<PosState> emit) {
-    final existingIndex = _currentCart.indexWhere(
-      (c) => c.item.id == event.item.id,
-    );
+  // 2. إضافة منتج للسلة
+  void _onAddItem(AddItemToCartEvent event, Emitter<PosState> emit) {
+    final existingIndex = _cartItems.indexWhere((c) => c.item.id == event.item.id);
     if (existingIndex >= 0) {
-      final currentItem = _currentCart[existingIndex];
-      _currentCart[existingIndex] = currentItem.copyWith(
-        quantity: currentItem.quantity + 1,
-      );
+      // إذا كان المنتج موجوداً، نزيد الكمية
+      final existingItem = _cartItems[existingIndex];
+      _cartItems[existingIndex] = existingItem.copyWith(quantity: existingItem.quantity + 1);
     } else {
-      _currentCart.add(CartItem(item: event.item, quantity: 1));
+      // إذا كان جديداً، نضيفه
+      _cartItems.add(CartItem(item: event.item, quantity: 1));
     }
-    _emitUpdatedCart(emit: emit);
+    _emitUpdatedState(emit);
   }
 
-  void _onUpdateCartItemQuantity(
-    UpdateCartItemQuantityEvent event,
-    Emitter<PosState> emit,
-  ) {
-    if (event.quantity <= 0) {
-      _currentCart.removeAt(event.index);
-    } else {
-      final currentItem = _currentCart[event.index];
-      _currentCart[event.index] = currentItem.copyWith(
-        quantity: event.quantity,
-      );
+  // 3. تحديث الكمية
+  void _onUpdateQuantity(UpdateCartItemQuantityEvent event, Emitter<PosState> emit) {
+    if (event.index >= 0 && event.index < _cartItems.length) {
+      if (event.quantity > 0) {
+        _cartItems[event.index] = _cartItems[event.index].copyWith(quantity: event.quantity);
+      } else {
+        _cartItems.removeAt(event.index);
+      }
+      _emitUpdatedState(emit);
     }
-    _emitUpdatedCart(emit: emit);
   }
 
-  void _onRemoveItemFromCart(
-    RemoveItemFromCartEvent event,
-    Emitter<PosState> emit,
-  ) {
-    _currentCart.removeAt(event.index);
-    _emitUpdatedCart(emit: emit);
+  // 4. إزالة منتج نهائياً
+  void _onRemoveItem(RemoveItemFromCartEvent event, Emitter<PosState> emit) {
+    if (event.index >= 0 && event.index < _cartItems.length) {
+      _cartItems.removeAt(event.index);
+      _emitUpdatedState(emit);
+    }
   }
 
-  void _onChangeOrderType(ChangeOrderTypeEvent event, Emitter<PosState> emit) {
-    _currentOrderType = event.orderType;
-    _emitUpdatedCart(emit: emit);
+  // 5. تغيير نوع الطلب (صالة، دليفري، الخ..)
+  void _onChangeType(ChangeOrderTypeEvent event, Emitter<PosState> emit) {
+    _orderType = event.orderType;
+    _emitUpdatedState(emit);
   }
 
+  // 6. تطبيق خصم مباشر
   void _onApplyDiscount(ApplyDiscountEvent event, Emitter<PosState> emit) {
-    _currentDiscount = event.discountAmount;
-    _emitUpdatedCart(emit: emit);
+    _discountAmount = event.discountAmount;
+    _emitUpdatedState(emit);
   }
 
+  // 7. تفريغ السلة بالكامل
   void _onClearCart(ClearCartEvent event, Emitter<PosState> emit) {
-    _currentCart.clear();
-    _currentOrderType = 'تيك أواي';
-    _currentDiscount = 0.0;
-    _emitUpdatedCart(emit: emit);
+    _cartItems.clear();
+    _discountAmount = 0.0;
+    _orderType = 'صالة';
+    _emitUpdatedState(emit);
   }
 
-  Future<void> _onSubmitOrder(
-    SubmitOrderEvent event,
-    Emitter<PosState> emit,
-  ) async {
-    if (_currentCart.isEmpty) return;
+  // 8. الدالة المركزية لحساب الإجماليات وتحديث الشاشة (الـ Core Logic)
+  void _emitUpdatedState(Emitter<PosState> emit) {
+    double subTotal = _cartItems.fold(0.0, (sum, current) => sum + (current.item.price * current.quantity));
+    double taxAmount = subTotal * _taxRate;
+    double serviceFee = _orderType == 'صالة' ? (subTotal * _serviceRate) : 0.0;
+    double deliveryFee = _orderType == 'دليفري' ? _deliveryFee : 0.0;
+    
+    // الإجمالي النهائي
+    double total = subTotal - _discountAmount + taxAmount + serviceFee + deliveryFee;
+
+    emit(PosUpdated(
+      cartItems: List.from(_cartItems), // List.from لإجبار الواجهة على التحديث
+      orderType: _orderType,
+      subTotal: subTotal,
+      discountAmount: _discountAmount,
+      taxAmount: taxAmount,
+      serviceFee: serviceFee,
+      deliveryFee: deliveryFee,
+      total: total,
+      restaurantName: _restaurantName,
+      taxNumber: _taxNumber,
+      printMode: _printMode,
+    ));
+  }
+
+  // 9. إتمام البيع والدفع (محصن بنظام الورديات)
+  Future<void> _onSubmitOrder(SubmitOrderEvent event, Emitter<PosState> emit) async {
+    // التقاط الحالة الحالية قبل الحفظ لاستخدام الأرقام المحسوبة بدقة
+    if (state is! PosUpdated) return; 
+    final currentState = state as PosUpdated;
+
+    if (currentState.cartItems.isEmpty) {
+      emit(PosError('لا يمكن إتمام البيع، السلة فارغة.'));
+      _emitUpdatedState(emit);
+      return;
+    }
+
     emit(PosLoading());
-    final calculations = _calculateTotals();
 
-    final List<OrderItem> orderItems = _currentCart
-        .map(
-          (c) => OrderItem(
-            itemId: c.item.id!,
-            quantity: c.quantity,
-            unitPrice: c.item.price,
-            notes: c.notes,
-          ),
-        )
-        .toList();
-
+    // بناء الكيان الذي سيتم حفظه بقاعدة البيانات
     final order = Order(
-      orderType: _currentOrderType,
-      subTotal: calculations['subTotal']!,
-      discount: calculations['discountAmount']!, // تمرير الخصم
-      taxAmount: calculations['taxAmount']!,
-      serviceFee: calculations['serviceFee']!,
-      deliveryFee: calculations['deliveryFee']!,
-      total: calculations['total']!,
+      orderType: currentState.orderType,
+      subTotal: currentState.subTotal,
+      discount: currentState.discountAmount,
+      taxAmount: currentState.taxAmount,
+      serviceFee: currentState.serviceFee,
+      deliveryFee: currentState.deliveryFee,
+      total: currentState.total,
       paymentMethod: event.paymentMethod,
-      status: 'مكتمل',
+      status: 'completed',
       createdAt: DateTime.now().toIso8601String(),
-      customerName: event.customerName, // جديد
-      customerPhone: event.customerPhone, // جديد
-      customerAddress: event.customerAddress, // جديد
-      items: orderItems,
+      customerName: event.customerName,
+      customerPhone: event.customerPhone,
+      customerAddress: event.customerAddress,
+      // تحويل عناصر السلة إلى عناصر طلب خاصة بقاعدة البيانات
+      items: currentState.cartItems.map((c) => OrderItem(
+        itemId: c.item.id!,
+        quantity: c.quantity,
+        unitPrice: c.item.price,
+        notes: c.notes,
+      )).toList(),
     );
 
-    final failureOrOrderId = await saveOrderUseCase(order);
+    // إرسال الطلب لطبقة الـ Domain التي ستتحقق من "الوردية"
+    final result = await saveOrderUseCase(order);
 
-    failureOrOrderId.fold(
+    result.fold(
       (failure) {
         emit(PosError(failure.message));
-        _emitUpdatedCart(emit: emit);
+        _emitUpdatedState(emit); // إعادة الشاشة لحالة السلة لعدم فقدان المنتجات
       },
       (orderId) {
         emit(PosCheckoutSuccess(orderId));
-        _currentCart.clear();
-        _currentOrderType = 'تيك أواي';
-        _currentDiscount = 0.0; // تفريغ الخصم بعد الدفع
-        _emitUpdatedCart(emit: emit);
+        // تفريغ السلة بعد نجاح الحفظ
+        _cartItems.clear();
+        _discountAmount = 0.0;
+        _orderType = 'صالة';
+        _emitUpdatedState(emit);
       },
     );
   }
 
-  void _emitUpdatedCart({Emitter<PosState>? emit}) {
-    if (_settings == null) return;
-    final calculations = _calculateTotals();
-    final state = PosUpdated(
-      cartItems: List.from(_currentCart),
-      orderType: _currentOrderType,
-      subTotal: calculations['subTotal']!,
-      discountAmount: calculations['discountAmount']!,
-      taxAmount: calculations['taxAmount']!,
-      serviceFee: calculations['serviceFee']!,
-      deliveryFee: calculations['deliveryFee']!,
-      total: calculations['total']!,
-      restaurantName: _settings!.restaurantName,
-      taxNumber: _settings!.taxNumber,
-      printMode: _settings!.printMode,
-    );
-    if (emit != null) {
-      emit(state);
-    } else {
-      this.emit(state);
+  // 10. دعم الحدث القديم للحماية (اختياري، يوجه للحدث الجديد)
+  Future<void> _onSaveOrderLegacy(SaveOrderEvent event, Emitter<PosState> emit) async {
+    // إذا تم استدعاء هذا عن طريق الخطأ في أي مكان، نعالجه
+    if (event.order is Order) {
+      emit(PosLoading());
+      final result = await saveOrderUseCase(event.order);
+      result.fold(
+        (error) => emit(PosError(error.message)),
+        (id) => emit(PosCheckoutSuccess(id)),
+      );
     }
-  }
-
-  Map<String, double> _calculateTotals() {
-    double subTotal = 0.0;
-    for (var cartItem in _currentCart) {
-      subTotal += (cartItem.item.price * cartItem.quantity);
-    }
-
-    double discountAmount = _currentDiscount;
-    if (discountAmount > subTotal){
-      discountAmount = subTotal; // منع خصم أكبر من السعر
-    }
-      
-
-    double taxableAmount = subTotal - discountAmount; // الضرائب تُحسب بعد الخصم
-
-    final tax = _settings?.taxRate ?? 0.14;
-    final service = _settings?.serviceRate ?? 0.12;
-    final delivery = _settings?.deliveryFee ?? 20.0;
-
-    double taxAmount = taxableAmount * tax;
-    double serviceFee = (_currentOrderType == 'صالة')
-        ? (taxableAmount * service)
-        : 0.0;
-    double deliveryFee = (_currentOrderType == 'دليفري') ? delivery : 0.0;
-
-    double total = taxableAmount + taxAmount + serviceFee + deliveryFee;
-
-    return {
-      'subTotal': double.parse(subTotal.toStringAsFixed(2)),
-      'discountAmount': double.parse(discountAmount.toStringAsFixed(2)),
-      'taxAmount': double.parse(taxAmount.toStringAsFixed(2)),
-      'serviceFee': double.parse(serviceFee.toStringAsFixed(2)),
-      'deliveryFee': double.parse(deliveryFee.toStringAsFixed(2)),
-      'total': double.parse(total.toStringAsFixed(2)),
-    };
   }
 }

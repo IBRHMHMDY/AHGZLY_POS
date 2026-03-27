@@ -22,3 +22,4 @@ class DeleteExpenseEvent extends ExpensesEvent {
   @override
   List<Object> get props => [id];
 }
+

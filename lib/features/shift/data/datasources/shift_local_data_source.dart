@@ -34,7 +34,7 @@ class ShiftLocalDataSourceImpl implements ShiftLocalDataSource {
   Future<ShiftModel> openShift({required double startingCash, required int cashierId}) async {
     final db = await databaseHelper.database;
     final activeShift = await getActiveShift();
-    if (activeShift != null) throw CacheException('يوجد وردية مفتوحة بالفعل. يجب إغلاقها أولاً.');
+    if (activeShift != null) throw CacheException(message: 'يوجد وردية مفتوحة بالفعل. يجب إغلاقها أولاً.');
 
     final now = DateTime.now().toIso8601String();
     final id = await db.insert('shifts', {
@@ -73,7 +73,7 @@ class ShiftLocalDataSourceImpl implements ShiftLocalDataSource {
   Future<ShiftModel> closeShift({required int shiftId, required double actualCash}) async {
     final db = await databaseHelper.database;
     final shiftMaps = await db.query('shifts', where: 'id = ? AND status = ?', whereArgs: [shiftId, 'active']);
-    if (shiftMaps.isEmpty) throw CacheException('لم يتم العثور على وردية نشطة لإغلاقها.');
+    if (shiftMaps.isEmpty) throw CacheException(message: 'لم يتم العثور على وردية نشطة لإغلاقها.');
     final shift = ShiftModel.fromMap(shiftMaps.first);
 
     final orders = await db.query(

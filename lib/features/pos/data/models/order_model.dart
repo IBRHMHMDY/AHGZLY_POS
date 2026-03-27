@@ -3,6 +3,7 @@ import 'package:ahgzly_pos/features/pos/data/models/order_item_model.dart';
 
 class OrderModel extends Order {
   const OrderModel({
+    super.shiftId,
     required super.orderType,
     required super.subTotal,
     required super.discount,
@@ -21,6 +22,7 @@ class OrderModel extends Order {
 
   factory OrderModel.fromEntity(Order entity) {
     return OrderModel(
+      shiftId: entity.shiftId,
       orderType: entity.orderType,
       subTotal: entity.subTotal,
       discount: entity.discount,
@@ -42,6 +44,7 @@ class OrderModel extends Order {
 
   Map<String, dynamic> toMap() {
     return {
+      'shift_id': shiftId, // تمت الإضافة
       'order_type': orderType,
       'sub_total': subTotal,
       'discount': discount,

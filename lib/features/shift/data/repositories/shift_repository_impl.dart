@@ -12,7 +12,7 @@ class ShiftRepositoryImpl implements ShiftRepository {
   ShiftRepositoryImpl({required this.localDataSource});
 
   @override
-  Future<Either<Failure, Shift?>> getActiveShift() async {
+  Future<Either<Failure, Shift?>> checkActiveShift() async {
     try {
       final shift = await localDataSource.getActiveShift();
       return Right(shift);
