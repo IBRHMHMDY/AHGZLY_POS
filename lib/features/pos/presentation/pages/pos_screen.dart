@@ -179,37 +179,25 @@ class _PosScreenState extends State<PosScreen> {
       actions: [
         BlocBuilder<AuthBloc, AuthState>(
           builder: (context, state) {
+            // استخدام state مباشرة بدلاً من context.read لضمان التحديث اللحظي
             final bool isAdmin = (state is AuthAuthenticated) && state.user.isAdmin;
+            final currentUser = (state is AuthAuthenticated) ? state.user : null;
+
             return Row(
               children: [
+                // 🛑 أزرار الإدارة العليا (للمدير فقط) 🛑
                 if (isAdmin) ...[
                   IconButton(
                     icon: const Icon(Icons.manage_accounts),
                     tooltip: 'إدارة المستخدمين',
-                    onPressed: () => context.push(
-                      '/users',
-                    ), // تأكد من أن المسار مطابق لـ AppRouter
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.history),
-                    tooltip: 'سجل الطلبات',
-                    onPressed: () => context.push('/orders'),
-                  ),
-                  
-                  IconButton(
-                    icon: const Icon(
-                      Icons.money_off,
-                      color: Colors.orangeAccent,
-                    ),
-                    tooltip: 'المصروفات',
-                    onPressed: () => context.push('/expenses'),
+                    onPressed: () => context.push('/users'),
                   ),
                   IconButton(
                     icon: const Icon(Icons.restaurant_menu),
                     tooltip: 'إدارة القائمة',
                     onPressed: () async {
                       await context.push('/menu');
-                      if (context.mounted){
+                      if (context.mounted) {
                         context.read<MenuBloc>().add(FetchCategoriesEvent());
                       }
                     },
@@ -219,17 +207,37 @@ class _PosScreenState extends State<PosScreen> {
                     tooltip: 'إعدادات النظام',
                     onPressed: () async {
                       await context.push('/settings');
-                      if (context.mounted){
+                      if (context.mounted) {
                         context.read<PosBloc>().add(ReloadSettingsEvent());
                       }
                     },
                   ),
                 ],
+
+                // 🟢 الأزرار التشغيلية (للكاشير والمدير معاً) 🟢
+
+                // 1. سجل الطلبات
+                IconButton(
+                  icon: const Icon(Icons.history),
+                  tooltip: 'سجل الطلبات',
+                  onPressed: () => context.push('/orders'),
+                ),
+                
+                // 2. المصروفات النثرية
+                IconButton(
+                  icon: const Icon(Icons.money_off, color: Colors.orangeAccent),
+                  tooltip: 'المصروفات',
+                  onPressed: () => context.push('/expenses'),
+                ),
+
+                // 3. الوردية (لإصدار تقارير X و Z)
                 IconButton(
                   icon: const Icon(Icons.analytics),
-                  tooltip: 'تقرير الوردية',
+                  tooltip: 'الوردية الحالية',
                   onPressed: () => context.push('/shift'),
                 ),
+
+                // 🔒 4. زر قفل الشاشة (الآمن) بدلاً من تبديل المستخدم
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 4.0),
                   child: ElevatedButton.icon(
@@ -244,15 +252,15 @@ class _PosScreenState extends State<PosScreen> {
                       style: TextStyle(fontWeight: FontWeight.bold),
                     ),
                     onPressed: () {
-                      // جلب بيانات الكاشير الحالي من الـ Bloc
-                      final authState = context.read<AuthBloc>().state;
-                      if (authState is AuthAuthenticated) {
+                      if (currentUser != null) {
                         // الانتقال لشاشة القفل مع تمرير المستخدم الحالي
-                        context.push('/lock', extra: authState.user);
+                        context.push('/lock', extra: currentUser);
                       }
                     },
                   ),
                 ),
+
+                // 5. زر إغلاق البرنامج
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 8.0),
                   child: ElevatedButton.icon(
