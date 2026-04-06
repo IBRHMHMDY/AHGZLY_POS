@@ -104,6 +104,15 @@ class _ShiftReportScreenState extends State<ShiftReportScreen> {
              ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(content: Text(state.message), backgroundColor: Colors.red),
             );
+          }else if (state is ShiftClosedSuccess) {
+             ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('تم إغلاق الوردية بنجاح، جاري الطباعة التلقائية...'), 
+                backgroundColor: Colors.green
+              ),
+            );
+            // استدعاء دالة الطباعة الموجودة بالفعل في ملفك
+            _printZReport(state.closedShift); 
           }
         },
         builder: (context, state) {

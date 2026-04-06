@@ -180,13 +180,12 @@ class _PosScreenState extends State<PosScreen> {
       actions: [
         BlocBuilder<AuthBloc, AuthState>(
           builder: (context, state) {
-            final isAdmin = state is AuthAuthenticated && state.user.isAdmin;
+            final bool isAdmin = (state is AuthAuthenticated) && state.user.isAdmin;
             return Row(
               children: [
                 if (isAdmin) ...[
-                  // ⬇️ تم إضافة زر إدارة المستخدمين هنا بنفس النمط ⬇️
                   IconButton(
-                    icon: const Icon(Icons.manage_accounts, color: Colors.teal),
+                    icon: const Icon(Icons.manage_accounts),
                     tooltip: 'إدارة المستخدمين',
                     onPressed: () => context.push(
                       '/users',
