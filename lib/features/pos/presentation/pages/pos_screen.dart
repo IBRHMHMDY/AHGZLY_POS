@@ -47,7 +47,10 @@ class _PosScreenState extends State<PosScreen> {
           children: [
             Icon(Icons.power_settings_new, color: Colors.red, size: 28),
             SizedBox(width: 8),
-            Text('إغلاق النظام', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
+            Text(
+              'إغلاق النظام',
+              style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
+            ),
           ],
         ),
         content: const Text(
@@ -57,16 +60,28 @@ class _PosScreenState extends State<PosScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('إلغاء', style: TextStyle(color: Colors.grey, fontSize: 16, fontWeight: FontWeight.bold)),
+            child: const Text(
+              'إلغاء',
+              style: TextStyle(
+                color: Colors.grey,
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
           ),
           ElevatedButton.icon(
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.red,
               foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
             ),
             icon: const Icon(Icons.exit_to_app),
-            label: const Text('تأكيد الإغلاق', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+            label: const Text(
+              'تأكيد الإغلاق',
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+            ),
             onPressed: () => exit(0), // أمر الإغلاق الفوري للبرنامج
           ),
         ],
@@ -90,7 +105,9 @@ class _PosScreenState extends State<PosScreen> {
                   _categories = state.categories;
                   if (_selectedCategory == null && _categories.isNotEmpty) {
                     _selectedCategory = _categories.first;
-                    context.read<MenuBloc>().add(FetchItemsEvent(_selectedCategory!.id!));
+                    context.read<MenuBloc>().add(
+                      FetchItemsEvent(_selectedCategory!.id!),
+                    );
                   }
                 });
               } else if (state is ItemsLoaded) {
@@ -106,7 +123,10 @@ class _PosScreenState extends State<PosScreen> {
               if (state is PosError) {
                 SnackbarUtils.showError(context, state.message);
               } else if (state is PosCheckoutSuccess) {
-                SnackbarUtils.showSuccess(context, 'تم حفظ الفاتورة بنجاح برقم #${state.orderId}');
+                SnackbarUtils.showSuccess(
+                  context,
+                  'تم حفظ الفاتورة بنجاح برقم #${state.orderId}',
+                );
                 // يمكن إضافة حدث تفريغ السلة هنا إذا لزم الأمر مستقبلاً
               }
             },
@@ -135,10 +155,7 @@ class _PosScreenState extends State<PosScreen> {
                 isLoading: context.watch<MenuBloc>().state is MenuLoading,
               ),
             ),
-            const Expanded(
-              flex: 2,
-              child: CartSection(), 
-            ),
+            const Expanded(flex: 2, child: CartSection()),
           ],
         ),
       ),
@@ -152,7 +169,10 @@ class _PosScreenState extends State<PosScreen> {
         children: [
           Icon(Icons.point_of_sale, size: 28),
           SizedBox(width: 8),
-          Text('نقطة البيع (POS)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22)),
+          Text(
+            'نقطة البيع (POS)',
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22),
+          ),
         ],
       ),
       backgroundColor: Colors.teal,
@@ -164,15 +184,42 @@ class _PosScreenState extends State<PosScreen> {
             return Row(
               children: [
                 if (isAdmin) ...[
-                  IconButton(icon: const Icon(Icons.history), tooltip: 'سجل الطلبات', onPressed: () => context.push('/orders')),
-                  IconButton(icon: const Icon(Icons.analytics), tooltip: 'تقرير الوردية', onPressed: () => context.push('/shift')),
-                  IconButton(icon: const Icon(Icons.money_off, color: Colors.orangeAccent), tooltip: 'المصروفات', onPressed: () => context.push('/expenses')),
+                  // ⬇️ تم إضافة زر إدارة المستخدمين هنا بنفس النمط ⬇️
+                  IconButton(
+                    icon: const Icon(Icons.manage_accounts, color: Colors.teal),
+                    tooltip: 'إدارة المستخدمين',
+                    onPressed: () => context.push(
+                      '/users',
+                    ), // تأكد من أن المسار مطابق لـ AppRouter
+                  ),
+
+                  // ⬆️ ======================================== ⬆️
+                  IconButton(
+                    icon: const Icon(Icons.history),
+                    tooltip: 'سجل الطلبات',
+                    onPressed: () => context.push('/orders'),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.analytics),
+                    tooltip: 'تقرير الوردية',
+                    onPressed: () => context.push('/shift'),
+                  ),
+                  IconButton(
+                    icon: const Icon(
+                      Icons.money_off,
+                      color: Colors.orangeAccent,
+                    ),
+                    tooltip: 'المصروفات',
+                    onPressed: () => context.push('/expenses'),
+                  ),
                   IconButton(
                     icon: const Icon(Icons.restaurant_menu),
                     tooltip: 'إدارة القائمة',
                     onPressed: () async {
                       await context.push('/menu');
-                      if (context.mounted) context.read<MenuBloc>().add(FetchCategoriesEvent());
+                      if (context.mounted){
+                        context.read<MenuBloc>().add(FetchCategoriesEvent());
+                      }
                     },
                   ),
                   IconButton(
@@ -180,16 +227,25 @@ class _PosScreenState extends State<PosScreen> {
                     tooltip: 'إعدادات النظام',
                     onPressed: () async {
                       await context.push('/settings');
-                      if (context.mounted) context.read<PosBloc>().add(ReloadSettingsEvent());
+                      if (context.mounted){
+                        context.read<PosBloc>().add(ReloadSettingsEvent());
+                      }
                     },
                   ),
                 ],
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 4.0),
                   child: ElevatedButton.icon(
-                    style: ElevatedButton.styleFrom(backgroundColor: Colors.orange.shade50, foregroundColor: Colors.orange.shade800, elevation: 0),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.orange.shade50,
+                      foregroundColor: Colors.orange.shade800,
+                      elevation: 0,
+                    ),
                     icon: const Icon(Icons.switch_account),
-                    label: const Text('تبديل المستخدم', style: TextStyle(fontWeight: FontWeight.bold)),
+                    label: const Text(
+                      'تبديل المستخدم',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
                     onPressed: () {
                       context.read<AuthBloc>().add(LogoutEvent());
                       context.go('/');
@@ -199,9 +255,16 @@ class _PosScreenState extends State<PosScreen> {
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 8.0),
                   child: ElevatedButton.icon(
-                    style: ElevatedButton.styleFrom(backgroundColor: Colors.red.shade50, foregroundColor: Colors.red, elevation: 0),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.red.shade50,
+                      foregroundColor: Colors.red,
+                      elevation: 0,
+                    ),
                     icon: const Icon(Icons.power_settings_new),
-                    label: const Text('إغلاق البرنامج', style: TextStyle(fontWeight: FontWeight.bold)),
+                    label: const Text(
+                      'إغلاق البرنامج',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
                     onPressed: () => _showExitConfirmation(context),
                   ),
                 ),

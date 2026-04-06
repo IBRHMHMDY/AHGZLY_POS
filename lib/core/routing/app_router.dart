@@ -8,8 +8,8 @@ import 'package:ahgzly_pos/features/orders/presentation/pages/orders_screen.dart
 import 'package:ahgzly_pos/features/shift/presentation/pages/shift_report_screen.dart';
 import 'package:ahgzly_pos/features/expenses/presentation/pages/expenses_screen.dart';
 import 'package:ahgzly_pos/features/settings/presentation/pages/settings_screen.dart';
-// تم إضافة استيراد شاشة فتح الوردية
 import 'package:ahgzly_pos/features/shift/presentation/pages/open_shift_screen.dart';
+import 'package:ahgzly_pos/features/users/presentation/pages/users_screen.dart';
 
 class AppRouter {
   // --------------------------------------------------------
@@ -25,7 +25,7 @@ class AppRouter {
   static const String shiftPath = '/shift';
   static const String expensesPath = '/expenses';
   static const String settingsPath = '/settings';
-
+  static const String usersPath = '/users';
   // --------------------------------------------------------
   // 2. Router Configuration
   // --------------------------------------------------------
@@ -79,6 +79,10 @@ class AppRouter {
         GoRoute(
           path: settingsPath,
           builder: (context, state) => const SettingsScreen(),
+        ),
+        GoRoute(
+          path: usersPath,
+          builder: (context, state) => const UsersScreen(),
         ),
       ],
     );
