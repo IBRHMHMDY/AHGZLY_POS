@@ -12,7 +12,6 @@ import 'package:ahgzly_pos/features/pos/presentation/bloc/pos_bloc.dart';
 import 'package:ahgzly_pos/features/pos/presentation/bloc/pos_event.dart';
 import 'package:ahgzly_pos/features/pos/presentation/bloc/pos_state.dart';
 import 'package:ahgzly_pos/features/auth/presentation/bloc/auth_bloc.dart';
-import 'package:ahgzly_pos/features/auth/presentation/bloc/auth_event.dart';
 import 'package:ahgzly_pos/features/auth/presentation/bloc/auth_state.dart';
 
 import 'package:ahgzly_pos/features/pos/presentation/widgets/categories_section.dart';
@@ -191,18 +190,12 @@ class _PosScreenState extends State<PosScreen> {
                       '/users',
                     ), // تأكد من أن المسار مطابق لـ AppRouter
                   ),
-
-                  // ⬆️ ======================================== ⬆️
                   IconButton(
                     icon: const Icon(Icons.history),
                     tooltip: 'سجل الطلبات',
                     onPressed: () => context.push('/orders'),
                   ),
-                  IconButton(
-                    icon: const Icon(Icons.analytics),
-                    tooltip: 'تقرير الوردية',
-                    onPressed: () => context.push('/shift'),
-                  ),
+                  
                   IconButton(
                     icon: const Icon(
                       Icons.money_off,
@@ -232,22 +225,31 @@ class _PosScreenState extends State<PosScreen> {
                     },
                   ),
                 ],
+                IconButton(
+                  icon: const Icon(Icons.analytics),
+                  tooltip: 'تقرير الوردية',
+                  onPressed: () => context.push('/shift'),
+                ),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 4.0),
                   child: ElevatedButton.icon(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.orange.shade50,
-                      foregroundColor: Colors.orange.shade800,
+                      backgroundColor: Colors.blueGrey.shade50,
+                      foregroundColor: Colors.blueGrey.shade800,
                       elevation: 0,
                     ),
-                    icon: const Icon(Icons.switch_account),
+                    icon: const Icon(Icons.lock),
                     label: const Text(
-                      'تبديل المستخدم',
+                      'قفل الشاشة',
                       style: TextStyle(fontWeight: FontWeight.bold),
                     ),
                     onPressed: () {
-                      context.read<AuthBloc>().add(LogoutEvent());
-                      context.go('/');
+                      // جلب بيانات الكاشير الحالي من الـ Bloc
+                      final authState = context.read<AuthBloc>().state;
+                      if (authState is AuthAuthenticated) {
+                        // الانتقال لشاشة القفل مع تمرير المستخدم الحالي
+                        context.push('/lock', extra: authState.user);
+                      }
                     },
                   ),
                 ),

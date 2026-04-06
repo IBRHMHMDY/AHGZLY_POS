@@ -2,6 +2,8 @@ import 'package:ahgzly_pos/features/shift/domain/entities/shift.dart';
 import 'package:flutter/material.dart';
 import 'package:ahgzly_pos/features/pos/presentation/bloc/pos_state.dart';
 import 'package:ahgzly_pos/features/orders/domain/entities/order_history.dart';
+// ignore: library_prefixes
+import 'package:intl/intl.dart' as intlDateTime;
 
 Widget _buildRow(String title, double value) {
   // إجبار الرقم على عرض خانتين عشريتين فقط للعملة
@@ -77,6 +79,23 @@ class CustomerReceiptWidget extends StatelessWidget {
             Text(
               'الرقم الضريبي: $taxNumber',
               style: const TextStyle(fontSize: 14, color: Colors.black),
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'الكاشير: $cashierName',
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black,
+                  ),
+                ),
+                Text(
+                  DateTime.now().toString().substring(0, 16),
+                  style: const TextStyle(fontSize: 14, color: Colors.black),
+                ),
+              ],
             ),
             const Divider(color: Colors.black, thickness: 2),
             Row(
@@ -210,23 +229,7 @@ class CustomerReceiptWidget extends StatelessWidget {
               DateTime.now().toString().substring(0, 16),
               style: const TextStyle(fontSize: 14, color: Colors.black),
             ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'الكاشير: $cashierName',
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black,
-                  ),
-                ),
-                Text(
-                  DateTime.now().toString().substring(0, 16),
-                  style: const TextStyle(fontSize: 14, color: Colors.black),
-                ),
-              ],
-            ),
+            
           ],
         ),
       ),
@@ -467,11 +470,15 @@ class CustomerHistoryReceiptWidget extends StatelessWidget {
 class ZReportReceiptWidget extends StatelessWidget {
   final Shift shift; 
   final String restaurantName;
+  final String cashierName;
+  final bool isXReport;
   
   const ZReportReceiptWidget({
     super.key,
     required this.shift,
     required this.restaurantName,
+    required this.cashierName,
+    this.isXReport = false,
   });
 
   @override
@@ -479,11 +486,18 @@ class ZReportReceiptWidget extends StatelessWidget {
     final isShortage = shift.shortageOrOverage < 0;
     final diffLabel = isShortage ? 'عجز في الدرج:' : (shift.shortageOrOverage > 0 ? 'زيادة في الدرج:' : 'مطابقة تامة:');
 
-    // تنسيق التواريخ بشكل مقروء
-    final startTimeFormatted = DateTime.parse(shift.startTime as String).toString().substring(0, 16);
+// تنسيق التواريخ بشكل مقروء وأنيق (مثال: 2023-10-25 04:30 PM)
+    final dateFormat = intlDateTime.DateFormat('yyyy-MM-dd hh:mm a');
+    
+    // بما أن startTime هي DateTime بالفعل، لا حاجة لـ parse
+    final startTimeFormatted = dateFormat.format(shift.startTime);
+    
+    // التحقق من الإغلاق، واستخدام الوقت الحالي إذا كانت الوردية ما زالت مفتوحة
     final endTimeFormatted = shift.endTime != null 
-        ? DateTime.parse(shift.endTime! as String).toString().substring(0, 16) 
-        : DateTime.now().toString().substring(0, 16); // إذا لم تغلق بعد، نأخذ الوقت الحالي
+        ? dateFormat.format(shift.endTime!) 
+        : dateFormat.format(DateTime.now());
+
+    final String reportTitle = isXReport ? 'ملخص مبيعات الوردية (X-Report)' : 'تقرير إغلاق الوردية (Z-Report)';
 
     return Container(
       width: 350,
@@ -497,7 +511,7 @@ class ZReportReceiptWidget extends StatelessWidget {
           children: [
             Text(restaurantName, style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.black)),
             const SizedBox(height: 10),
-            const Text('تقرير إغلاق الوردية (Z-Report)', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black)),
+            Text(reportTitle, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black)),
             const Divider(color: Colors.black, thickness: 2),
             
             // ⬇️ التعديل الجديد: توثيق الأوقات بشكل صريح ⬇️
@@ -557,11 +571,26 @@ class ZReportReceiptWidget extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 20),
-            const Text('توقيع الكاشير: ........................', style: TextStyle(fontSize: 16, color: Colors.black)),
-            const SizedBox(height: 10),
-            const Text('توقيع المـديـر: ........................', style: TextStyle(fontSize: 16, color: Colors.black)),
+            Padding(
+              padding: const EdgeInsets.all(15),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text('الكاشير المسلم:', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black)),
+                  Text(cashierName, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black)),
+                ],
+              ),
+            ),
+            const SizedBox(height: 15),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('توقيع المـديـر: ............................', style: TextStyle(fontSize: 16, color: Colors.black)),
+              ],
+            ),
             const SizedBox(height: 20),
-            Text('طُبع في: ${DateTime.now().toString().substring(0, 16)}', style: const TextStyle(fontSize: 14, color: Colors.black)),
+            Text('طُبع في: ${dateFormat.format(DateTime.now())}', style: const TextStyle(fontSize: 14, color: Colors.black)),
+            const SizedBox(height: 10),
           ],
         ),
       ),

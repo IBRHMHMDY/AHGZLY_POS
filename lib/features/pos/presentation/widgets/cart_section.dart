@@ -27,9 +27,6 @@ class _CartSectionState extends State<CartSection> {
     final printerService = sl<PrinterService>();
     bool customerSuccess = true;
     bool kitchenSuccess = true;
-    
-
-    // ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('جاري الطباعة التلقائية...')));
 
     if (mode == 'customer' || mode == 'both') {
       customerSuccess = await printerService.printReceiptUsb(
@@ -137,7 +134,6 @@ class _CartSectionState extends State<CartSection> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          // الحماية من الـ Overflow عن طريق تقليص النص الطويل
           Expanded(
             child: Text(
               label, 

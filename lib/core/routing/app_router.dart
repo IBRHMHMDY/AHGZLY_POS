@@ -10,6 +10,8 @@ import 'package:ahgzly_pos/features/expenses/presentation/pages/expenses_screen.
 import 'package:ahgzly_pos/features/settings/presentation/pages/settings_screen.dart';
 import 'package:ahgzly_pos/features/shift/presentation/pages/open_shift_screen.dart';
 import 'package:ahgzly_pos/features/users/presentation/pages/users_screen.dart';
+import 'package:ahgzly_pos/features/auth/presentation/pages/lock_screen.dart';
+import 'package:ahgzly_pos/core/common/entities/user.dart';
 
 class AppRouter {
   // --------------------------------------------------------
@@ -83,6 +85,13 @@ class AppRouter {
         GoRoute(
           path: usersPath,
           builder: (context, state) => const UsersScreen(),
+        ),
+        GoRoute(
+          path: '/lock',
+          builder: (context, state) {
+            final user = state.extra as User; // استقبال المستخدم الحالي
+            return LockScreen(currentUser: user);
+          },
         ),
       ],
     );

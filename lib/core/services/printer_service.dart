@@ -12,36 +12,45 @@ class PrinterService {
   final ScreenshotController _screenshotController = ScreenshotController();
 
   /// دالة الطباعة المخصصة لطابعات الـ USB عبر نظام Windows
+  // lib/core/services/printer_service.dart
+
   Future<bool> printReceiptUsb({
     required Widget receiptWidget,
   }) async {
     try {
-      // 1. التقاط صورة للـ Widget بجودة عالية
+      // 1. التقاط الصورة مع إعطاء وقت كافٍ لرسم النصوص (300ms) لتجنب الشاشات البيضاء
       final Uint8List capturedImage = await _screenshotController.captureFromWidget(
         receiptWidget,
-        pixelRatio: 2.0, // لضمان وضوح النصوص العربية
-        delay: const Duration(milliseconds: 200),
+        pixelRatio: 2.0, 
+        delay: const Duration(milliseconds: 300), 
       );
 
-      // 2. إنشاء وثيقة PDF صامتة تحتوي على الصورة
       final pdf = pw.Document();
       final image = pw.MemoryImage(capturedImage);
 
+      // 2. 🪄 الإصلاح الجوهري: حساب طول الفاتورة الفعلي لمنع الطابعة من تجاهل الأمر
+      // عرض ورق 80mm يساوي تقريباً 226.77 نقطة (Points)
+      final double printWidth = PdfPageFormat.roll80.width;
+      final double imgWidth = image.width!.toDouble();
+      final double imgHeight = image.height!.toDouble();
+      
+      // حساب الطول المتناسب مع العرض
+      final double printHeight = (imgHeight / imgWidth) * printWidth;
+
       pdf.addPage(
         pw.Page(
-          // مقاس ورق الكاشير 80mm
-          pageFormat: PdfPageFormat.roll80, 
-          margin: pw.EdgeInsets.zero,
+          // إنشاء مقاس ورق دقيق يطابق طول الفاتورة بدلاً من الطول اللانهائي
+          pageFormat: PdfPageFormat(printWidth, printHeight, marginAll: 0),
           build: (pw.Context context) {
-            return pw.Center(
-              child: pw.Image(image, fit: pw.BoxFit.contain),
+            return pw.FullPage(
+              ignoreMargins: true,
+              child: pw.Image(image, fit: pw.BoxFit.fill),
             );
           },
         ),
       );
 
-      // 3. إرسال الـ PDF مباشرة إلى مدير طباعة الويندوز
-      // ستظهر نافذة اختيار الطابعة (اختر Epson)
+      // 3. جلب اسم الطابعة
       final settingsResult = await sl<GetSettingsUseCase>().call(NoParams());
       String savedPrinterName = '';
       settingsResult.fold(
@@ -49,11 +58,9 @@ class PrinterService {
         (settings) => savedPrinterName = settings.printerName,
       );
 
-      // 2. جلب قائمة الطابعات المتصلة بالويندوز
+      // 4. مطابقة الطابعة
       final printers = await Printing.listPrinters();
       Printer? targetPrinter;
-
-      // 3. البحث عن الطابعة المطلوبة بالاسم
       for (var p in printers) {
         if (p.name.trim().toLowerCase() == savedPrinterName.trim().toLowerCase()) {
           targetPrinter = p;
@@ -61,17 +68,15 @@ class PrinterService {
         }
       }
 
-      // 4. تنفيذ الطباعة
+      // 5. أمر الطباعة
       if (targetPrinter != null) {
-        // طباعة صامتة (مباشرة) في الخلفية بدون نوافذ
         await Printing.directPrintPdf(
           printer: targetPrinter,
-          onLayout: (PdfPageFormat format) async => pdf.save(), // تأكد أن اسم المتغير pdf مطابق لما لديك (أو doc)
+          onLayout: (PdfPageFormat format) async => pdf.save(),
         );
       } else {
-        // في حال كان اسم الطابعة في الإعدادات خاطئاً، نفتح النافذة كحل بديل للطوارئ
         await Printing.layoutPdf(
-          name: 'Receipt',
+          name: 'Z-Report',
           onLayout: (PdfPageFormat format) async => pdf.save(),
         );
       }
