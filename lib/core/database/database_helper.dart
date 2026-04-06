@@ -18,7 +18,7 @@ class DatabaseHelper {
 
   Future<Database> _initDatabase() async {
     final dbPath = await getDatabasesPath();
-    final path = join(dbPath, 'ahgzly_pos.db');
+    final path = join(dbPath, 'pos_sys.db');
 
     return await openDatabase(
       path,
@@ -178,21 +178,40 @@ class DatabaseHelper {
     await db.execute('CREATE INDEX idx_shifts_status ON shifts(status)');
   }
 
+  /// دالة مساعدة لفحص ما إذا كان العمود موجوداً بالفعل في الجدول لتجنب أعطال الترقية
+  Future<bool> _columnExists(Database db, String tableName, String columnName) async {
+    final result = await db.rawQuery("PRAGMA table_info($tableName)");
+    return result.any((row) => row['name'] == columnName);
+  }
+
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
     if (oldVersion < 11) {
-      // ترقيات قديمة
-      await db.execute('ALTER TABLE shifts ADD COLUMN cashier_id INTEGER DEFAULT 1');
-      await db.execute('ALTER TABLE shifts ADD COLUMN starting_cash REAL DEFAULT 0.0');
-      await db.execute('ALTER TABLE shifts ADD COLUMN total_expenses REAL DEFAULT 0.0');
-      await db.execute('ALTER TABLE shifts ADD COLUMN expected_cash REAL DEFAULT 0.0');
-      await db.execute('ALTER TABLE shifts ADD COLUMN actual_cash REAL DEFAULT 0.0');
+      // ترقيات قديمة (محمية الآن بفحص مسبق)
+      if (!await _columnExists(db, 'shifts', 'cashier_id')) {
+        await db.execute('ALTER TABLE shifts ADD COLUMN cashier_id INTEGER DEFAULT 1');
+      }
+      if (!await _columnExists(db, 'shifts', 'starting_cash')) {
+        await db.execute('ALTER TABLE shifts ADD COLUMN starting_cash REAL DEFAULT 0.0');
+      }
+      if (!await _columnExists(db, 'shifts', 'total_expenses')) {
+        await db.execute('ALTER TABLE shifts ADD COLUMN total_expenses REAL DEFAULT 0.0');
+      }
+      if (!await _columnExists(db, 'shifts', 'expected_cash')) {
+        await db.execute('ALTER TABLE shifts ADD COLUMN expected_cash REAL DEFAULT 0.0');
+      }
+      if (!await _columnExists(db, 'shifts', 'actual_cash')) {
+        await db.execute('ALTER TABLE shifts ADD COLUMN actual_cash REAL DEFAULT 0.0');
+      }
     }
     
     if (oldVersion < 12) {
-      // 1. إضافة shift_id للجداول إذا لم تكن موجودة (للمستخدمين القدامى)
-      // ملاحظة: SQLite لا يدعم إضافة FOREIGN KEY مباشرة عبر ALTER TABLE، لذلك نكتفي بإضافة العمود
-      await db.execute('ALTER TABLE orders ADD COLUMN shift_id INTEGER DEFAULT 0');
-      await db.execute('ALTER TABLE expenses ADD COLUMN shift_id INTEGER DEFAULT 0');
+      // 1. إضافة shift_id للجداول بأمان تام (لن يحدث كراش إذا كان موجوداً)
+      if (!await _columnExists(db, 'orders', 'shift_id')) {
+        await db.execute('ALTER TABLE orders ADD COLUMN shift_id INTEGER DEFAULT 0');
+      }
+      if (!await _columnExists(db, 'expenses', 'shift_id')) {
+        await db.execute('ALTER TABLE expenses ADD COLUMN shift_id INTEGER DEFAULT 0');
+      }
       
       // 2. إنشاء الفهارس
       await db.execute('CREATE INDEX IF NOT EXISTS idx_items_category ON items(category_id)');

@@ -1,3 +1,5 @@
+import 'package:ahgzly_pos/features/auth/presentation/bloc/auth_bloc.dart';
+import 'package:ahgzly_pos/features/auth/presentation/bloc/auth_state.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:ahgzly_pos/core/di/dependency_injection.dart';
@@ -20,11 +22,14 @@ class _CartSectionState extends State<CartSection> {
   Map<String, dynamic>? _lastCustomerData;
 
   void _handleAutoPrint(BuildContext context, int orderId, PosUpdated orderState, String mode) async {
+    final authState = context.read<AuthBloc>().state;
+    final String currentCashierName = (authState is AuthAuthenticated) ? authState.user.name : 'غير معروف';
     final printerService = sl<PrinterService>();
     bool customerSuccess = true;
     bool kitchenSuccess = true;
+    
 
-    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('جاري الطباعة التلقائية...')));
+    // ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('جاري الطباعة التلقائية...')));
 
     if (mode == 'customer' || mode == 'both') {
       customerSuccess = await printerService.printReceiptUsb(
@@ -33,6 +38,7 @@ class _CartSectionState extends State<CartSection> {
           subTotal: orderState.subTotal, discountAmount: orderState.discountAmount, taxAmount: orderState.taxAmount,
           serviceFee: orderState.serviceFee, deliveryFee: orderState.deliveryFee, total: orderState.total,
           restaurantName: orderState.restaurantName, taxNumber: orderState.taxNumber,
+          cashierName: currentCashierName,
           customerName: _lastCustomerData?['name'] ?? '', customerPhone: _lastCustomerData?['phone'] ?? '', customerAddress: _lastCustomerData?['address'] ?? '',
         ),
       );
@@ -54,6 +60,8 @@ class _CartSectionState extends State<CartSection> {
   }
 
   void _showPrintDialog(BuildContext context, int orderId, PosUpdated previousState) {
+    final authState = context.read<AuthBloc>().state;
+    final String currentCashierName = (authState is AuthAuthenticated) ? authState.user.name : 'غير معروف';
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -75,6 +83,7 @@ class _CartSectionState extends State<CartSection> {
                   serviceFee: previousState.serviceFee, deliveryFee: previousState.deliveryFee, total: previousState.total,
                   restaurantName: previousState.restaurantName, taxNumber: previousState.taxNumber,
                   customerName: _lastCustomerData?['name'] ?? '', customerPhone: _lastCustomerData?['phone'] ?? '', customerAddress: _lastCustomerData?['address'] ?? '',
+                  cashierName: currentCashierName,
                 ),
               );
             },

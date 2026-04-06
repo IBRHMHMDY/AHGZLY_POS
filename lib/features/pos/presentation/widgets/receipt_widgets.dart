@@ -4,11 +4,13 @@ import 'package:ahgzly_pos/features/pos/presentation/bloc/pos_state.dart';
 import 'package:ahgzly_pos/features/orders/domain/entities/order_history.dart';
 
 Widget _buildRow(String title, double value) {
+  // إجبار الرقم على عرض خانتين عشريتين فقط للعملة
+  final formattedValue = value.toStringAsFixed(2);
   return Row(
     mainAxisAlignment: MainAxisAlignment.spaceBetween,
     children: [
       Text(title, style: const TextStyle(fontSize: 16, color: Colors.black)),
-      Text('$value ج.م', style: const TextStyle(fontSize: 16, color: Colors.black)),
+      Text('$formattedValue ج.م', style: const TextStyle(fontSize: 16, color: Colors.black)),
     ],
   );
 }
@@ -28,6 +30,7 @@ class CustomerReceiptWidget extends StatelessWidget {
   final String customerName;
   final String customerPhone;
   final String customerAddress;
+  final String cashierName;
 
   const CustomerReceiptWidget({
     super.key,
@@ -42,6 +45,7 @@ class CustomerReceiptWidget extends StatelessWidget {
     required this.total,
     required this.restaurantName,
     required this.taxNumber,
+    required this.cashierName,
     this.customerName = '',
     this.customerPhone = '',
     this.customerAddress = '',
@@ -76,7 +80,7 @@ class CustomerReceiptWidget extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Expanded(child: Text('${c.item.name} (x${c.quantity})', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black))),
-                      Text('${c.item.price * c.quantity} ج.م', style: const TextStyle(fontSize: 16, color: Colors.black)),
+                      Text('${(c.item.price * c.quantity).toStringAsFixed(2)} ج.م', style: const TextStyle(fontSize: 16, color: Colors.black)),
                     ],
                   ),
                 )),
@@ -104,6 +108,13 @@ class CustomerReceiptWidget extends StatelessWidget {
             const SizedBox(height: 20),
             const Text('شكراً لزيارتكم!', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black)),
             Text(DateTime.now().toString().substring(0, 16), style: const TextStyle(fontSize: 14, color: Colors.black)),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text('الكاشير: $cashierName', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.black)),
+                Text(DateTime.now().toString().substring(0, 16), style: const TextStyle(fontSize: 14, color: Colors.black)),
+              ],
+            ),
           ],
         ),
       ),
@@ -201,7 +212,7 @@ class CustomerHistoryReceiptWidget extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Expanded(child: Text('${i.itemName} (x${i.quantity})', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black))),
-                      Text('${i.unitPrice * i.quantity} ج.م', style: const TextStyle(fontSize: 16, color: Colors.black)),
+                      Text('${(i.unitPrice * i.quantity).toStringAsFixed(2)} ج.م', style: const TextStyle(fontSize: 16, color: Colors.black)),
                     ],
                   ),
                 )),
@@ -213,7 +224,7 @@ class CustomerHistoryReceiptWidget extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 const Text('الإجمالي النهائي:', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.black)),
-                Text('${order.total} ج.م', style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.black)),
+                Text('${order.total.toStringAsFixed(2)} ج.م', style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.black)),
               ],
             ),
             const SizedBox(height: 20),

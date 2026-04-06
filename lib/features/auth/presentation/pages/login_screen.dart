@@ -11,6 +11,8 @@ import '../../../shift/presentation/bloc/shift_bloc.dart';
 import '../../../shift/presentation/bloc/shift_event.dart';
 import '../../../shift/presentation/bloc/shift_state.dart';
 
+import 'dart:io';
+
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
@@ -44,10 +46,60 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
+  // دالة إظهار رسالة التأكيد قبل الإغلاق لمنع الخروج بالخطأ
+  void _showExitConfirmation() {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Row(
+          children: [
+            Icon(Icons.warning_amber_rounded, color: Colors.red, size: 28),
+            SizedBox(width: 8),
+            Text('تأكيد الإغلاق', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
+          ],
+        ),
+        content: const Text(
+          'هل أنت متأكد من أنك تريد إغلاق نظام نقطة البيع (POS) بالكامل؟',
+          style: TextStyle(fontSize: 16),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('تراجع', style: TextStyle(fontSize: 16)),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            ),
+            onPressed: () {
+              // إغلاق البرنامج بالكامل بقوة
+              exit(0);
+            },
+            child: const Text('تأكيد وإغلاق', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.grey[100],
+      floatingActionButtonLocation: FloatingActionButtonLocation.startFloat,
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: _showExitConfirmation, // استدعاء دالة التأكيد
+        backgroundColor: Colors.red.shade700,
+        foregroundColor: Colors.white,
+        elevation: 8, // لزيادة البروز (Shadow)
+        icon: const Icon(Icons.power_settings_new, size: 28),
+        label: const Text(
+          'إغلاق النظام',
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+        ),
+      ),
       // تم تغيير BlocConsumer إلى MultiBlocListener لمراقبة الدخول والوردية معاً
       body: MultiBlocListener(
         listeners: [

@@ -1,8 +1,8 @@
-import 'dart:io'; // ⬅️ إضافة هامة للتعامل مع أوامر النظام
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:ahgzly_pos/core/utils/snackbar_utils.dart'; // ⬅️ تم الاستيراد هنا
+import 'package:ahgzly_pos/core/utils/snackbar_utils.dart';
 import 'package:ahgzly_pos/features/menu/domain/entities/category.dart';
 import 'package:ahgzly_pos/features/menu/domain/entities/item.dart';
 import 'package:ahgzly_pos/features/menu/presentation/bloc/menu_bloc.dart';
@@ -10,7 +10,7 @@ import 'package:ahgzly_pos/features/menu/presentation/bloc/menu_event.dart';
 import 'package:ahgzly_pos/features/menu/presentation/bloc/menu_state.dart';
 import 'package:ahgzly_pos/features/pos/presentation/bloc/pos_bloc.dart';
 import 'package:ahgzly_pos/features/pos/presentation/bloc/pos_event.dart';
-import 'package:ahgzly_pos/features/pos/presentation/bloc/pos_state.dart'; // ⬅️ تم الاستيراد لالتقاط الحالات
+import 'package:ahgzly_pos/features/pos/presentation/bloc/pos_state.dart';
 import 'package:ahgzly_pos/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:ahgzly_pos/features/auth/presentation/bloc/auth_event.dart';
 import 'package:ahgzly_pos/features/auth/presentation/bloc/auth_state.dart';

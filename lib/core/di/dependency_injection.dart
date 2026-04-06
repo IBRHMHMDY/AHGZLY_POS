@@ -204,32 +204,20 @@ void _initCore() {
   // Features: POS
   // ==========================================
   void _initPos() {
-
   sl.registerLazySingleton<PosLocalDataSource>(
     () => PosLocalDataSourceImpl(databaseHelper: sl()),
   );
   sl.registerLazySingleton<PosRepository>(
     () => PosRepositoryImpl(localDataSource: sl()),
   );
-  
-  // -- التعديل الجوهري هنا: حقن الورديات في المبيعات --
   sl.registerLazySingleton(() => SaveOrderUseCase(
     posRepository: sl(),
     checkActiveShiftUseCase: sl(), 
   ));
-
-    sl.registerLazySingleton<PosLocalDataSource>(
-      () => PosLocalDataSourceImpl(databaseHelper: sl()),
-    );
-    sl.registerLazySingleton<PosRepository>(
-      () => PosRepositoryImpl(localDataSource: sl()),
-    );
-    sl.registerLazySingleton(() => SaveOrderUseCase(checkActiveShiftUseCase: sl(),posRepository: sl()));
-
-    sl.registerFactory(
-      () => PosBloc(saveOrderUseCase: sl(), getSettingsUseCase: sl()),
-    );
-  }
+  sl.registerFactory(
+    () => PosBloc(saveOrderUseCase: sl(), getSettingsUseCase: sl()),
+  );
+}
 
   // ==========================================
   // Features: Settings

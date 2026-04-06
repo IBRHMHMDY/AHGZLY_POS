@@ -24,7 +24,7 @@ class _CheckoutDialogState extends State<CheckoutDialog> {
   @override
   void initState() {
     super.initState();
-    _paidController = TextEditingController(text: widget.totalAmount.toString());
+    _paidController = TextEditingController(text: widget.totalAmount.toStringAsFixed(2));
     _nameController = TextEditingController();
     _phoneController = TextEditingController();
     _addressController = TextEditingController();
@@ -113,15 +113,15 @@ class _CheckoutDialogState extends State<CheckoutDialog> {
                     ),
                     const Divider(),
                     TextFormField(
+                      controller: _nameController, 
+                      decoration: InputDecoration(labelText: 'اسم العميل', prefixIcon: const Icon(Icons.person), border: OutlineInputBorder(borderRadius: BorderRadius.circular(8))),
+                    ),
+                    const SizedBox(height: 12),
+                    TextFormField(
                       controller: _phoneController, 
                       keyboardType: TextInputType.phone, 
                       decoration: InputDecoration(labelText: 'رقم الهاتف *', prefixIcon: const Icon(Icons.phone), border: OutlineInputBorder(borderRadius: BorderRadius.circular(8))),
                       validator: (val) => (val == null || val.trim().isEmpty) ? 'مطلوب للتوصيل' : null,
-                    ),
-                    const SizedBox(height: 12),
-                    TextFormField(
-                      controller: _nameController, 
-                      decoration: InputDecoration(labelText: 'اسم العميل', prefixIcon: const Icon(Icons.person), border: OutlineInputBorder(borderRadius: BorderRadius.circular(8))),
                     ),
                     const SizedBox(height: 12),
                     TextFormField(
@@ -146,7 +146,7 @@ class _CheckoutDialogState extends State<CheckoutDialog> {
                         setState(() { 
                           _selectedMethod = val; 
                           if (val != 'كاش') {
-                            _paidController.text = widget.totalAmount.toString(); 
+                            _paidController.text = widget.totalAmount.toStringAsFixed(2); 
                           }
                         });
                       }
