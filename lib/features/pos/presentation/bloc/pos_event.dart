@@ -8,6 +8,13 @@ abstract class PosEvent extends Equatable {
   List<Object> get props => [];
 }
 
+class SaveOrderEvent extends PosEvent {
+  final dynamic order; // يفضل لاحقاً تغيير dynamic إلى الكيان Order
+  const SaveOrderEvent(this.order);
+  @override
+  List<Object> get props => [order];
+}
+
 class AddItemToCartEvent extends PosEvent {
   final Item item;
   const AddItemToCartEvent(this.item);

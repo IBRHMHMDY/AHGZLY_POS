@@ -55,7 +55,7 @@ class _AddExpenseDialogState extends State<AddExpenseDialog> {
             TextFormField(
               controller: _reasonController,
               decoration: InputDecoration(
-                labelText: 'سبب الصرف (أنابيب، خضار، إلخ)',
+                labelText: 'سبب الصرف (فواتير كهرباء، غاز... إلخ)',
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                 prefixIcon: const Icon(Icons.edit_note, color: Colors.teal),
               ),
@@ -84,6 +84,7 @@ class _AddExpenseDialogState extends State<AddExpenseDialog> {
                 amount: amount,
                 reason: _reasonController.text.trim(),
                 createdAt: DateTime.now().toIso8601String(),
+                shiftId: 0
               );
               Navigator.pop(context, expense);
             }

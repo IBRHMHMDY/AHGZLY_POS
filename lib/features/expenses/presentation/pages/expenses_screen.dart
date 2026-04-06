@@ -85,7 +85,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
       ),
       body: BlocConsumer<ExpensesBloc, ExpensesState>(
         listener: (context, state) {
-          if (state is ExpenseOperationSuccess) {
+          if (state is ExpensesSuccess) {
             ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(state.message), backgroundColor: Colors.green));
             context.read<ExpensesBloc>().add(LoadExpensesEvent());
           } else if (state is ExpensesError) {

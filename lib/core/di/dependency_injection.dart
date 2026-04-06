@@ -106,7 +106,7 @@ Future<void> init() async {
 }
 
   // ==========================================
-  // Core & Security (تمت إضافتها هنا)
+  // Core & Security 
   // ==========================================
 void _initCore() {
   sl.registerLazySingleton<DatabaseHelper>(() => DatabaseHelper());
@@ -203,15 +203,13 @@ void _initCore() {
   // ==========================================
   // Features: POS
   // ==========================================
-  void _initPos() {
-
-    sl.registerLazySingleton<PosLocalDataSource>(
-      () => PosLocalDataSourceImpl(databaseHelper: sl()),
-    );
-    sl.registerLazySingleton<PosRepository>(
-      () => PosRepositoryImpl(localDataSource: sl()),
-    );
-    sl.registerLazySingleton(() => SaveOrderUseCase(sl()));
+  sl.registerLazySingleton<PosLocalDataSource>(
+    () => PosLocalDataSourceImpl(databaseHelper: sl()),
+  );
+  sl.registerLazySingleton<PosRepository>(
+    () => PosRepositoryImpl(localDataSource: sl()),
+  );
+  sl.registerLazySingleton(() => SaveOrderUseCase(sl()));
 
     sl.registerFactory(
       () => PosBloc(saveOrderUseCase: sl(), getSettingsUseCase: sl()),
@@ -238,25 +236,23 @@ void _initCore() {
   // ==========================================
   // Features: Shift
   // ==========================================
-  void _initShift() {
-    sl.registerLazySingleton<ShiftLocalDataSource>(
-      () => ShiftLocalDataSourceImpl(databaseHelper: sl()),
-    );
-    sl.registerLazySingleton<ShiftRepository>(
-      () => ShiftRepositoryImpl(localDataSource: sl()),
-    );
-    sl.registerLazySingleton(() => CheckActiveShiftUseCase(sl()));
-    sl.registerLazySingleton(() => OpenShiftUseCase(sl()));
-    sl.registerLazySingleton(() => CloseShiftUseCase(sl()));
-
-    sl.registerFactory(
-      () => ShiftBloc(
-        checkActiveShiftUseCase: sl(),
-        openShiftUseCase: sl(),
-        closeShiftUseCase: sl(),
-      ),
-    );
-  }
+sl.registerLazySingleton<ShiftLocalDataSource>(
+    () => ShiftLocalDataSourceImpl(databaseHelper: sl()),
+  );
+  sl.registerLazySingleton<ShiftRepository>(
+    () => ShiftRepositoryImpl(localDataSource: sl()),
+  );
+  sl.registerLazySingleton(() => CheckActiveShiftUseCase(sl()));
+  sl.registerLazySingleton(() => OpenShiftUseCase(sl()));
+  sl.registerLazySingleton(() => CloseShiftUseCase(sl()));
+  
+  sl.registerFactory(
+    () => ShiftBloc(
+      checkActiveShiftUseCase: sl(), 
+      openShiftUseCase: sl(),
+      closeShiftUseCase: sl()
+    ),
+  );
 
   // ==========================================
   // Features: Orders
@@ -278,23 +274,20 @@ void _initCore() {
   // ==========================================
   // Features: Expenses
   // ==========================================
-  void _initExpenses() {
-
-    sl.registerLazySingleton<ExpensesLocalDataSource>(
-      () => ExpensesLocalDataSourceImpl(databaseHelper: sl()),
-    );
-    sl.registerLazySingleton<ExpensesRepository>(
-      () => ExpensesRepositoryImpl(localDataSource: sl()),
-    );
-    sl.registerLazySingleton(() => AddExpenseUseCase(sl()));
-    sl.registerLazySingleton(() => DeleteExpenseUseCase(sl()));
-    sl.registerLazySingleton(() => GetTodayExpensesUseCase(sl()));
-    sl.registerFactory(
-      () => ExpensesBloc(
-        addExpenseUseCase: sl(),
-        deleteExpenseUseCase: sl(),
-        getTodayExpensesUseCase: sl(),
-      ),
-    );
-  }
-
+  sl.registerLazySingleton<ExpensesLocalDataSource>(
+    () => ExpensesLocalDataSourceImpl(databaseHelper: sl()),
+  );
+  sl.registerLazySingleton<ExpensesRepository>(
+    () => ExpensesRepositoryImpl(localDataSource: sl()),
+  );
+  sl.registerLazySingleton(() => AddExpenseUseCase(sl()));
+  sl.registerLazySingleton(() => DeleteExpenseUseCase(sl()));
+  sl.registerLazySingleton(() => GetTodayExpensesUseCase(sl()));
+  sl.registerFactory(
+    () => ExpensesBloc(
+      addExpenseUseCase: sl(),
+      deleteExpenseUseCase: sl(),
+      getTodayExpensesUseCase: sl(),
+    ),
+  );
+}

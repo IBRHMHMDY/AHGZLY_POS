@@ -9,6 +9,6 @@ class CheckActiveShiftUseCase {
   CheckActiveShiftUseCase(this.repository);
 
   Future<Either<Failure, Shift?>> execute() async {
-    return await repository.getActiveShift();
+    return await repository.checkActiveShift();
   }
 }

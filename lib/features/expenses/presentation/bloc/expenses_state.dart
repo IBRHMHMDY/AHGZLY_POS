@@ -26,9 +26,9 @@ class ExpensesError extends ExpensesState {
   List<Object> get props => [message];
 }
 
-class ExpenseOperationSuccess extends ExpensesState {
+class ExpensesSuccess extends ExpensesState {
   final String message;
-  ExpenseOperationSuccess(this.message);
+  ExpensesSuccess(this.message);
   @override
   List<Object> get props => [message];
 }
