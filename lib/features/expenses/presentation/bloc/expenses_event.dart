@@ -7,7 +7,15 @@ abstract class ExpensesEvent extends Equatable {
   List<Object> get props => [];
 }
 
-class LoadExpensesEvent extends ExpensesEvent {}
+class LoadExpensesEvent extends ExpensesEvent {
+  final bool isAdmin;
+  final int? shiftId;
+
+  LoadExpensesEvent({required this.isAdmin, required this.shiftId});
+
+  @override
+  List<Object> get props => [isAdmin, shiftId ?? -1];
+}
 
 class AddExpenseEvent extends ExpensesEvent {
   final Expense expense;

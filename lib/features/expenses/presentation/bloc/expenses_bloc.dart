@@ -1,5 +1,4 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:ahgzly_pos/core/usecases/usecase.dart'; // لاستيراد NoParams
 import 'package:ahgzly_pos/features/expenses/domain/usecases/add_expense_usecase.dart';
 import 'package:ahgzly_pos/features/expenses/domain/usecases/delete_expense_usecase.dart';
 import 'package:ahgzly_pos/features/expenses/domain/usecases/get_today_expenses_usecase.dart';
@@ -24,15 +23,10 @@ class ExpensesBloc extends Bloc<ExpensesEvent, ExpensesState> {
   // 1. معالجة جلب مصروفات اليوم
   Future<void> _onLoadExpenses(LoadExpensesEvent event, Emitter<ExpensesState> emit) async {
     emit(ExpensesLoading());
-    
-    final result = await getTodayExpensesUseCase(NoParams());
-    
+    final result = await getTodayExpensesUseCase(GetExpensesParams(isAdmin: event.isAdmin, shiftId: event.shiftId));
     result.fold(
-      (failure) {
-        emit(ExpensesError(failure.message));
-      },
+      (failure) => emit(ExpensesError(failure.message)),
       (expenses) {
-        // حساب إجمالي المصروفات لليوم كما يتوقع הـ State لديك
         final double totalExpenses = expenses.fold(0.0, (sum, item) => sum + item.amount);
         emit(ExpensesLoaded(expenses, totalExpenses));
       },
@@ -52,7 +46,7 @@ class ExpensesBloc extends Bloc<ExpensesEvent, ExpensesState> {
       (_) {
         emit(ExpensesSuccess('تم إضافة المصروف بنجاح وخصمه من الوردية.'));
         // استدعاء حدث الجلب لتحديث القائمة فوراً بعد النجاح
-        add(LoadExpensesEvent());
+        add(LoadExpensesEvent(isAdmin: true, shiftId: event.expense.shiftId));
       },
     );
   }
@@ -70,7 +64,7 @@ class ExpensesBloc extends Bloc<ExpensesEvent, ExpensesState> {
       (_) {
         emit(ExpensesSuccess('تم حذف المصروف بنجاح.'));
         // استدعاء حدث الجلب لتحديث القائمة فوراً بعد الحذف
-        add(LoadExpensesEvent());
+        add(LoadExpensesEvent(isAdmin: true, shiftId: event.id));
       },
     );
   }

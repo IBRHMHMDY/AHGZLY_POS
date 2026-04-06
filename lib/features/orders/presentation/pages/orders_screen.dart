@@ -1,4 +1,8 @@
+import 'package:ahgzly_pos/features/auth/presentation/bloc/auth_bloc.dart';
+import 'package:ahgzly_pos/features/auth/presentation/bloc/auth_state.dart';
 import 'package:ahgzly_pos/features/orders/presentation/bloc/orders_event.dart';
+import 'package:ahgzly_pos/features/shift/presentation/bloc/shift_bloc.dart';
+import 'package:ahgzly_pos/features/shift/presentation/bloc/shift_state.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:ahgzly_pos/features/orders/presentation/bloc/orders_bloc.dart';
@@ -13,11 +17,21 @@ class OrdersScreen extends StatefulWidget {
 }
 
 class _OrdersScreenState extends State<OrdersScreen> {
+  
+  void _loadOrders() {
+    final authState = context.read<AuthBloc>().state;
+    final shiftState = context.read<ShiftBloc>().state;
+    
+    final bool isAdmin = (authState is AuthAuthenticated) && authState.user.isAdmin;
+    final int? shiftId = (shiftState is ActiveShiftLoaded) ? shiftState.shift.id : null;
+    
+    context.read<OrdersBloc>().add(LoadOrdersEvent(isAdmin: isAdmin, shiftId: shiftId));
+  }
+
   @override
   void initState() {
     super.initState();
-    // جلب الطلبات فور فتح الشاشة لضمان أحدث البيانات
-    context.read<OrdersBloc>().add(LoadOrdersEvent()); // تأكد أن اسم الـ Event في مشروعك هو FetchOrdersEvent أو عدله
+    _loadOrders();
   }
 
   @override

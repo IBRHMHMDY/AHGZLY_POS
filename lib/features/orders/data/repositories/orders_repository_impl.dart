@@ -9,9 +9,9 @@ class OrdersRepositoryImpl implements OrdersRepository {
   OrdersRepositoryImpl({required this.localDataSource});
 
   @override
-  Future<Either<Failure, List<OrderHistory>>> getOrdersHistory() async {
+  Future<Either<Failure, List<OrderHistory>>> getOrdersHistory({required bool isAdmin, required int? shiftId}) async{
     try {
-      final orders = await localDataSource.getOrdersHistory();
+      final orders = await localDataSource.getOrdersHistory(isAdmin: isAdmin,shiftId: shiftId);
       return Right(orders);
     } catch (e) {
       return Left(DatabaseFailure('فشل في جلب سجل الطلبات: ${e.toString()}'));

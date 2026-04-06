@@ -1,6 +1,10 @@
+import 'package:ahgzly_pos/features/auth/presentation/bloc/auth_bloc.dart';
+import 'package:ahgzly_pos/features/auth/presentation/bloc/auth_state.dart';
 import 'package:ahgzly_pos/features/expenses/presentation/bloc/expenses_bloc.dart';
 import 'package:ahgzly_pos/features/expenses/presentation/bloc/expenses_event.dart';
 import 'package:ahgzly_pos/features/expenses/presentation/bloc/expenses_state.dart';
+import 'package:ahgzly_pos/features/shift/presentation/bloc/shift_bloc.dart';
+import 'package:ahgzly_pos/features/shift/presentation/bloc/shift_state.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:ahgzly_pos/features/expenses/domain/entities/expense.dart';
@@ -15,10 +19,20 @@ class ExpensesScreen extends StatefulWidget {
 }
 
 class _ExpensesScreenState extends State<ExpensesScreen> {
+  void _loadData() {
+    final authState = context.read<AuthBloc>().state;
+    final shiftState = context.read<ShiftBloc>().state;
+    
+    final bool isAdmin = (authState is AuthAuthenticated) && authState.user.isAdmin;
+    final int? shiftId = (shiftState is ActiveShiftLoaded) ? shiftState.shift.id : null;
+    
+    context.read<ExpensesBloc>().add(LoadExpensesEvent(isAdmin: isAdmin, shiftId: shiftId));
+  }
+
   @override
   void initState() {
     super.initState();
-    context.read<ExpensesBloc>().add(LoadExpensesEvent());
+    _loadData(); // استدعاء الدالة الجديدة
   }
 
   void _showAddExpenseDialog(BuildContext context) async {
@@ -87,7 +101,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
         listener: (context, state) {
           if (state is ExpensesSuccess) {
             ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(state.message), backgroundColor: Colors.green));
-            context.read<ExpensesBloc>().add(LoadExpensesEvent());
+            _loadData();
           } else if (state is ExpensesError) {
             ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(state.message), backgroundColor: Colors.red));
           }

@@ -3,7 +3,7 @@ import 'package:ahgzly_pos/core/error/exceptions.dart';
 import 'package:ahgzly_pos/features/expenses/data/models/expense_model.dart';
 
 abstract class ExpensesLocalDataSource {
-  Future<List<ExpenseModel>> getTodayExpenses();
+  Future<List<ExpenseModel>> getExpenses({required bool isAdmin, required int? shiftId});
   Future<void> addExpense(ExpenseModel expense);
   Future<void> deleteExpense(int id);
 }
@@ -14,16 +14,24 @@ class ExpensesLocalDataSourceImpl implements ExpensesLocalDataSource {
   ExpensesLocalDataSourceImpl({required this.databaseHelper});
 
   @override
-  Future<List<ExpenseModel>> getTodayExpenses() async {
+  Future<List<ExpenseModel>> getExpenses({required bool isAdmin, required int? shiftId}) async {
     final db = await databaseHelper.database;
-    // الاستعلام الأفضل: جلب المصروفات الخاصة بالوردية المفتوحة حالياً إن وجدت، أو مصروفات اليوم
-    // لكن للاحتفاظ بالمنطق القديم مبدئياً، سنجلب مصروفات اليوم
-    final result = await db.query(
-      'expenses',
-      where: "date(created_at) = date('now', 'localtime')",
-      orderBy: 'id DESC',
-    );
-    return result.map((e) => ExpenseModel.fromMap(e)).toList();
+    
+    if (isAdmin) {
+      // المدير يرى كافة المصروفات المسجلة
+      final result = await db.query('expenses', orderBy: 'id DESC');
+      return result.map((e) => ExpenseModel.fromMap(e)).toList();
+    } else {
+      // الكاشير يرى مصروفات ورديته فقط
+      if (shiftId == null) return [];
+      final result = await db.query(
+        'expenses',
+        where: 'shift_id = ?',
+        whereArgs: [shiftId],
+        orderBy: 'id DESC',
+      );
+      return result.map((e) => ExpenseModel.fromMap(e)).toList();
+    }
   }
 
   @override

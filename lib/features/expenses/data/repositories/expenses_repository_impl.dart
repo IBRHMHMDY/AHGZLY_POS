@@ -8,13 +8,12 @@ import 'package:ahgzly_pos/features/expenses/data/models/expense_model.dart';
 
 class ExpensesRepositoryImpl implements ExpensesRepository {
   final ExpensesLocalDataSource localDataSource;
-
   ExpensesRepositoryImpl({required this.localDataSource});
 
   @override
-  Future<Either<Failure, List<Expense>>> getTodayExpenses() async {
+  Future<Either<Failure, List<Expense>>> getExpenses({required bool isAdmin, required int? shiftId}) async {
     try {
-      final expenses = await localDataSource.getTodayExpenses();
+      final expenses = await localDataSource.getExpenses(isAdmin: isAdmin, shiftId: shiftId);
       return Right(expenses);
     } catch (e) {
       return Left(DatabaseFailure('فشل في جلب المصروفات'));
@@ -24,6 +23,7 @@ class ExpensesRepositoryImpl implements ExpensesRepository {
   @override
   Future<Either<Failure, void>> addExpense(Expense expense) async {
     try {
+      // يجب أن تتأكد أن ExpenseModel يحتوي على حقل shiftId
       await localDataSource.addExpense(ExpenseModel.fromEntity(expense));
       return const Right(null);
     } catch (e) {

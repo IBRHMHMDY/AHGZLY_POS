@@ -5,7 +5,6 @@ import 'package:ahgzly_pos/features/expenses/domain/repositories/expenses_reposi
 
 class DeleteExpenseUseCase implements UseCase<void, int> {
   final ExpensesRepository repository;
-
   DeleteExpenseUseCase(this.repository);
 
   @override

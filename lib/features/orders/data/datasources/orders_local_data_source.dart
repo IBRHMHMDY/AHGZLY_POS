@@ -2,7 +2,7 @@ import 'package:ahgzly_pos/core/database/database_helper.dart';
 import 'package:ahgzly_pos/features/orders/data/models/order_history_model.dart';
 
 abstract class OrdersLocalDataSource {
-  Future<List<OrderHistoryModel>> getOrdersHistory();
+  Future<List<OrderHistoryModel>> getOrdersHistory({required bool isAdmin, required int? shiftId});
   Future<void> refundOrder(int orderId); // دالة الاسترجاع
 }
 
@@ -11,11 +11,21 @@ class OrdersLocalDataSourceImpl implements OrdersLocalDataSource {
   OrdersLocalDataSourceImpl({required this.databaseHelper});
 
   @override
-  Future<List<OrderHistoryModel>> getOrdersHistory() async {
+  Future<List<OrderHistoryModel>> getOrdersHistory({required bool isAdmin, required int? shiftId}) async {
     final db = await databaseHelper.database;
-    final List<Map<String, dynamic>> ordersMap = await db.query('orders', orderBy: 'id DESC');
+    final List<Map<String, dynamic>> ordersMap;
     List<OrderHistoryModel> orders = [];
-
+    if(isAdmin){
+      ordersMap = await db.query('orders', orderBy: 'id DESC');
+    }else{
+      if (shiftId == null) return [];
+      ordersMap = await db.query(
+        'orders', 
+        where: 'shift_id = ?', 
+        whereArgs: [shiftId], 
+        orderBy: 'id DESC'
+      );
+    }
     for (var order in ordersMap) {
       final orderId = order['id'];
       final List<Map<String, dynamic>> itemsMap = await db.rawQuery('''

@@ -292,12 +292,7 @@ void _initExpenses() {
   sl.registerLazySingleton<ExpensesRepository>(
     () => ExpensesRepositoryImpl(localDataSource: sl()),
   );
-  sl.registerLazySingleton(
-    () => AddExpenseUseCase(
-      checkActiveShiftUseCase: sl(),
-      expensesRepository: sl(),
-    ),
-  );
+  sl.registerLazySingleton(() => AddExpenseUseCase(sl()), );
   sl.registerLazySingleton(() => DeleteExpenseUseCase(sl()));
   sl.registerLazySingleton(() => GetTodayExpensesUseCase(sl()));
   sl.registerFactory(

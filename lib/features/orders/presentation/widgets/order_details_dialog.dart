@@ -1,3 +1,7 @@
+import 'package:ahgzly_pos/features/auth/presentation/bloc/auth_bloc.dart';
+import 'package:ahgzly_pos/features/auth/presentation/bloc/auth_state.dart';
+import 'package:ahgzly_pos/features/shift/presentation/bloc/shift_bloc.dart';
+import 'package:ahgzly_pos/features/shift/presentation/bloc/shift_state.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:ahgzly_pos/core/di/dependency_injection.dart';
@@ -22,9 +26,15 @@ class OrderDetailsDialog extends StatelessWidget {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       title: Row(
         children: [
-          Icon(Icons.receipt_long, color: isRefunded ? Colors.red : Colors.teal),
+          Icon(
+            Icons.receipt_long,
+            color: isRefunded ? Colors.red : Colors.teal,
+          ),
           const SizedBox(width: 8),
-          Text('تفاصيل الطلب #${order.id}', style: const TextStyle(fontWeight: FontWeight.bold)),
+          Text(
+            'تفاصيل الطلب #${order.id}',
+            style: const TextStyle(fontWeight: FontWeight.bold),
+          ),
         ],
       ),
       content: SizedBox(
@@ -41,14 +51,19 @@ class OrderDetailsDialog extends StatelessWidget {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text('إجمالي الطلب:', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  const Text(
+                    'إجمالي الطلب:',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
                   Text(
-                    '${order.total} ج.م', 
+                    '${order.total} ج.م',
                     style: TextStyle(
-                      fontSize: 22, 
-                      fontWeight: FontWeight.bold, 
-                      color: isRefunded ? Colors.red : Colors.teal, 
-                      decoration: isRefunded ? TextDecoration.lineThrough : null,
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                      color: isRefunded ? Colors.red : Colors.teal,
+                      decoration: isRefunded
+                          ? TextDecoration.lineThrough
+                          : null,
                     ),
                   ),
                 ],
@@ -63,9 +78,24 @@ class OrderDetailsDialog extends StatelessWidget {
                 itemBuilder: (ctx, index) {
                   final item = order.items[index];
                   return ListTile(
-                    title: Text(item.itemName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                    subtitle: Text('الكمية: ${item.quantity}', style: TextStyle(color: Colors.grey.shade700)),
-                    trailing: Text('${item.unitPrice * item.quantity} ج.م', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                    title: Text(
+                      item.itemName,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                    ),
+                    subtitle: Text(
+                      'الكمية: ${item.quantity}',
+                      style: TextStyle(color: Colors.grey.shade700),
+                    ),
+                    trailing: Text(
+                      '${item.unitPrice * item.quantity} ج.م',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                    ),
                   );
                 },
               ),
@@ -85,40 +115,76 @@ class OrderDetailsDialog extends StatelessWidget {
                     style: OutlinedButton.styleFrom(
                       foregroundColor: Colors.red,
                       side: const BorderSide(color: Colors.red),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                     ),
                     onPressed: () {
                       Navigator.pop(context);
-                      context.read<OrdersBloc>().add(RefundOrderEvent(order.id));
+                      final authState = context.read<AuthBloc>().state;
+                      final shiftState = context.read<ShiftBloc>().state;
+
+                      final bool isAdmin =
+                          (authState is AuthAuthenticated) &&
+                          authState.user.isAdmin;
+                      final int? shiftId = (shiftState is ActiveShiftLoaded)
+                          ? shiftState.shift.id
+                          : null;
+                      context.read<OrdersBloc>().add(
+                        RefundOrderEvent(
+                          isAdmin: isAdmin,
+                          shiftId: shiftId,
+                          orderId: order.id,
+                        ),
+                      );
                     },
                     icon: const Icon(Icons.refresh),
-                    label: const Text('استرجاع (Refund)', style: TextStyle(fontWeight: FontWeight.bold)),
+                    label: const Text(
+                      'استرجاع (Refund)',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
                   )
                 else
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                    decoration: BoxDecoration(color: Colors.red.shade100, borderRadius: BorderRadius.circular(8)),
-                    child: const Text('تم استرجاع الطلب', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.red.shade100,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Text(
+                      'تم استرجاع الطلب',
+                      style: TextStyle(
+                        color: Colors.red,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ),
-                  
+
                 const SizedBox(width: 12),
-                
+
                 ElevatedButton.icon(
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.blue.shade50,
                     foregroundColor: Colors.blue.shade700,
                     elevation: 0,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                   ),
                   onPressed: () async {
-                    final settingsResult = await sl<GetSettingsUseCase>().call(NoParams());
+                    final settingsResult = await sl<GetSettingsUseCase>().call(
+                      NoParams(),
+                    );
                     String rName = 'مـطـعـم احـجـزلـي';
                     String tNum = '123-456-789';
-                    settingsResult.fold(
-                      (l) => null,
-                      (r) { rName = r.restaurantName; tNum = r.taxNumber; }
-                    );
-                    
+                    settingsResult.fold((l) => null, (r) {
+                      rName = r.restaurantName;
+                      tNum = r.taxNumber;
+                    });
+
                     final printerService = sl<PrinterService>();
                     await printerService.printReceiptUsb(
                       receiptWidget: CustomerHistoryReceiptWidget(
@@ -129,13 +195,19 @@ class OrderDetailsDialog extends StatelessWidget {
                     );
                   },
                   icon: const Icon(Icons.print),
-                  label: const Text('إعادة طباعة', style: TextStyle(fontWeight: FontWeight.bold)),
+                  label: const Text(
+                    'إعادة طباعة',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
                 ),
               ],
             ),
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('إغلاق', style: TextStyle(fontSize: 16, color: Colors.grey)),
+              child: const Text(
+                'إغلاق',
+                style: TextStyle(fontSize: 16, color: Colors.grey),
+              ),
             ),
           ],
         ),

@@ -1,5 +1,11 @@
+import 'package:ahgzly_pos/features/expenses/presentation/bloc/expenses_bloc.dart';
+import 'package:ahgzly_pos/features/expenses/presentation/bloc/expenses_event.dart';
+import 'package:ahgzly_pos/features/shift/presentation/bloc/shift_bloc.dart';
+import 'package:ahgzly_pos/features/shift/presentation/bloc/shift_state.dart';
 import 'package:flutter/material.dart';
 import 'package:ahgzly_pos/features/expenses/domain/entities/expense.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:intl/intl.dart';
 
 class AddExpenseDialog extends StatefulWidget {
   const AddExpenseDialog({super.key});
@@ -80,13 +86,21 @@ class _AddExpenseDialogState extends State<AddExpenseDialog> {
           onPressed: () {
             if (_formKey.currentState!.validate()) {
               final amount = double.parse(_amountController.text);
-              final expense = Expense(
-                amount: amount,
-                reason: _reasonController.text.trim(),
-                createdAt: DateTime.now().toIso8601String(),
-                shiftId: 0
-              );
-              Navigator.pop(context, expense);
+              final shiftState = context.read<ShiftBloc>().state;
+    int currentShiftId = 0;
+    if (shiftState is ActiveShiftLoaded) {
+      currentShiftId = shiftState.shift.id; // جلب رقم الوردية الحالية
+    }
+    final dateFormat = DateFormat('yyyy-MM-dd hh:mm a');
+    final newExpense = Expense(
+      shiftId: currentShiftId, // ⬅️ ربط المصروف بالوردية هنا!
+      amount: amount,
+      reason: _reasonController.text,
+      createdAt:dateFormat.format(DateTime.now()),
+    );
+
+    context.read<ExpensesBloc>().add(AddExpenseEvent(newExpense));
+              Navigator.pop(context, newExpense);
             }
           },
           child: const Text('حفظ المصروف', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
