@@ -7,6 +7,7 @@ import 'package:ahgzly_pos/features/settings/domain/entities/app_settings.dart';
 import 'package:ahgzly_pos/features/settings/presentation/bloc/settings_bloc.dart';
 import 'package:ahgzly_pos/features/settings/presentation/bloc/settings_event.dart';
 import 'package:ahgzly_pos/features/settings/presentation/bloc/settings_state.dart';
+import 'package:printing/printing.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -17,10 +18,13 @@ class SettingsScreen extends StatefulWidget {
 
 class _SettingsScreenState extends State<SettingsScreen> {
   final _formKey = GlobalKey<FormState>();
+  List<Printer> _printers = [];
+  bool _isLoadingPrinters = false;
+  String? _selectedPrinterName;
   late TextEditingController _taxController;
   late TextEditingController _serviceController;
   late TextEditingController _deliveryController;
-  late TextEditingController _printerController;
+  // late TextEditingController _printerController;
   late TextEditingController _restaurantNameController;
   late TextEditingController _taxNumberController;
 
@@ -35,9 +39,24 @@ class _SettingsScreenState extends State<SettingsScreen> {
     _taxController = TextEditingController();
     _serviceController = TextEditingController();
     _deliveryController = TextEditingController();
-    _printerController = TextEditingController();
+    // _printerController = TextEditingController();
+    _fetchPrinters();
     _restaurantNameController = TextEditingController();
     _taxNumberController = TextEditingController();
+  }
+
+  Future<void> _fetchPrinters() async {
+    setState(() => _isLoadingPrinters = true);
+    try {
+      // هذه الدالة تجلب كل الطابعات المعرفة في Windows و Android
+      final printers = await Printing.listPrinters();
+      setState(() {
+        _printers = printers;
+        _isLoadingPrinters = false;
+      });
+    } catch (e) {
+      setState(() => _isLoadingPrinters = false);
+    }
   }
 
   @override
@@ -45,7 +64,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     _taxController.dispose();
     _serviceController.dispose();
     _deliveryController.dispose();
-    _printerController.dispose();
+    // _printerController.dispose();
     _restaurantNameController.dispose();
     _taxNumberController.dispose();
     super.dispose();
@@ -95,7 +114,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         taxRate: double.parse(_taxController.text) / 100,
         serviceRate: double.parse(_serviceController.text) / 100,
         deliveryFee: double.parse(_deliveryController.text),
-        printerName: _printerController.text.trim(),
+        printerName: _selectedPrinterName ?? '',
         restaurantName: _restaurantNameController.text.trim(),
         taxNumber: _taxNumberController.text.trim(),
         printMode: _selectedPrintMode,
@@ -187,10 +206,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
           if (state is SettingsLoaded) {
             if (!_isInit) {
               final s = state.settings;
-              _taxController.text = (s.taxRate * 100).toString();
-              _serviceController.text = (s.serviceRate * 100).toString();
-              _deliveryController.text = s.deliveryFee.toString();
-              _printerController.text = s.printerName;
+              _taxController.text = num.parse((s.taxRate * 100).toStringAsFixed(2)).toString();
+              _serviceController.text = num.parse((s.serviceRate * 100).toStringAsFixed(2)).toString();
+              _deliveryController.text = num.parse(s.deliveryFee.toStringAsFixed(2)).toString();
+              _selectedPrinterName = s.printerName;
               _restaurantNameController.text = s.restaurantName;
               _taxNumberController.text = s.taxNumber;
               _selectedPrintMode = s.printMode;
@@ -253,10 +272,62 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         title: 'الأجهزة والطباعة',
                         icon: Icons.print,
                         children: [
-                          _buildTextField(
-                            _printerController,
-                            'اسم طابعة الويندوز (USB Printer Name)',
-                            'EPSON Printer',
+                          // Select Printer
+                          Row(
+                            children: [
+                              Expanded(
+                                child: DropdownButtonFormField<String>(
+                                  isExpanded: true,
+                                  // التأكد من أن الاسم المحفوظ موجود فعلاً في قائمة الطابعات
+                                  value: (_selectedPrinterName != null && 
+                                          _printers.any((p) => p.name == _selectedPrinterName))
+                                      ? _selectedPrinterName
+                                      : null,
+                                  decoration: InputDecoration(
+                                    labelText: 'اختر الطابعة المتصلة',
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    filled: true,
+                                    fillColor: Colors.grey.shade50,
+                                  ),
+                                  items: _printers.map((Printer printer) {
+                                    return DropdownMenuItem<String>(
+                                      value: printer.name,
+                                      child: Text(
+                                        '${printer.name} ${printer.isDefault ? "(الافتراضية)" : ""}',
+                                        style: const TextStyle(fontSize: 14),
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    );
+                                  }).toList(),
+                                  onChanged: (val) {
+                                    setState(() {
+                                      _selectedPrinterName = val;
+                                    });
+                                  },
+                                  validator: (value) => value == null || value.isEmpty ? 'مطلوب تحديد طابعة' : null,
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Container(
+                                decoration: BoxDecoration(
+                                  color: Colors.teal,
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: IconButton(
+                                  icon: _isLoadingPrinters
+                                      ? const SizedBox(
+                                          width: 24,
+                                          height: 24,
+                                          child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                                        )
+                                      : const Icon(Icons.refresh, color: Colors.white),
+                                  onPressed: _fetchPrinters,
+                                  tooltip: 'تحديث قائمة الطابعات',
+                                ),
+                              ),
+                            ],
                           ),
                           const SizedBox(height: 16),
                           DropdownButtonFormField<String>(
