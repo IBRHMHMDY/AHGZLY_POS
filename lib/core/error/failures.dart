@@ -30,3 +30,8 @@ class SecurityFailure extends Failure {
 class AuthFailure extends Failure {
   const AuthFailure(super.message);
 }
+
+class ValidationFailure extends Failure {
+  const ValidationFailure(super.message);
+  
+}

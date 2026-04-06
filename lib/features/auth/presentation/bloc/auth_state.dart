@@ -1,5 +1,5 @@
+import 'package:ahgzly_pos/core/common/entities/user.dart';
 import 'package:equatable/equatable.dart';
-import 'package:ahgzly_pos/features/auth/domain/entities/user.dart';
 
 abstract class AuthState extends Equatable {
   @override

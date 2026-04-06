@@ -90,6 +90,14 @@ import 'package:ahgzly_pos/features/expenses/domain/usecases/add_expense_usecase
 import 'package:ahgzly_pos/features/expenses/domain/usecases/delete_expense_usecase.dart';
 import 'package:ahgzly_pos/features/expenses/domain/usecases/get_today_expenses_usecase.dart';
 import 'package:ahgzly_pos/features/expenses/presentation/bloc/expenses_bloc.dart';
+// Users Feature
+import 'package:ahgzly_pos/features/users/data/datasources/users_local_data_source.dart';
+import 'package:ahgzly_pos/features/users/data/repositories/users_repository_impl.dart';
+import 'package:ahgzly_pos/features/users/domain/repositories/users_repository.dart';
+import 'package:ahgzly_pos/features/users/domain/usecases/get_users_usecase.dart';
+import 'package:ahgzly_pos/features/users/domain/usecases/add_user_usecase.dart';
+import 'package:ahgzly_pos/features/users/domain/usecases/toggle_user_status_usecase.dart';
+import 'package:ahgzly_pos/features/users/presentation/bloc/users_bloc.dart';
 
 final sl = GetIt.instance;
 
@@ -103,11 +111,12 @@ Future<void> init() async {
   _initSettings();
   _initOrders();
   _initExpenses();
+  _initUsers();
 }
 
-  // ==========================================
-  // Core & Security 
-  // ==========================================
+// ==========================================
+// Core & Security
+// ==========================================
 void _initCore() {
   sl.registerLazySingleton<DatabaseHelper>(() => DatabaseHelper());
   sl.registerLazySingleton<PrinterService>(() => PrinterService());
@@ -121,182 +130,207 @@ void _initCore() {
   sl.registerLazySingleton<TimeGuardService>(() => TimeGuardService(sl()));
 }
 
+// ==========================================
+// Features: License
+// ==========================================
+void _initLicense() {
+  sl.registerLazySingleton<LicenseLocalDataSource>(
+    () => LicenseLocalDataSourceImpl(secureStorage: sl()),
+  );
+  sl.registerLazySingleton<LicenseRepository>(
+    () => LicenseRepositoryImpl(localDataSource: sl()),
+  );
+  sl.registerLazySingleton(
+    () => CheckLicenseStatusUseCase(
+      cryptoService: sl(),
+      deviceSecurityService: sl(),
+      repository: sl(),
+      timeGuardService: sl(),
+    ),
+  );
+  sl.registerLazySingleton(() => ActivateLicenseUseCase(sl()));
+  sl.registerFactory(
+    () => LicenseBloc(
+      checkLicenseStatusUseCase: sl(),
+      activateLicenseUseCase: sl(),
+    ),
+  );
+}
 
-  // ==========================================
-  // Features: License
-  // ==========================================
-  void _initLicense(){
-    sl.registerLazySingleton<LicenseLocalDataSource>(
-      () => LicenseLocalDataSourceImpl(secureStorage: sl()),
-    );
-    sl.registerLazySingleton<LicenseRepository>(
-      () => LicenseRepositoryImpl(localDataSource: sl()),
-    );
-    sl.registerLazySingleton(
-      () => CheckLicenseStatusUseCase(
-        cryptoService: sl(),
-        deviceSecurityService: sl(),
-        repository: sl(),
-        timeGuardService: sl(),
-      ),
-    );
-    sl.registerLazySingleton(() => ActivateLicenseUseCase(sl()));
-    sl.registerFactory(
-      () => LicenseBloc(
-        checkLicenseStatusUseCase: sl(),
-        activateLicenseUseCase: sl(),
-      ),
-    );
-  }
+// ==========================================
+// Features: Auth
+// ==========================================
+void _initAuth() {
+  sl.registerLazySingleton<AuthLocalDataSource>(
+    () => AuthLocalDataSourceImpl(databaseHelper: sl(), secureStorage: sl()),
+  );
+  sl.registerLazySingleton<AuthRepository>(
+    () => AuthRepositoryImpl(localDataSource: sl()),
+  );
+  sl.registerLazySingleton(() => LoginUseCase(sl()));
+  sl.registerLazySingleton(() => LogoutUseCase(sl()));
+  sl.registerLazySingleton(
+    () => AuthBloc(loginUseCase: sl(), logoutUseCase: sl()),
+  );
+}
 
-  // ==========================================
-  // Features: Auth
-  // ==========================================
-  void _initAuth(){
+// ==========================================
+// Features: Menu
+// ==========================================
+void _initMenu() {
+  sl.registerLazySingleton<MenuLocalDataSource>(
+    () => MenuLocalDataSourceImpl(databaseHelper: sl()),
+  );
+  sl.registerLazySingleton<MenuRepository>(
+    () => MenuRepositoryImpl(localDataSource: sl()),
+  );
+  sl.registerLazySingleton(() => GetCategoriesUseCase(sl()));
+  sl.registerLazySingleton(() => AddCategoryUseCase(sl()));
+  sl.registerLazySingleton(() => UpdateCategoryUseCase(sl()));
+  sl.registerLazySingleton(() => DeleteCategoryUseCase(sl()));
+  sl.registerLazySingleton(() => GetItemsUseCase(sl()));
+  sl.registerLazySingleton(() => AddItemUseCase(sl()));
+  sl.registerLazySingleton(() => UpdateItemUseCase(sl()));
+  sl.registerLazySingleton(() => DeleteItemUseCase(sl()));
 
-    sl.registerLazySingleton<AuthLocalDataSource>(
-      () => AuthLocalDataSourceImpl(databaseHelper: sl(), secureStorage: sl()),
-    );
-    sl.registerLazySingleton<AuthRepository>(
-      () => AuthRepositoryImpl(localDataSource: sl()),
-    );
-    sl.registerLazySingleton(() => LoginUseCase(sl()));
-    sl.registerLazySingleton(() => LogoutUseCase(sl()));
-    sl.registerLazySingleton(
-      () => AuthBloc(loginUseCase: sl(), logoutUseCase: sl()),
-    );
-  }
+  sl.registerFactory(
+    () => MenuBloc(
+      getCategories: sl(),
+      addCategory: sl(),
+      updateCategory: sl(),
+      deleteCategory: sl(),
+      getItems: sl(),
+      addItem: sl(),
+      updateItem: sl(),
+      deleteItem: sl(),
+    ),
+  );
+}
 
-  // ==========================================
-  // Features: Menu
-  // ==========================================
-  void _initMenu() {
-    sl.registerLazySingleton<MenuLocalDataSource>(
-      () => MenuLocalDataSourceImpl(databaseHelper: sl()),
-    );
-    sl.registerLazySingleton<MenuRepository>(
-      () => MenuRepositoryImpl(localDataSource: sl()),
-    );
-    sl.registerLazySingleton(() => GetCategoriesUseCase(sl()));
-    sl.registerLazySingleton(() => AddCategoryUseCase(sl()));
-    sl.registerLazySingleton(() => UpdateCategoryUseCase(sl()));
-    sl.registerLazySingleton(() => DeleteCategoryUseCase(sl()));
-    sl.registerLazySingleton(() => GetItemsUseCase(sl()));
-    sl.registerLazySingleton(() => AddItemUseCase(sl()));
-    sl.registerLazySingleton(() => UpdateItemUseCase(sl()));
-    sl.registerLazySingleton(() => DeleteItemUseCase(sl()));
-
-    sl.registerFactory(
-      () => MenuBloc(
-        getCategories: sl(),
-        addCategory: sl(),
-        updateCategory: sl(),
-        deleteCategory: sl(),
-        getItems: sl(),
-        addItem: sl(),
-        updateItem: sl(),
-        deleteItem: sl(),
-      ),
-    );
-  }
-
-  // ==========================================
-  // Features: POS
-  // ==========================================
-  void _initPos() {
+// ==========================================
+// Features: POS
+// ==========================================
+void _initPos() {
   sl.registerLazySingleton<PosLocalDataSource>(
     () => PosLocalDataSourceImpl(databaseHelper: sl()),
   );
   sl.registerLazySingleton<PosRepository>(
     () => PosRepositoryImpl(localDataSource: sl()),
   );
-  sl.registerLazySingleton(() => SaveOrderUseCase(
-    posRepository: sl(),
-    checkActiveShiftUseCase: sl(), 
-  ));
+  sl.registerLazySingleton(
+    () => SaveOrderUseCase(posRepository: sl(), checkActiveShiftUseCase: sl()),
+  );
   sl.registerFactory(
     () => PosBloc(saveOrderUseCase: sl(), getSettingsUseCase: sl()),
   );
 }
 
-  // ==========================================
-  // Features: Settings
-  // ==========================================
-  void _initSettings(){
-    sl.registerLazySingleton<SettingsLocalDataSource>(
-      () => SettingsLocalDataSourceImpl(databaseHelper: sl()),
-    );
-    sl.registerLazySingleton<SettingsRepository>(
-      () => SettingsRepositoryImpl(localDataSource: sl()),
-    );
-    sl.registerLazySingleton(() => GetSettingsUseCase(sl()));
-    sl.registerLazySingleton(() => UpdateSettingsUseCase(sl()));
-    sl.registerFactory(
-      () => SettingsBloc(getSettingsUseCase: sl(), updateSettingsUseCase: sl()),
-    );
-  }
+// ==========================================
+// Features: Settings
+// ==========================================
+void _initSettings() {
+  sl.registerLazySingleton<SettingsLocalDataSource>(
+    () => SettingsLocalDataSourceImpl(databaseHelper: sl()),
+  );
+  sl.registerLazySingleton<SettingsRepository>(
+    () => SettingsRepositoryImpl(localDataSource: sl()),
+  );
+  sl.registerLazySingleton(() => GetSettingsUseCase(sl()));
+  sl.registerLazySingleton(() => UpdateSettingsUseCase(sl()));
+  sl.registerFactory(
+    () => SettingsBloc(getSettingsUseCase: sl(), updateSettingsUseCase: sl()),
+  );
+}
 
-  // ==========================================
-  // Features: Shift
-  // ==========================================
-  void _initShift() {
-    sl.registerLazySingleton<ShiftLocalDataSource>(
-      () => ShiftLocalDataSourceImpl(databaseHelper: sl()),
-    );
-    sl.registerLazySingleton<ShiftRepository>(
-      () => ShiftRepositoryImpl(localDataSource: sl()),
-    );
-    sl.registerLazySingleton(() => CheckActiveShiftUseCase(sl()));
-    sl.registerLazySingleton(() => OpenShiftUseCase(sl()));
-    sl.registerLazySingleton(() => CloseShiftUseCase(sl()));
+// ==========================================
+// Features: Shift
+// ==========================================
+void _initShift() {
+  sl.registerLazySingleton<ShiftLocalDataSource>(
+    () => ShiftLocalDataSourceImpl(databaseHelper: sl()),
+  );
+  sl.registerLazySingleton<ShiftRepository>(
+    () => ShiftRepositoryImpl(localDataSource: sl()),
+  );
+  sl.registerLazySingleton(() => CheckActiveShiftUseCase(sl()));
+  sl.registerLazySingleton(() => OpenShiftUseCase(sl()));
+  sl.registerLazySingleton(() => CloseShiftUseCase(sl()));
 
-    sl.registerFactory(
-      () => ShiftBloc(
-        checkActiveShiftUseCase: sl(),
-        openShiftUseCase: sl(),
-        closeShiftUseCase: sl(),
-      ),
-    );
-  }
-  // ==========================================
-  // Features: Orders
-  // ==========================================
-  void _initOrders() {
-    sl.registerLazySingleton<OrdersLocalDataSource>(
-      () => OrdersLocalDataSourceImpl(databaseHelper: sl()),
-    );
-    sl.registerLazySingleton<OrdersRepository>(
-      () => OrdersRepositoryImpl(localDataSource: sl()),
-    );
-    sl.registerLazySingleton(() => GetOrdersUseCase(sl()));
-    sl.registerLazySingleton(() => RefundOrderUseCase(sl()));
-    sl.registerFactory(
-      () => OrdersBloc(getOrdersUseCase: sl(), refundOrderUseCase: sl()),
-    );
-  }
+  sl.registerFactory(
+    () => ShiftBloc(
+      checkActiveShiftUseCase: sl(),
+      openShiftUseCase: sl(),
+      closeShiftUseCase: sl(),
+    ),
+  );
+}
 
-  // ==========================================
-  // Features: Expenses
-  // ==========================================
-  void _initExpenses() {
+// ==========================================
+// Features: Orders
+// ==========================================
+void _initOrders() {
+  sl.registerLazySingleton<OrdersLocalDataSource>(
+    () => OrdersLocalDataSourceImpl(databaseHelper: sl()),
+  );
+  sl.registerLazySingleton<OrdersRepository>(
+    () => OrdersRepositoryImpl(localDataSource: sl()),
+  );
+  sl.registerLazySingleton(() => GetOrdersUseCase(sl()));
+  sl.registerLazySingleton(() => RefundOrderUseCase(sl()));
+  sl.registerFactory(
+    () => OrdersBloc(getOrdersUseCase: sl(), refundOrderUseCase: sl()),
+  );
+}
 
-    sl.registerLazySingleton<ExpensesLocalDataSource>(
-      () => ExpensesLocalDataSourceImpl(databaseHelper: sl()),
-    );
-    sl.registerLazySingleton<ExpensesRepository>(
-      () => ExpensesRepositoryImpl(localDataSource: sl()),
-    );
-    sl.registerLazySingleton(() => AddExpenseUseCase(checkActiveShiftUseCase: sl(), expensesRepository: sl()));
-    sl.registerLazySingleton(() => DeleteExpenseUseCase(sl()));
-    sl.registerLazySingleton(() => GetTodayExpensesUseCase(sl()));
-    sl.registerFactory(
-      () => ExpensesBloc(
-        addExpenseUseCase: sl(),
-        deleteExpenseUseCase: sl(),
-        getTodayExpensesUseCase: sl(),
-      ),
-    );
-  }
+// ==========================================
+// Features: Expenses
+// ==========================================
+void _initExpenses() {
+  sl.registerLazySingleton<ExpensesLocalDataSource>(
+    () => ExpensesLocalDataSourceImpl(databaseHelper: sl()),
+  );
+  sl.registerLazySingleton<ExpensesRepository>(
+    () => ExpensesRepositoryImpl(localDataSource: sl()),
+  );
+  sl.registerLazySingleton(
+    () => AddExpenseUseCase(
+      checkActiveShiftUseCase: sl(),
+      expensesRepository: sl(),
+    ),
+  );
+  sl.registerLazySingleton(() => DeleteExpenseUseCase(sl()));
+  sl.registerLazySingleton(() => GetTodayExpensesUseCase(sl()));
+  sl.registerFactory(
+    () => ExpensesBloc(
+      addExpenseUseCase: sl(),
+      deleteExpenseUseCase: sl(),
+      getTodayExpensesUseCase: sl(),
+    ),
+  );
+}
 
+void _initUsers() {
+  // Data sources
+  sl.registerLazySingleton<UsersLocalDataSource>(
+    () => UsersLocalDataSourceImpl(databaseHelper: sl()), // نمرر الـ Impl هنا!
+  );
 
+  // Repositories
+  sl.registerLazySingleton<UsersRepository>(
+    () => UsersRepositoryImpl(localDataSource: sl()), // نمرر الـ Impl هنا!
+  );
 
+  // Use cases
+  sl.registerLazySingleton(() => GetUsersUseCase(sl()));
+  sl.registerLazySingleton(() => AddUserUseCase(sl()));
+  sl.registerLazySingleton(() => ToggleUserStatusUseCase(sl()));
+
+  // Bloc
+  sl.registerFactory(
+    () => UsersBloc(
+      getUsersUseCase: sl(),
+      addUserUseCase: sl(),
+      toggleUserStatusUseCase: sl(),
+    ),
+  );
+}

@@ -1,7 +1,7 @@
+import 'package:ahgzly_pos/core/common/models/user_model.dart';
 import 'package:ahgzly_pos/core/database/database_helper.dart';
 import 'package:ahgzly_pos/core/error/exceptions.dart'; 
 import 'package:ahgzly_pos/core/utils/hash_util.dart';
-import 'package:ahgzly_pos/features/auth/data/models/user_model.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 abstract class AuthLocalDataSource {

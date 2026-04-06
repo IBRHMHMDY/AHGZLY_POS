@@ -14,3 +14,8 @@ class CacheException implements Exception {
   final String message;
   CacheException({required this.message});
 }
+
+class LocalDatabaseException implements Exception {
+  final String message;
+  LocalDatabaseException(this.message);
+}
