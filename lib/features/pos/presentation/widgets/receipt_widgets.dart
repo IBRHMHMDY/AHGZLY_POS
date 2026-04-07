@@ -485,13 +485,9 @@ class ZReportReceiptWidget extends StatelessWidget {
     final isShortage = shift.shortageOrOverage < 0;
     final diffLabel = isShortage ? 'عجز في الدرج:' : (shift.shortageOrOverage > 0 ? 'زيادة في الدرج:' : 'مطابقة تامة:');
 
-// تنسيق التواريخ بشكل مقروء وأنيق (مثال: 2023-10-25 04:30 PM)
+    // تنسيق التواريخ بشكل مقروء وأنيق (مثال: 2023-10-25 04:30 PM)
     final dateFormat = intlDateTime.DateFormat('yyyy-MM-dd hh:mm a');
-    
-    // بما أن startTime هي DateTime بالفعل، لا حاجة لـ parse
     final startTimeFormatted = dateFormat.format(shift.startTime);
-    
-    // التحقق من الإغلاق، واستخدام الوقت الحالي إذا كانت الوردية ما زالت مفتوحة
     final endTimeFormatted = shift.endTime != null 
         ? dateFormat.format(shift.endTime!) 
         : dateFormat.format(DateTime.now());
@@ -513,7 +509,7 @@ class ZReportReceiptWidget extends StatelessWidget {
             Text(reportTitle, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black)),
             const Divider(color: Colors.black, thickness: 2),
             
-            // ⬇️ التعديل الجديد: توثيق الأوقات بشكل صريح ⬇️
+            // توثيق الأوقات
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -521,16 +517,18 @@ class ZReportReceiptWidget extends StatelessWidget {
                 Text(startTimeFormatted, style: const TextStyle(fontSize: 16, color: Colors.black)),
               ],
             ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text('نهاية الوردية:', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black)),
-                Text(endTimeFormatted, style: const TextStyle(fontSize: 16, color: Colors.black)),
-              ],
-            ),
+            
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text( isXReport ? 'وقت الطباعه:' : 'نهاية الوردية:', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black)),
+                  Text(endTimeFormatted, style: const TextStyle(fontSize: 16, color: Colors.black)),
+                ],
+              ),
+            
             const Divider(color: Colors.black, thickness: 2),
-            // ⬆️ ======================================== ⬆️
 
+            // استخدام الدالة العامة _buildRow التي قمت أنت بتجهيزها مسبقاً
             _buildRow('العهدة الافتتاحية:', shift.startingCash),
             _buildRow('إجمالي المبيعات:', shift.totalSales),
             _buildRow('مبيعات الكاش:', shift.totalCash),
@@ -539,6 +537,7 @@ class ZReportReceiptWidget extends StatelessWidget {
             const Divider(color: Colors.black, thickness: 1),
             _buildRow('إجمالي المصروفات:', shift.totalExpenses),
             const Divider(color: Colors.black, thickness: 2),
+            
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -546,21 +545,26 @@ class ZReportReceiptWidget extends StatelessWidget {
                 FittedBox(fit: BoxFit.scaleDown, child: Text('${MoneyFormatter.format(shift.expectedCash)} ج.م', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black))),
               ],
             ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Expanded(child: Text('النقدية الفعلية:', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black))),
-                FittedBox(fit: BoxFit.scaleDown, child: Text('${MoneyFormatter.format(shift.actualCash)} ج.م', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black))),
-              ],
-            ),
-            const Divider(color: Colors.black, thickness: 2),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(child: Text(diffLabel, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black))),
-                FittedBox(fit: BoxFit.scaleDown, child: Text('${MoneyFormatter.format(shift.shortageOrOverage.abs())} ج.م', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black))),
-              ],
-            ),
+            
+            // 🪄 التعديل الجوهري (Refactoring): إخفاء النقدية الفعلية والعجز في حالة الـ X-Report
+            if (!isXReport) ...[
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Expanded(child: Text('النقدية الفعلية:', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black))),
+                  FittedBox(fit: BoxFit.scaleDown, child: Text('${MoneyFormatter.format(shift.actualCash)} ج.م', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black))),
+                ],
+              ),
+              const Divider(color: Colors.black, thickness: 2),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(child: Text(diffLabel, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black))),
+                  FittedBox(fit: BoxFit.scaleDown, child: Text('${MoneyFormatter.format(shift.shortageOrOverage.abs())} ج.م', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black))),
+                ],
+              ),
+            ],
+
             const Divider(color: Colors.black, thickness: 2),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
