@@ -1,3 +1,5 @@
+// مسار الملف: lib/features/menu/data/models/item_model.dart
+
 import 'package:ahgzly_pos/features/menu/domain/entities/item.dart';
 
 class ItemModel extends Item {
@@ -16,7 +18,8 @@ class ItemModel extends Item {
       id: map['id'],
       categoryId: map['category_id'],
       name: map['name'],
-      price: map['price'],
+      // Refactored: تحويل إلى int لضمان التوافق مع قاعدة البيانات الجديدة (القروش)
+      price: (map['price'] as num).toInt(), 
       imagePath: map.containsKey('image_path') ? map['image_path'] : null,
       createdAt: map['created_at'],
       updatedAt: map['updated_at'],
@@ -28,7 +31,7 @@ class ItemModel extends Item {
       if (id != null) 'id': id,
       'category_id': categoryId,
       'name': name,
-      'price': price,
+      'price': price, // سيتم حفظه كـ Integer
       // 'image_path': imagePath,
       'created_at': createdAt,
       'updated_at': updatedAt,
