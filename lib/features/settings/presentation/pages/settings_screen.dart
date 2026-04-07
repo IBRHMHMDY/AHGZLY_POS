@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:ahgzly_pos/core/database/database_helper.dart';
+import 'package:ahgzly_pos/core/utils/money_formatter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:ahgzly_pos/core/services/backup_service.dart';
@@ -24,7 +25,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
   late TextEditingController _taxController;
   late TextEditingController _serviceController;
   late TextEditingController _deliveryController;
-  // late TextEditingController _printerController;
   late TextEditingController _restaurantNameController;
   late TextEditingController _taxNumberController;
 
@@ -39,7 +39,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
     _taxController = TextEditingController();
     _serviceController = TextEditingController();
     _deliveryController = TextEditingController();
-    // _printerController = TextEditingController();
     _fetchPrinters();
     _restaurantNameController = TextEditingController();
     _taxNumberController = TextEditingController();
@@ -113,7 +112,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       final newSettings = AppSettings(
         taxRate: double.parse(_taxController.text) / 100,
         serviceRate: double.parse(_serviceController.text) / 100,
-        deliveryFee: double.parse(_deliveryController.text),
+        deliveryFee: MoneyFormatter.toCents(double.parse(_deliveryController.text.trim())),
         printerName: _selectedPrinterName ?? '',
         restaurantName: _restaurantNameController.text.trim(),
         taxNumber: _taxNumberController.text.trim(),
@@ -208,7 +207,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               final s = state.settings;
               _taxController.text = num.parse((s.taxRate * 100).toStringAsFixed(2)).toString();
               _serviceController.text = num.parse((s.serviceRate * 100).toStringAsFixed(2)).toString();
-              _deliveryController.text = num.parse(s.deliveryFee.toStringAsFixed(2)).toString();
+              _deliveryController.text = MoneyFormatter.format(state.settings.deliveryFee);;
               _selectedPrinterName = s.printerName;
               _restaurantNameController.text = s.restaurantName;
               _taxNumberController.text = s.taxNumber;

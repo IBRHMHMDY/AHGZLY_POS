@@ -1,3 +1,4 @@
+import 'package:ahgzly_pos/core/utils/money_formatter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:ahgzly_pos/features/expenses/domain/entities/expense.dart';
@@ -96,9 +97,9 @@ class _AddExpenseDialogState extends State<AddExpenseDialog> {
                 return;
               }
 
-              final amount = double.parse(_amountController.text);
+              final amountDouble = double.parse(_amountController.text);
               final expense = Expense(
-                amount: amount,
+                amount: MoneyFormatter.toCents(amountDouble),
                 reason: _reasonController.text.trim(),
                 createdAt: DateTime.now().toIso8601String(), // صيغة صحيحة 100%
                 shiftId: shiftState.shift.id, // ⬅️ تم وضع رقم الوردية الفعلي هنا

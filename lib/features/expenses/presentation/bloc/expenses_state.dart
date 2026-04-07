@@ -13,7 +13,7 @@ class ExpensesLoading extends ExpensesState {}
 
 class ExpensesLoaded extends ExpensesState {
   final List<Expense> expenses;
-  final double totalExpenses;
+  final int totalExpenses;
   ExpensesLoaded(this.expenses, this.totalExpenses);
   @override
   List<Object> get props => [expenses, totalExpenses];

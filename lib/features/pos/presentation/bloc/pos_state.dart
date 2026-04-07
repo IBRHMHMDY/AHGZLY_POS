@@ -24,12 +24,12 @@ class PosLoading extends PosState {}
 class PosUpdated extends PosState {
   final List<CartItem> cartItems;
   final String orderType;
-  final double subTotal;
-  final double discountAmount; // جديد
-  final double taxAmount;
-  final double serviceFee;
-  final double deliveryFee;
-  final double total;
+  final int subTotal;
+  final int discountAmount; // جديد
+  final int taxAmount;
+  final int serviceFee;
+  final int deliveryFee;
+  final int total;
   final String restaurantName;
   final String taxNumber;
   final String printMode;

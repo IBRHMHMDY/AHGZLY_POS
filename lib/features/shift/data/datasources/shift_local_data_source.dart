@@ -4,7 +4,7 @@ import 'package:ahgzly_pos/features/shift/data/models/shift_model.dart';
 
 abstract class ShiftLocalDataSource {
   Future<ShiftModel?> getActiveShift();
-  Future<ShiftModel> openShift({required double startingCash, required int cashierId});
+  Future<ShiftModel> openShift({required int startingCash, required int cashierId});
   Future<ShiftModel> closeShift({required int shiftId, required double actualCash});
 }
 
@@ -31,7 +31,7 @@ class ShiftLocalDataSourceImpl implements ShiftLocalDataSource {
   }
 
 @override
-  Future<ShiftModel> openShift({required double startingCash, required int cashierId}) async {
+  Future<ShiftModel> openShift({required int startingCash, required int cashierId}) async {
     final db = await databaseHelper.database;
     final activeShift = await getActiveShift();
     if (activeShift != null) throw CacheException(message: 'يوجد وردية مفتوحة بالفعل. يجب إغلاقها أولاً.');
@@ -45,8 +45,8 @@ class ShiftLocalDataSourceImpl implements ShiftLocalDataSource {
       'total_sales': 0.0,
       'total_cash': 0.0,
       'total_visa': 0.0,
-      'total_instapay': 0.0, // تمت الإضافة
-      'total_orders': 0,     // تمت الإضافة
+      'total_instapay': 0.0, 
+      'total_orders': 0,
       'total_expenses': 0.0,
       'expected_cash': startingCash,
       'actual_cash': 0.0,
@@ -57,14 +57,14 @@ class ShiftLocalDataSourceImpl implements ShiftLocalDataSource {
       cashierId: cashierId,
       startTime: DateTime.now(),
       startingCash: startingCash,
-      totalSales: 0.0,
-      totalCash: 0.0,
-      totalVisa: 0.0,
-      totalInstapay: 0.0, // تمت الإضافة
-      totalOrders: 0,     // تمت الإضافة
-      totalExpenses: 0.0,
+      totalSales: 0,
+      totalCash: 0,
+      totalVisa: 0,
+      totalInstapay: 0,
+      totalOrders: 0,
+      totalExpenses: 0,
       expectedCash: startingCash,
-      actualCash: 0.0,
+      actualCash: 0,
       status: 'active',
     );
   }

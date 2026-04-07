@@ -27,7 +27,7 @@ class ExpensesBloc extends Bloc<ExpensesEvent, ExpensesState> {
     result.fold(
       (failure) => emit(ExpensesError(failure.message)),
       (expenses) {
-        final double totalExpenses = expenses.fold(0.0, (sum, item) => sum + item.amount);
+        final int totalExpenses = expenses.fold(0, (sum, item) => sum + item.amount);
         emit(ExpensesLoaded(expenses, totalExpenses));
       },
     );

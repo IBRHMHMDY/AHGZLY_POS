@@ -1,3 +1,5 @@
+// مسار الملف: lib/features/shift/data/models/shift_model.dart
+
 import '../../domain/entities/shift.dart';
 
 class ShiftModel extends Shift {
@@ -10,8 +12,8 @@ class ShiftModel extends Shift {
     required super.totalSales,
     required super.totalCash,
     required super.totalVisa,
-    required super.totalInstapay, // تمت الإضافة
-    required super.totalOrders,   // تمت الإضافة
+    required super.totalInstapay,
+    required super.totalOrders,
     required super.totalExpenses,
     required super.expectedCash,
     required super.actualCash,
@@ -24,15 +26,16 @@ class ShiftModel extends Shift {
       cashierId: map['cashier_id'],
       startTime: DateTime.parse(map['start_time']),
       endTime: map['end_time'] != null ? DateTime.parse(map['end_time']) : null,
-      startingCash: (map['starting_cash'] ?? 0).toDouble(),
-      totalSales: (map['total_sales'] ?? 0).toDouble(),
-      totalCash: (map['total_cash'] ?? 0).toDouble(),
-      totalVisa: (map['total_visa'] ?? 0).toDouble(),
-      totalInstapay: (map['total_instapay'] ?? 0).toDouble(), // تمت الإضافة
-      totalOrders: (map['total_orders'] ?? 0).toInt(),       // تمت الإضافة
-      totalExpenses: (map['total_expenses'] ?? 0).toDouble(),
-      expectedCash: (map['expected_cash'] ?? 0).toDouble(),
-      actualCash: (map['actual_cash'] ?? 0).toDouble(),
+      // Refactored: تحويل جميع المبالغ إلى int بدلاً من double
+      startingCash: (map['starting_cash'] as num?)?.toInt() ?? 0,
+      totalSales: (map['total_sales'] as num?)?.toInt() ?? 0,
+      totalCash: (map['total_cash'] as num?)?.toInt() ?? 0,
+      totalVisa: (map['total_visa'] as num?)?.toInt() ?? 0,
+      totalInstapay: (map['total_instapay'] as num?)?.toInt() ?? 0,
+      totalOrders: (map['total_orders'] as num?)?.toInt() ?? 0,
+      totalExpenses: (map['total_expenses'] as num?)?.toInt() ?? 0,
+      expectedCash: (map['expected_cash'] as num?)?.toInt() ?? 0,
+      actualCash: (map['actual_cash'] as num?)?.toInt() ?? 0,
       status: map['status'],
     );
   }
@@ -42,12 +45,12 @@ class ShiftModel extends Shift {
       'cashier_id': cashierId,
       'start_time': startTime.toIso8601String(),
       'end_time': endTime?.toIso8601String(),
-      'starting_cash': startingCash,
+      'starting_cash': startingCash, // سيتم الحفظ كـ INTEGER
       'total_sales': totalSales,
       'total_cash': totalCash,
       'total_visa': totalVisa,
-      'total_instapay': totalInstapay, // تمت الإضافة
-      'total_orders': totalOrders,     // تمت الإضافة
+      'total_instapay': totalInstapay,
+      'total_orders': totalOrders,
       'total_expenses': totalExpenses,
       'expected_cash': expectedCash,
       'actual_cash': actualCash,

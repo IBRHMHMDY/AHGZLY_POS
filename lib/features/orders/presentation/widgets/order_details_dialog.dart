@@ -12,6 +12,7 @@ import 'package:ahgzly_pos/features/orders/presentation/bloc/orders_bloc.dart';
 import 'package:ahgzly_pos/features/orders/presentation/bloc/orders_event.dart';
 import 'package:ahgzly_pos/features/pos/presentation/widgets/receipt_widgets.dart';
 import 'package:ahgzly_pos/features/settings/domain/usecases/get_settings_usecase.dart';
+import 'package:ahgzly_pos/core/utils/money_formatter.dart';
 
 class OrderDetailsDialog extends StatelessWidget {
   final OrderHistory order;
@@ -56,7 +57,7 @@ class OrderDetailsDialog extends StatelessWidget {
                     style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                   Text(
-                    '${order.total} ج.م',
+                    '${MoneyFormatter.format(order.total)} ج.م',
                     style: TextStyle(
                       fontSize: 22,
                       fontWeight: FontWeight.bold,
@@ -90,7 +91,7 @@ class OrderDetailsDialog extends StatelessWidget {
                       style: TextStyle(color: Colors.grey.shade700),
                     ),
                     trailing: Text(
-                      '${item.unitPrice * item.quantity} ج.م',
+                      '${MoneyFormatter.format(item.unitPrice * item.quantity)} ج.م',
                       style: const TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 16,

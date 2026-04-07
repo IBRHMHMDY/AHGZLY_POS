@@ -14,12 +14,12 @@ class PosBloc extends Bloc<PosEvent, PosState> {
   // --- محتويات السلة وإعداداتها المحفوظة في الذاكرة ---
   final List<CartItem> _cartItems = [];
   String _orderType = 'صالة';
-  double _discountAmount = 0.0;
+  int _discountAmount = 0;
   
   // إعدادات افتراضية (سيتم جلبها من قاعدة البيانات)
   double _taxRate = 0.0;
   double _serviceRate = 0.0;
-  double _deliveryFee = 0.0;
+  int _deliveryFee = 0;
   String _restaurantName = '';
   String _taxNumber = '';
   String _printMode = 'ask';
@@ -112,20 +112,25 @@ class PosBloc extends Bloc<PosEvent, PosState> {
   // 7. تفريغ السلة بالكامل
   void _onClearCart(ClearCartEvent event, Emitter<PosState> emit) {
     _cartItems.clear();
-    _discountAmount = 0.0;
+    _discountAmount = 0;
     _orderType = 'صالة';
     _emitUpdatedState(emit);
   }
 
   // 8. الدالة المركزية لحساب الإجماليات وتحديث الشاشة (الـ Core Logic)
   void _emitUpdatedState(Emitter<PosState> emit) {
-    double subTotal = _cartItems.fold(0.0, (sum, current) => sum + (current.item.price * current.quantity));
-    double taxAmount = subTotal * _taxRate;
-    double serviceFee = _orderType == 'صالة' ? (subTotal * _serviceRate) : 0.0;
-    double deliveryFee = _orderType == 'دليفري' ? _deliveryFee : 0.0;
+    int subTotal = _cartItems.fold(0, (sum, item) => sum + (item.item.price * item.quantity));
+    
+    int afterDiscount = subTotal - _discountAmount;
+    if (afterDiscount < 0) afterDiscount = 0;
+
+    // استخدام round() للتقريب لأقرب قرش وتجنب الكسور
+    int taxAmount = (afterDiscount * _taxRate).round(); 
+    int serviceFee = _orderType == 'صالة' ? (afterDiscount * _serviceRate).round() : 0;
+    int deliveryFee = _orderType == 'دليفري' ? _deliveryFee : 0;
     
     // الإجمالي النهائي
-    double total = subTotal - _discountAmount + taxAmount + serviceFee + deliveryFee;
+    int total = subTotal - _discountAmount + taxAmount + serviceFee + deliveryFee;
 
     emit(PosUpdated(
       cartItems: List.from(_cartItems), // List.from لإجبار الواجهة على التحديث
@@ -192,7 +197,7 @@ class PosBloc extends Bloc<PosEvent, PosState> {
         emit(PosCheckoutSuccess(orderId));
         // تفريغ السلة بعد نجاح الحفظ
         _cartItems.clear();
-        _discountAmount = 0.0;
+        _discountAmount = 0;
         _orderType = 'صالة';
         _emitUpdatedState(emit);
       },

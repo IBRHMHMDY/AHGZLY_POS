@@ -1,3 +1,4 @@
+import 'package:ahgzly_pos/core/utils/money_formatter.dart';
 import 'package:ahgzly_pos/features/shift/domain/entities/shift.dart';
 import 'package:flutter/material.dart';
 import 'package:ahgzly_pos/features/pos/presentation/bloc/pos_state.dart';
@@ -5,9 +6,8 @@ import 'package:ahgzly_pos/features/orders/domain/entities/order_history.dart';
 // ignore: library_prefixes
 import 'package:intl/intl.dart' as intlDateTime;
 
-Widget _buildRow(String title, double value) {
-  // إجبار الرقم على عرض خانتين عشريتين فقط للعملة
-  final formattedValue = value.toStringAsFixed(2);
+Widget _buildRow(String title, int valueInCents) { // Refactored: int
+  final formattedValue = MoneyFormatter.format(valueInCents); 
   return Row(
     mainAxisAlignment: MainAxisAlignment.spaceBetween,
     children: [
@@ -19,17 +19,16 @@ Widget _buildRow(String title, double value) {
     ],
   );
 }
-
 class CustomerReceiptWidget extends StatelessWidget {
   final int orderId;
   final String orderType;
   final List<CartItem> items;
-  final double subTotal;
-  final double discountAmount;
-  final double taxAmount;
-  final double serviceFee;
-  final double deliveryFee;
-  final double total;
+  final int subTotal;
+  final int discountAmount;
+  final int taxAmount;
+  final int serviceFee;
+  final int deliveryFee;
+  final int total;
   final String restaurantName;
   final String taxNumber;
   final String customerName;
@@ -140,7 +139,7 @@ class CustomerReceiptWidget extends StatelessWidget {
                       ),
                     ),
                     Text(
-                      '${(c.item.price * c.quantity).toStringAsFixed(2)} ج.م',
+                      '${MoneyFormatter.format(c.item.price * c.quantity)} ج.م',
                       style: const TextStyle(fontSize: 16, color: Colors.black),
                     ),
                   ],
@@ -173,7 +172,7 @@ class CustomerReceiptWidget extends StatelessWidget {
                 FittedBox(
                   fit: BoxFit.scaleDown,
                   child: Text(
-                    '${total.toStringAsFixed(2)} ج.م',
+                    '${MoneyFormatter.format(total)} ج.م',
                     style: const TextStyle(
                       fontSize: 22,
                       fontWeight: FontWeight.bold,
@@ -420,7 +419,7 @@ class CustomerHistoryReceiptWidget extends StatelessWidget {
                       ),
                     ),
                     Text(
-                      '${(i.unitPrice * i.quantity).toStringAsFixed(2)} ج.م',
+                      '${MoneyFormatter.format(i.unitPrice * i.quantity)} ج.م',
                       style: const TextStyle(fontSize: 16, color: Colors.black),
                     ),
                   ],
@@ -446,7 +445,7 @@ class CustomerHistoryReceiptWidget extends StatelessWidget {
                   ),
                 ),
                 Text(
-                  '${order.total.toStringAsFixed(2)} ج.م',
+                  '${MoneyFormatter.format(order.total)} ج.م',
                   style: const TextStyle(
                     fontSize: 22,
                     fontWeight: FontWeight.bold,
@@ -544,14 +543,14 @@ class ZReportReceiptWidget extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 const Expanded(child: Text('النقدية المتوقعة:', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black))),
-                FittedBox(fit: BoxFit.scaleDown, child: Text('${shift.expectedCash.toStringAsFixed(2)} ج.م', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black))),
+                FittedBox(fit: BoxFit.scaleDown, child: Text('${MoneyFormatter.format(shift.expectedCash)} ج.م', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black))),
               ],
             ),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 const Expanded(child: Text('النقدية الفعلية:', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black))),
-                FittedBox(fit: BoxFit.scaleDown, child: Text('${shift.actualCash.toStringAsFixed(2)} ج.م', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black))),
+                FittedBox(fit: BoxFit.scaleDown, child: Text('${MoneyFormatter.format(shift.actualCash)} ج.م', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black))),
               ],
             ),
             const Divider(color: Colors.black, thickness: 2),
@@ -559,7 +558,7 @@ class ZReportReceiptWidget extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Expanded(child: Text(diffLabel, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black))),
-                FittedBox(fit: BoxFit.scaleDown, child: Text('${shift.shortageOrOverage.abs().toStringAsFixed(2)} ج.م', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black))),
+                FittedBox(fit: BoxFit.scaleDown, child: Text('${MoneyFormatter.format(shift.shortageOrOverage.abs())} ج.م', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black))),
               ],
             ),
             const Divider(color: Colors.black, thickness: 2),

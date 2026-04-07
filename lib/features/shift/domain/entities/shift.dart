@@ -1,3 +1,5 @@
+// مسار الملف: lib/features/shift/domain/entities/shift.dart
+
 import 'package:equatable/equatable.dart';
 
 class Shift extends Equatable {
@@ -5,15 +7,15 @@ class Shift extends Equatable {
   final int? cashierId;
   final DateTime startTime;
   final DateTime? endTime;
-  final double startingCash;
-  final double totalSales;
-  final double totalCash;
-  final double totalVisa;
-  final double totalInstapay;
+  final int startingCash;  // Refactored: int (Cents)
+  final int totalSales;    // Refactored: int (Cents)
+  final int totalCash;     // Refactored: int (Cents)
+  final int totalVisa;     // Refactored: int (Cents)
+  final int totalInstapay; // Refactored: int (Cents)
   final int totalOrders;
-  final double totalExpenses;
-  final double expectedCash;
-  final double actualCash;
+  final int totalExpenses; // Refactored: int (Cents)
+  final int expectedCash;  // Refactored: int (Cents)
+  final int actualCash;    // Refactored: int (Cents)
   final String status;
 
   const Shift({
@@ -33,7 +35,8 @@ class Shift extends Equatable {
     required this.status,
   });
 
-  double get shortageOrOverage => actualCash - expectedCash;
+  // Refactored: العائد أصبح int
+  int get shortageOrOverage => actualCash - expectedCash; 
 
   @override
   List<Object?> get props => [

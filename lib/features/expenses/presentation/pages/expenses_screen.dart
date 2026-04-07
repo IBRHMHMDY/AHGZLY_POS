@@ -1,3 +1,4 @@
+import 'package:ahgzly_pos/core/utils/money_formatter.dart';
 import 'package:ahgzly_pos/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:ahgzly_pos/features/auth/presentation/bloc/auth_state.dart';
 import 'package:ahgzly_pos/features/expenses/presentation/bloc/expenses_bloc.dart';
@@ -136,7 +137,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                             ],
                           ),
                           Text(
-                            '${state.totalExpenses.toStringAsFixed(2)} ج.م',
+                            '${MoneyFormatter.format(state.totalExpenses)} ج.م', // Refactored
                             style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.redAccent),
                           ),
                         ],
@@ -178,7 +179,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                                     trailing: Row(
                                       mainAxisSize: MainAxisSize.min,
                                       children: [
-                                        Text('${expense.amount} ج.م', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.redAccent)),
+                                        Text('${MoneyFormatter.format(expense.amount)} ج.م', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.redAccent)),
                                         const SizedBox(width: 16),
                                         IconButton(
                                           icon: const Icon(Icons.delete_outline, color: Colors.red),

@@ -7,6 +7,7 @@ import 'package:ahgzly_pos/features/menu/presentation/bloc/menu_event.dart';
 import 'package:ahgzly_pos/features/menu/presentation/bloc/menu_state.dart';
 import 'package:ahgzly_pos/features/menu/presentation/widgets/category_dialog.dart';
 import 'package:ahgzly_pos/features/menu/presentation/widgets/item_dialog.dart';
+import 'package:ahgzly_pos/core/utils/money_formatter.dart'; // استدعاء المنسق المالي
 
 class MenuScreen extends StatefulWidget {
   const MenuScreen({super.key});
@@ -448,7 +449,7 @@ class _MenuScreenState extends State<MenuScreen> {
                                                 ),
                                                 const SizedBox(height: 6),
                                                 Text(
-                                                  '${item.price} ج.م',
+                                                  '${MoneyFormatter.format(item.price)} ج.م',
                                                   style: const TextStyle(
                                                     fontSize: 18,
                                                     color: Colors.teal,

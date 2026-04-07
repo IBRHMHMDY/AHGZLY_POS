@@ -8,6 +8,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:ahgzly_pos/features/orders/presentation/bloc/orders_bloc.dart';
 import 'package:ahgzly_pos/features/orders/presentation/bloc/orders_state.dart';
 import 'package:ahgzly_pos/features/orders/presentation/widgets/order_details_dialog.dart';
+import 'package:ahgzly_pos/core/utils/money_formatter.dart';
 
 class OrdersScreen extends StatefulWidget {
   const OrdersScreen({super.key});
@@ -121,7 +122,7 @@ class _OrdersScreenState extends State<OrdersScreen> {
                                       child: Text('#${order.id}', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: isRefunded ? Colors.red : Colors.teal)),
                                     ),
                                     title: Text(
-                                      'الإجمالي: ${order.total} ج.م', 
+                                      'الإجمالي: ${MoneyFormatter.format(order.total)} ج.م', 
                                       style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: isRefunded ? Colors.red : Colors.black87, decoration: isRefunded ? TextDecoration.lineThrough : null)
                                     ),
                                     subtitle: Padding(

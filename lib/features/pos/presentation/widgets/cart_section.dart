@@ -1,3 +1,4 @@
+import 'package:ahgzly_pos/core/utils/money_formatter.dart';
 import 'package:ahgzly_pos/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:ahgzly_pos/features/auth/presentation/bloc/auth_state.dart';
 import 'package:flutter/material.dart';
@@ -116,8 +117,10 @@ class _CartSectionState extends State<CartSection> {
             style: ElevatedButton.styleFrom(backgroundColor: Colors.teal, foregroundColor: Colors.white),
             onPressed: () {
               if (controller.text.isNotEmpty) {
-                final discount = double.tryParse(controller.text) ?? 0.0;
-                context.read<PosBloc>().add(ApplyDiscountEvent(discount));
+                // Refactored: تحويل المدخل إلى قروش قبل إرساله للـ Bloc
+                final discountDouble = double.tryParse(controller.text) ?? 0.0;
+                final discountCents = MoneyFormatter.toCents(discountDouble);
+                context.read<PosBloc>().add(ApplyDiscountEvent(discountCents));
                 Navigator.pop(ctx);
               }
             },
@@ -128,7 +131,7 @@ class _CartSectionState extends State<CartSection> {
     );
   }
 
-  Widget _buildSummaryRow(String label, double amount, {bool isDiscount = false, bool isTotal = false}) {
+  Widget _buildSummaryRow(String label, int amount, {bool isDiscount = false, bool isTotal = false}) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4.0),
       child: Row(
@@ -142,7 +145,7 @@ class _CartSectionState extends State<CartSection> {
             ),
           ),
           const SizedBox(width: 8),
-          Text('${isDiscount ? "-" : ""}${amount.toStringAsFixed(2)} ج.م', style: TextStyle(fontSize: isTotal ? 20 : 14, fontWeight: FontWeight.bold, color: isDiscount ? Colors.red : (isTotal ? Colors.teal.shade800 : Colors.black87))),
+          Text('${isDiscount ? "-" : ""}${MoneyFormatter.format(amount)} ج.م', style: TextStyle(fontSize: isTotal ? 20 : 14, fontWeight: FontWeight.bold, color: isDiscount ? Colors.red : (isTotal ? Colors.teal.shade800 : Colors.black87))),
         ],
       ),
     );

@@ -1,8 +1,9 @@
+import 'package:ahgzly_pos/core/utils/money_formatter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 class CloseShiftDialog extends StatefulWidget {
-  final double expectedCash; // تمت إضافة هذا المتغير لحساب الفروقات
+  final int expectedCash; // تمت إضافة هذا المتغير لحساب الفروقات
 
   const CloseShiftDialog({super.key, required this.expectedCash});
 
@@ -13,8 +14,8 @@ class CloseShiftDialog extends StatefulWidget {
 class _CloseShiftDialogState extends State<CloseShiftDialog> {
   final TextEditingController _actualCashController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
-  
-  double _difference = 0.0;
+
+  int _difference = 0; // Refactored: التعامل مع الفرق كـ int
   bool _isCalculated = false;
 
   @override
@@ -24,10 +25,12 @@ class _CloseShiftDialogState extends State<CloseShiftDialog> {
   }
 
   void _calculateDifference() {
-    final actualCash = double.tryParse(_actualCashController.text);
-    if (actualCash != null) {
+    final actualCashDouble = double.tryParse(_actualCashController.text);
+    if (actualCashDouble != null) {
+      // تحويل الإدخال (جنيهات) إلى قروش للخصم الدقيق من المتوقع
+      final actualCashCents = MoneyFormatter.toCents(actualCashDouble);
       setState(() {
-        _difference = actualCash - widget.expectedCash;
+        _difference = actualCashCents - widget.expectedCash;
         _isCalculated = true;
       });
     } else {
@@ -39,8 +42,11 @@ class _CloseShiftDialogState extends State<CloseShiftDialog> {
 
   void _submit() {
     if (_formKey.currentState!.validate()) {
-      final actualCash = double.parse(_actualCashController.text.trim());
-      Navigator.of(context).pop(actualCash);
+      final actualCashDouble = double.parse(_actualCashController.text.trim());
+      final actualCashCents = MoneyFormatter.toCents(actualCashDouble);
+      Navigator.of(
+        context,
+      ).pop(actualCashCents); // إرجاع القيمة بالقروش للـ BLoC
     }
   }
 
@@ -61,7 +67,10 @@ class _CloseShiftDialogState extends State<CloseShiftDialog> {
           children: [
             Icon(Icons.lock_clock, color: Colors.redAccent, size: 28),
             SizedBox(width: 8),
-            Text('إغلاق الوردية (End of Shift)', style: TextStyle(fontWeight: FontWeight.bold)),
+            Text(
+              'إغلاق الوردية (End of Shift)',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
           ],
         ),
         content: SizedBox(
@@ -73,31 +82,62 @@ class _CloseShiftDialogState extends State<CloseShiftDialog> {
               children: [
                 Container(
                   padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(color: Colors.blue.shade50, borderRadius: BorderRadius.circular(8)),
+                  decoration: BoxDecoration(
+                    color: Colors.blue.shade50,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text('الكاش المتوقع بالدرج:', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                      Text('${widget.expectedCash.toStringAsFixed(2)} ج.م', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.blue.shade800)),
+                      const Text(
+                        'الكاش المتوقع بالدرج:',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      Text(
+                        '${widget.expectedCash.toStringAsFixed(2)} ج.م',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.blue.shade800,
+                        ),
+                      ),
                     ],
                   ),
                 ),
                 const SizedBox(height: 20),
-                const Text('الرجاء عدّ النقدية الموجودة في الدرج حالياً وكتابة المبلغ الفعلي لإتمام المطابقة.', style: TextStyle(fontSize: 14, color: Colors.grey)),
+                const Text(
+                  'الرجاء عدّ النقدية الموجودة في الدرج حالياً وكتابة المبلغ الفعلي لإتمام المطابقة.',
+                  style: TextStyle(fontSize: 14, color: Colors.grey),
+                ),
                 const SizedBox(height: 16),
                 TextFormField(
                   controller: _actualCashController,
-                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                  inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}'))],
-                  style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
+                  inputFormatters: [
+                    FilteringTextInputFormatter.allow(
+                      RegExp(r'^\d+\.?\d{0,2}'),
+                    ),
+                  ],
+                  style: const TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                  ),
                   decoration: InputDecoration(
                     labelText: 'النقدية الفعلية (بعد العد)',
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
                     prefixIcon: const Icon(Icons.money, color: Colors.teal),
                   ),
                   autofocus: true,
                   validator: (val) {
-                    if (val == null || val.isEmpty) return 'أدخل النقدية الفعلية';
+                    if (val == null || val.isEmpty)
+                      {return 'أدخل النقدية الفعلية';}
                     if (double.tryParse(val) == null) return 'رقم غير صحيح';
                     return null;
                   },
@@ -107,54 +147,87 @@ class _CloseShiftDialogState extends State<CloseShiftDialog> {
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: _difference == 0 ? Colors.green.shade50 : (_difference > 0 ? Colors.teal.shade50 : Colors.red.shade50),
+                      color: _difference == 0
+                          ? Colors.green.shade50
+                          : (_difference > 0
+                                ? Colors.teal.shade50
+                                : Colors.red.shade50),
                       borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: _difference == 0 ? Colors.green : (_difference > 0 ? Colors.teal : Colors.red)),
+                      border: Border.all(
+                        color: _difference == 0
+                            ? Colors.green
+                            : (_difference > 0 ? Colors.teal : Colors.red),
+                      ),
                     ),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          _difference == 0 ? 'الدرج مطابق تماماً' : (_difference > 0 ? 'يوجد زيادة قدرها:' : 'يوجد عجز قدره:'),
+                          _difference == 0
+                              ? 'الدرج مطابق تماماً'
+                              : (_difference > 0
+                                    ? 'يوجد زيادة قدرها:'
+                                    : 'يوجد عجز قدره:'),
                           style: TextStyle(
-                            fontSize: 16, 
+                            fontSize: 16,
                             fontWeight: FontWeight.bold,
-                            color: _difference == 0 ? Colors.green.shade800 : (_difference > 0 ? Colors.teal.shade800 : Colors.red.shade800),
+                            color: _difference == 0
+                                ? Colors.green.shade800
+                                : (_difference > 0
+                                      ? Colors.teal.shade800
+                                      : Colors.red.shade800),
                           ),
                         ),
                         if (_difference != 0)
                           Text(
-                            '${_difference.abs().toStringAsFixed(2)} ج.م',
+                            '${MoneyFormatter.format(_difference.abs())} ج.م',
                             style: TextStyle(
-                              fontSize: 20, 
+                              fontSize: 20,
                               fontWeight: FontWeight.bold,
-                              color: _difference > 0 ? Colors.teal.shade800 : Colors.red.shade800,
+                              color: _difference > 0
+                                  ? Colors.teal.shade800
+                                  : Colors.red.shade800,
                             ),
                           ),
                       ],
                     ),
                   ),
-                ]
+                ],
               ],
             ),
           ),
         ),
-        actionsPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        actionsPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 16,
+        ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.of(context).pop(), 
-            child: const Text('إلغاء', style: TextStyle(color: Colors.grey, fontSize: 16, fontWeight: FontWeight.bold)),
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text(
+              'إلغاء',
+              style: TextStyle(
+                color: Colors.grey,
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
           ),
           ElevatedButton.icon(
             onPressed: _submit,
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.redAccent, 
+              backgroundColor: Colors.redAccent,
               foregroundColor: Colors.white,
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
             ),
             icon: const Icon(Icons.print),
-            label: const Text('إغلاق وطباعة Z-Report', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+            label: const Text(
+              'إغلاق وطباعة Z-Report',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
           ),
         ],
       ),

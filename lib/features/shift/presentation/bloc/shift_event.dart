@@ -6,7 +6,7 @@ abstract class ShiftEvent {}
 class CheckActiveShiftEvent extends ShiftEvent {}
 
 class OpenShiftSubmittedEvent extends ShiftEvent {
-  final double startingCash;
+  final int startingCash;
   final int cashierId;
   OpenShiftSubmittedEvent({required this.startingCash, required this.cashierId});
 }

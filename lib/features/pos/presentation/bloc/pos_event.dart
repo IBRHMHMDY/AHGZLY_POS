@@ -71,7 +71,7 @@ class ClearCartEvent extends PosEvent {}
 class ReloadSettingsEvent extends PosEvent {}
 
 class ApplyDiscountEvent extends PosEvent {
-  final double discountAmount;
+  final int discountAmount;
   const ApplyDiscountEvent(this.discountAmount);
   @override
   List<Object> get props => [discountAmount];

@@ -1,3 +1,4 @@
+import 'package:ahgzly_pos/core/utils/money_formatter.dart';
 import 'package:flutter/material.dart';
 import 'package:ahgzly_pos/features/menu/domain/entities/item.dart';
 import 'package:ahgzly_pos/features/menu/domain/entities/category.dart';
@@ -28,7 +29,9 @@ class _ItemDialogState extends State<ItemDialog> {
   void initState() {
     super.initState();
     _nameController = TextEditingController(text: widget.item?.name ?? '');
-    _priceController = TextEditingController(text: widget.item?.price.toString() ?? '');
+    _priceController = TextEditingController(
+  text: widget.item != null ? MoneyFormatter.format(widget.item!.price) : ''
+);
     _selectedCategoryId = widget.item?.categoryId ?? widget.initialCategoryId;
   }
 
@@ -120,7 +123,7 @@ class _ItemDialogState extends State<ItemDialog> {
                 id: widget.item?.id,
                 categoryId: _selectedCategoryId,
                 name: _nameController.text.trim(),
-                price: double.parse(_priceController.text.trim()),
+                price: MoneyFormatter.toCents(double.parse(_priceController.text.trim())),
                 createdAt: widget.item?.createdAt ?? DateTime.now().toIso8601String(),
                 updatedAt: DateTime.now().toIso8601String(),
               );

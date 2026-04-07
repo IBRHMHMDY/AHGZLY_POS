@@ -1,3 +1,4 @@
+import 'package:ahgzly_pos/core/utils/money_formatter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:ahgzly_pos/features/menu/domain/entities/item.dart';
@@ -84,7 +85,7 @@ class ItemsSection extends StatelessWidget {
                                       ),
                                       const SizedBox(height: 4),
                                       Text(
-                                        '${item.price} ج.م', 
+                                        '${MoneyFormatter.format(item.price)} ج.م', 
                                         style: const TextStyle(fontSize: 15, color: Colors.teal, fontWeight: FontWeight.w900),
                                         maxLines: 1,
                                         overflow: TextOverflow.ellipsis, // حماية السعر من الـ Overflow
