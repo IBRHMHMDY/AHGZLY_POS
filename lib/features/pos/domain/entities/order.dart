@@ -2,18 +2,17 @@ import 'package:equatable/equatable.dart';
 import 'package:ahgzly_pos/features/pos/domain/entities/order_item.dart';
 
 class Order extends Equatable {
-  final int? shiftId; // تمت الإضافة لربط الطلب بالوردية
+  final int? shiftId; 
   final String orderType;
-  final double subTotal;
-  final double discount;
-  final double taxAmount;
-  final double serviceFee;
-  final double deliveryFee;
-  final double total;
+  final int subTotal;    // Refactored: int (Cents)
+  final int discount;    // Refactored: int (Cents)
+  final int taxAmount;   // Refactored: int (Cents)
+  final int serviceFee;  // Refactored: int (Cents)
+  final int deliveryFee; // Refactored: int (Cents)
+  final int total;       // Refactored: int (Cents)
   final String paymentMethod;
   final String status;
   final String createdAt;
-  // بيانات الدليفري
   final String customerName;
   final String customerPhone;
   final String customerAddress;

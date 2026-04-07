@@ -6,11 +6,13 @@ class OrderHistoryItemModel extends OrderHistoryItem {
     required super.quantity,
     required super.unitPrice,
   });
+  
   factory OrderHistoryItemModel.fromMap(Map<String, dynamic> map) {
     return OrderHistoryItemModel(
       itemName: map['item_name'] as String,
       quantity: map['quantity'] as int,
-      unitPrice: (map['unit_price'] as num).toDouble(),
+      // Refactored: تحويل إلى int بدلاً من double
+      unitPrice: (map['unit_price'] as num).toInt(), 
     );
   }
 }
@@ -35,9 +37,12 @@ class OrderHistoryModel extends OrderHistory {
     return OrderHistoryModel(
       id: map['id'] as int,
       orderType: map['order_type'] as String,
-      subTotal: (map['sub_total'] as num).toDouble(),
-      discount: (map['discount'] as num?)?.toDouble() ?? 0.0,
-      total: (map['total'] as num).toDouble(),
+      // Refactored: تحويل إلى int بدلاً من double
+      subTotal: (map['sub_total'] as num).toInt(),
+      // Refactored: تحويل إلى int وضبط القيمة الافتراضية لـ 0 بدلاً من 0.0
+      discount: (map['discount'] as num?)?.toInt() ?? 0,
+      // Refactored: تحويل إلى int بدلاً من double
+      total: (map['total'] as num).toInt(),
       paymentMethod: map['payment_method'] as String,
       createdAt: map['created_at'] as String,
       status: map['status'] as String,

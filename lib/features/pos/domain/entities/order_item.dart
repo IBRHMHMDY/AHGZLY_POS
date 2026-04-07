@@ -5,7 +5,7 @@ class OrderItem extends Equatable {
   final int? orderId;
   final int itemId;
   final int quantity;
-  final double unitPrice;
+  final int unitPrice; // Refactored: تغيير من double إلى int (Cents)
   final String? notes;
 
   const OrderItem({

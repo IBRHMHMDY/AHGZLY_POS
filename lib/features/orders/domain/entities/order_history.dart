@@ -3,7 +3,7 @@ import 'package:equatable/equatable.dart';
 class OrderHistoryItem extends Equatable {
   final String itemName;
   final int quantity;
-  final double unitPrice;
+  final int unitPrice; // Refactored: تغيير من double إلى int (Cents)
   const OrderHistoryItem({
     required this.itemName,
     required this.quantity,
@@ -16,9 +16,9 @@ class OrderHistoryItem extends Equatable {
 class OrderHistory extends Equatable {
   final int id;
   final String orderType;
-  final double subTotal; // جديد
-  final double discount; // جديد
-  final double total;
+  final int subTotal; // Refactored: int (Cents)
+  final int discount; // Refactored: int (Cents)
+  final int total;    // Refactored: int (Cents)
   final String paymentMethod;
   final String createdAt;
   final String status;
@@ -38,14 +38,6 @@ class OrderHistory extends Equatable {
 
   @override
   List<Object?> get props => [
-    id,
-    orderType,
-    subTotal,
-    discount,
-    total,
-    paymentMethod,
-    createdAt,
-    status,
-    items,
+    id, orderType, subTotal, discount, total, paymentMethod, createdAt, status, items,
   ];
 }
