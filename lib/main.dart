@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-
 import 'package:ahgzly_pos/core/di/dependency_injection.dart' as di;
 import 'package:ahgzly_pos/core/routing/app_router.dart';
 import 'package:ahgzly_pos/core/init/app_initializer.dart';
