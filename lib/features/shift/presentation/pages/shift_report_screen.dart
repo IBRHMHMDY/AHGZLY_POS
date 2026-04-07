@@ -210,8 +210,8 @@ class _ShiftReportScreenState extends State<ShiftReportScreen> {
                   _buildReportRow('المبيعات الكاش:', '${MoneyFormatter.format(shift.totalCash)} ج.م'),
                   _buildReportRow('المبيعات الفيزا:', '${MoneyFormatter.format(shift.totalVisa)} ج.م'),
                   _buildReportRow('المبيعات إنستا باي:', '${MoneyFormatter.format(shift.totalInstapay)} ج.م'),
+                  if (shift.totalRefunds > 0) _buildReportRow('إجمالي المرتجعات (${shift.refundedOrdersCount} طلب):', '${MoneyFormatter.format(shift.totalRefunds)} ج.م', color: Colors.red),
                   _buildReportRow('إجمالي المصروفات:', '${MoneyFormatter.format(shift.totalExpenses)} ج.م', color: Colors.red),
-                  
                   const Divider(height: 32, thickness: 2),
                   _buildReportRow('النقدية المتوقعة في الدرج:', '${MoneyFormatter.format(shift.expectedCash)} ج.م', isBold: true, color: Colors.blueAccent),
                   

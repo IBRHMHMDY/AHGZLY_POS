@@ -7,15 +7,21 @@ class Shift extends Equatable {
   final int? cashierId;
   final DateTime startTime;
   final DateTime? endTime;
-  final int startingCash;  // Refactored: int (Cents)
-  final int totalSales;    // Refactored: int (Cents)
-  final int totalCash;     // Refactored: int (Cents)
-  final int totalVisa;     // Refactored: int (Cents)
-  final int totalInstapay; // Refactored: int (Cents)
+  
+  final int startingCash; // Refactored: int (Cents)
   final int totalOrders;
+  final int totalSales; // Refactored: int (Cents)
+  final int totalCash; // Refactored: int (Cents)
+  final int totalVisa; // Refactored: int (Cents)
+  final int totalInstapay; // Refactored: int (Cents)
+
+  final int refundedOrdersCount;
+  final int totalRefunds;
+
   final int totalExpenses; // Refactored: int (Cents)
-  final int expectedCash;  // Refactored: int (Cents)
-  final int actualCash;    // Refactored: int (Cents)
+  
+  final int expectedCash; // Refactored: int (Cents)
+  final int actualCash; // Refactored: int (Cents)
   final String status;
 
   const Shift({
@@ -28,6 +34,8 @@ class Shift extends Equatable {
     required this.totalCash,
     required this.totalVisa,
     required this.totalInstapay,
+    required this.totalRefunds,
+    required this.refundedOrdersCount,
     required this.totalOrders,
     required this.totalExpenses,
     required this.expectedCash,
@@ -36,12 +44,25 @@ class Shift extends Equatable {
   });
 
   // Refactored: العائد أصبح int
-  int get shortageOrOverage => actualCash - expectedCash; 
+  int get shortageOrOverage => actualCash - expectedCash;
 
   @override
   List<Object?> get props => [
-        id, cashierId, startTime, endTime, startingCash, totalSales,
-        totalCash, totalVisa, totalInstapay, totalOrders, totalExpenses, 
-        expectedCash, actualCash, status,
-      ];
+    id,
+    cashierId,
+    startTime,
+    endTime,
+    startingCash,
+    totalSales,
+    refundedOrdersCount,
+    totalRefunds,
+    totalCash,
+    totalVisa,
+    totalInstapay,
+    totalOrders,
+    totalExpenses,
+    expectedCash,
+    actualCash,
+    status,
+  ];
 }

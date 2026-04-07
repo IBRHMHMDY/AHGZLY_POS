@@ -207,13 +207,11 @@ class PosBloc extends Bloc<PosEvent, PosState> {
   // 10. دعم الحدث القديم للحماية (اختياري، يوجه للحدث الجديد)
   Future<void> _onSaveOrderLegacy(SaveOrderEvent event, Emitter<PosState> emit) async {
     // إذا تم استدعاء هذا عن طريق الخطأ في أي مكان، نعالجه
-    if (event.order is Order) {
-      emit(PosLoading());
-      final result = await saveOrderUseCase(event.order);
-      result.fold(
-        (error) => emit(PosError(error.message)),
-        (id) => emit(PosCheckoutSuccess(id)),
-      );
-    }
+    emit(PosLoading());
+    final result = await saveOrderUseCase(event.order);
+    result.fold(
+      (error) => emit(PosError(error.message)),
+      (id) => emit(PosCheckoutSuccess(id)),
+    );
   }
 }

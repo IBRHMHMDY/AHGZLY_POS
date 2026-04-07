@@ -1,3 +1,4 @@
+import 'package:ahgzly_pos/features/pos/domain/entities/order.dart';
 import 'package:equatable/equatable.dart';
 import 'package:ahgzly_pos/features/menu/domain/entities/item.dart';
 
@@ -9,7 +10,7 @@ abstract class PosEvent extends Equatable {
 }
 
 class SaveOrderEvent extends PosEvent {
-  final dynamic order; // يفضل لاحقاً تغيير dynamic إلى الكيان Order
+  final Order order; // يفضل لاحقاً تغيير dynamic إلى الكيان Order
   const SaveOrderEvent(this.order);
   @override
   List<Object> get props => [order];

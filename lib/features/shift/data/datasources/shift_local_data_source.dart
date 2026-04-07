@@ -42,14 +42,16 @@ class ShiftLocalDataSourceImpl implements ShiftLocalDataSource {
       'start_time': now,
       'starting_cash': startingCash,
       'status': 'active',
-      'total_sales': 0.0,
-      'total_cash': 0.0,
-      'total_visa': 0.0,
-      'total_instapay': 0.0, 
+      'total_sales': 0,
+      'total_cash': 0,
+      'total_visa': 0,
+      'total_instapay': 0, 
       'total_orders': 0,
-      'total_expenses': 0.0,
+      'total_refunds': 0,        // التهيئة
+      'refunded_orders_count': 0, // التهيئة
+      'total_expenses': 0,
       'expected_cash': startingCash,
-      'actual_cash': 0.0,
+      'actual_cash': 0,
     });
 
     return ShiftModel(
@@ -62,6 +64,8 @@ class ShiftLocalDataSourceImpl implements ShiftLocalDataSource {
       totalVisa: 0,
       totalInstapay: 0,
       totalOrders: 0,
+      totalRefunds: 0,        // التهيئة
+      refundedOrdersCount: 0, // التهيئة
       totalExpenses: 0,
       expectedCash: startingCash,
       actualCash: 0,
@@ -76,43 +80,54 @@ class ShiftLocalDataSourceImpl implements ShiftLocalDataSource {
     if (shiftMaps.isEmpty) throw CacheException(message: 'لم يتم العثور على وردية نشطة لإغلاقها.');
     final shift = ShiftModel.fromMap(shiftMaps.first);
 
+    // [Refactoring Specialist]: أزلنا الفلتر (status != مرتجع) لنجلب كافة الطلبات للوردية ونفصلها برمجياً
     final orders = await db.query(
       'orders',
-      where: 'created_at >= ? AND status != ?',
-      whereArgs: [shift.startTime.toIso8601String(), 'مرتجع'], 
+      where: 'created_at >= ?', 
+      whereArgs: [shift.startTime.toIso8601String()], 
     );
 
-    double totalCash = 0;
-    double totalVisa = 0;
-    double totalInstapay = 0; // تمت الإضافة
-    int totalOrders = orders.length; // تمت الإضافة (عدد الطلبات)
+    int totalCash = 0;
+    int totalVisa = 0;
+    int totalInstapay = 0; 
+    int totalRefunds = 0;
+    int refundedOrdersCount = 0;
     
     for (var order in orders) {
-      final total = (order['total'] as num).toDouble();
+      final total = (order['total'] as num).toInt();
+      final status = order['status'].toString();
       final paymentMethod = order['payment_method'].toString().toLowerCase();
       
-      if (paymentMethod == 'cash' || paymentMethod == 'كاش') {
-        totalCash += total;
-      } else if (paymentMethod == 'visa' || paymentMethod == 'فيزا') {
-        totalVisa += total;
-      } else if (paymentMethod == 'instapay' || paymentMethod == 'إنستاباي' || paymentMethod == 'انستاباي') {
-        totalInstapay += total; // حساب إنستا باي
+      if (status == 'مرتجع') {
+        totalRefunds += total;
+        refundedOrdersCount++;
+      } else {
+        // إذا لم يكن مرتجعاً، تتم إضافته لمبيعات طرق الدفع المخصصة
+        if (paymentMethod == 'cash' || paymentMethod == 'كاش') {
+          totalCash += total;
+        } else if (paymentMethod == 'visa' || paymentMethod == 'فيزا') {
+          totalVisa += total;
+        } else if (paymentMethod == 'instapay' || paymentMethod == 'إنستاباي' || paymentMethod == 'انستاباي') {
+          totalInstapay += total; 
+        }
       }
     }
-    // إجمالي المبيعات يشمل الكاش والفيزا وإنستا باي
+    
+    // المبيعات الناجحة فقط هي التي تدخل في الدرج المحاسبي (وهذا هو الصافي Net Sales)
     final totalSales = totalCash + totalVisa + totalInstapay;
+    final totalOrders = orders.length; // عدد كل الطلبات في الوردية (شامل المرتجع)
 
     final expenses = await db.query(
       'expenses',
       where: 'created_at >= ?',
       whereArgs: [shift.startTime.toIso8601String()],
     );
-    double totalExpenses = 0;
+    int totalExpenses = 0;
     for (var exp in expenses) {
-      totalExpenses += (exp['amount'] as num).toDouble();
+      totalExpenses += (exp['amount'] as num).toInt();
     }
 
-    // ملاحظة محاسبية هامة: الكاش المتوقع في الدرج يتأثر فقط بالكاش الملموس (totalCash) وليس الفيزا أو إنستاباي
+    // الدرج المتوقع = العهدة + الكاش الناجح (تم استبعاد المرتجع منه مسبقاً) - المصروفات
     final expectedCash = shift.startingCash + totalCash - totalExpenses;
 
     final now = DateTime.now().toIso8601String();
@@ -124,8 +139,10 @@ class ShiftLocalDataSourceImpl implements ShiftLocalDataSource {
         'total_sales': totalSales,
         'total_cash': totalCash,
         'total_visa': totalVisa,
-        'total_instapay': totalInstapay, // تحديث
-        'total_orders': totalOrders,     // تحديث
+        'total_instapay': totalInstapay, 
+        'total_orders': totalOrders,     
+        'total_refunds': totalRefunds,              // تحديث
+        'refunded_orders_count': refundedOrdersCount, // تحديث
         'total_expenses': totalExpenses,
         'expected_cash': expectedCash,
         'actual_cash': actualCash, 

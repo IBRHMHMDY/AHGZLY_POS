@@ -25,7 +25,7 @@ class DatabaseHelper {
     return await openDatabase(
       path,
       // تم الترقية إلى الإصدار 13 لتغيير أنواع البيانات المالية إلى INTEGER
-      version: 13, 
+      version: 14, 
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
       onConfigure: (db) async {
@@ -96,6 +96,8 @@ class DatabaseHelper {
         total_visa INTEGER NOT NULL DEFAULT 0,    -- Refactored: INTEGER
         total_instapay INTEGER NOT NULL DEFAULT 0,-- Refactored: INTEGER
         total_orders INTEGER NOT NULL DEFAULT 0,
+        total_refunds INTEGER NOT NULL DEFAULT 0,
+        refunded_orders_count INTEGER NOT NULL DEFAULT 0,
         total_expenses INTEGER NOT NULL DEFAULT 0,-- Refactored: INTEGER
         expected_cash INTEGER NOT NULL DEFAULT 0, -- Refactored: INTEGER
         actual_cash INTEGER NOT NULL DEFAULT 0,   -- Refactored: INTEGER

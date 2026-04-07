@@ -535,6 +535,12 @@ class ZReportReceiptWidget extends StatelessWidget {
             _buildRow('مبيعات الفيزا:', shift.totalVisa),
             _buildRow('مبيعات إنستاباي:', shift.totalInstapay),
             const Divider(color: Colors.black, thickness: 1),
+            if (shift.totalRefunds > 0) ...[
+              _buildRow('عدد طلبات المرتجع:', shift.refundedOrdersCount),
+              _buildRow('إجمالي المرتجعات:', shift.totalRefunds),
+              const Divider(color: Colors.black, thickness: 1),
+            ],
+            const Divider(color: Colors.black, thickness: 1),
             _buildRow('إجمالي المصروفات:', shift.totalExpenses),
             const Divider(color: Colors.black, thickness: 2),
             
@@ -579,16 +585,16 @@ class ZReportReceiptWidget extends StatelessWidget {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text('الكاشير المسلم:', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black)),
+                  const Text('الكاشير:', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black)),
                   Text(cashierName, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black)),
                 ],
               ),
             ),
             const SizedBox(height: 15),
             Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                const Text('توقيع المـديـر: ............................', style: TextStyle(fontSize: 16, color: Colors.black)),
+                const Text('توقيع المـديـر: ..................................', style: TextStyle(fontSize: 16, color: Colors.black)),
               ],
             ),
             const SizedBox(height: 20),
