@@ -15,7 +15,8 @@ class AppSettingsModel extends AppSettings {
     return AppSettingsModel(
       taxRate: (map['tax_rate'] as num).toDouble(),
       serviceRate: (map['service_rate'] as num).toDouble(),
-      deliveryFee: (map['delivery_fee'] as num).toDouble(),
+      // Refactored: تحويل إلى int ليتوافق مع قاعدة البيانات الجديدة
+      deliveryFee: (map['delivery_fee'] as num).toInt(), 
       printerName: map['printer_name'] as String,
       restaurantName: map['restaurant_name'] as String? ?? 'مـطـعـم احـجـزلـي',
       taxNumber: map['tax_number'] as String? ?? '123-456-789',
@@ -28,7 +29,7 @@ class AppSettingsModel extends AppSettings {
       'id': 1,
       'tax_rate': taxRate,
       'service_rate': serviceRate,
-      'delivery_fee': deliveryFee,
+      'delivery_fee': deliveryFee, // سيتم حفظه كـ Integer
       'printer_name': printerName,
       'restaurant_name': restaurantName,
       'tax_number': taxNumber,

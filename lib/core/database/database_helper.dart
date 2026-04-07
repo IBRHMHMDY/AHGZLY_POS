@@ -1,3 +1,5 @@
+// مسار الملف: lib/core/database/database_helper.dart
+
 import 'package:path/path.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:ahgzly_pos/core/utils/hash_util.dart';
@@ -22,11 +24,11 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 12, // الترقية إلى 12 لإضافة قيود الورديات والفهارس (Indexes)
+      // تم الترقية إلى الإصدار 13 لتغيير أنواع البيانات المالية إلى INTEGER
+      version: 13, 
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
       onConfigure: (db) async {
-        // فرض صارم لسلامة العلاقات (Foreign Keys) على مستوى الـ SQLite
         await db.execute('PRAGMA foreign_keys = ON');
       },
     );
@@ -49,14 +51,15 @@ class DatabaseHelper {
         id INTEGER PRIMARY KEY DEFAULT 1, 
         tax_rate REAL NOT NULL, 
         service_rate REAL NOT NULL, 
-        delivery_fee REAL NOT NULL, 
+        delivery_fee INTEGER NOT NULL, -- Refactored: INTEGER (Cents)
         printer_name TEXT NOT NULL, 
         restaurant_name TEXT NOT NULL, 
         tax_number TEXT NOT NULL, 
         print_mode TEXT NOT NULL
       )
     ''');
-    await db.insert('settings', {'id': 1, 'tax_rate': 0.14, 'service_rate': 0.12, 'delivery_fee': 20.0, 'printer_name': 'EPSON Printer', 'restaurant_name': 'مـطـعـم احـجـزلـي', 'tax_number': '123-456-789', 'print_mode': 'ask'});
+    // delivery_fee: 2000 cents = 20.0
+    await db.insert('settings', {'id': 1, 'tax_rate': 0.14, 'service_rate': 0.12, 'delivery_fee': 2000, 'printer_name': 'EPSON Printer', 'restaurant_name': 'مـطـعـم احـجـزلـي', 'tax_number': '123-456-789', 'print_mode': 'ask'});
 
     // 2. جداول الموارد البشرية والمستخدمين
     await db.execute('''
@@ -87,15 +90,15 @@ class DatabaseHelper {
         cashier_id INTEGER,
         start_time TEXT NOT NULL, 
         end_time TEXT, 
-        starting_cash REAL NOT NULL DEFAULT 0.0,
-        total_sales REAL NOT NULL DEFAULT 0.0,
-        total_cash REAL NOT NULL DEFAULT 0.0, 
-        total_visa REAL NOT NULL DEFAULT 0.0, 
-        total_instapay REAL NOT NULL DEFAULT 0.0,
+        starting_cash INTEGER NOT NULL DEFAULT 0, -- Refactored: INTEGER
+        total_sales INTEGER NOT NULL DEFAULT 0,   -- Refactored: INTEGER
+        total_cash INTEGER NOT NULL DEFAULT 0,    -- Refactored: INTEGER
+        total_visa INTEGER NOT NULL DEFAULT 0,    -- Refactored: INTEGER
+        total_instapay INTEGER NOT NULL DEFAULT 0,-- Refactored: INTEGER
         total_orders INTEGER NOT NULL DEFAULT 0,
-        total_expenses REAL NOT NULL DEFAULT 0.0,
-        expected_cash REAL NOT NULL DEFAULT 0.0,
-        actual_cash REAL NOT NULL DEFAULT 0.0,
+        total_expenses INTEGER NOT NULL DEFAULT 0,-- Refactored: INTEGER
+        expected_cash INTEGER NOT NULL DEFAULT 0, -- Refactored: INTEGER
+        actual_cash INTEGER NOT NULL DEFAULT 0,   -- Refactored: INTEGER
         status TEXT NOT NULL,
         FOREIGN KEY (cashier_id) REFERENCES users (id) ON DELETE RESTRICT
       )
@@ -111,25 +114,24 @@ class DatabaseHelper {
       )
     ''');
     
-    // تعديل: ON DELETE RESTRICT بدلاً من CASCADE لمنع مسح قسم به منتجات عن طريق الخطأ
     await db.execute('''
       CREATE TABLE items (
         id INTEGER PRIMARY KEY AUTOINCREMENT, 
         category_id INTEGER NOT NULL, 
         name TEXT NOT NULL, 
-        price REAL NOT NULL, 
+        price INTEGER NOT NULL, -- Refactored: INTEGER (Cents)
         created_at TEXT NOT NULL, 
         updated_at TEXT NOT NULL, 
         FOREIGN KEY (category_id) REFERENCES categories (id) ON DELETE RESTRICT
       )
     ''');
 
-    // 5. جداول الحركات المالية (المبيعات والمصروفات) - تم ربطها بالوردية
+    // 5. جداول الحركات المالية
     await db.execute('''
       CREATE TABLE expenses (
         id INTEGER PRIMARY KEY AUTOINCREMENT, 
         shift_id INTEGER NOT NULL,
-        amount REAL NOT NULL, 
+        amount INTEGER NOT NULL, -- Refactored: INTEGER (Cents)
         reason TEXT NOT NULL, 
         created_at TEXT NOT NULL,
         FOREIGN KEY (shift_id) REFERENCES shifts (id) ON DELETE RESTRICT
@@ -141,12 +143,12 @@ class DatabaseHelper {
         id INTEGER PRIMARY KEY AUTOINCREMENT, 
         shift_id INTEGER NOT NULL,
         order_type TEXT NOT NULL, 
-        sub_total REAL NOT NULL, 
-        discount REAL NOT NULL DEFAULT 0.0, 
-        tax_amount REAL NOT NULL, 
-        service_fee REAL NOT NULL, 
-        delivery_fee REAL NOT NULL, 
-        total REAL NOT NULL, 
+        sub_total INTEGER NOT NULL,      -- Refactored: INTEGER (Cents)
+        discount INTEGER NOT NULL DEFAULT 0, -- Refactored: INTEGER (Cents)
+        tax_amount INTEGER NOT NULL,     -- Refactored: INTEGER (Cents)
+        service_fee INTEGER NOT NULL,    -- Refactored: INTEGER (Cents)
+        delivery_fee INTEGER NOT NULL,   -- Refactored: INTEGER (Cents)
+        total INTEGER NOT NULL,          -- Refactored: INTEGER (Cents)
         payment_method TEXT NOT NULL, 
         status TEXT NOT NULL, 
         customer_name TEXT DEFAULT "", 
@@ -163,14 +165,14 @@ class DatabaseHelper {
         order_id INTEGER NOT NULL, 
         item_id INTEGER NOT NULL, 
         quantity INTEGER NOT NULL, 
-        unit_price REAL NOT NULL, 
+        unit_price INTEGER NOT NULL, -- Refactored: INTEGER (Cents)
         notes TEXT, 
         FOREIGN KEY (order_id) REFERENCES orders (id) ON DELETE CASCADE, 
         FOREIGN KEY (item_id) REFERENCES items (id) ON DELETE RESTRICT
       )
     ''');
 
-    // 6. إنشاء الفهارس (Indexes) لتحسين أداء التقارير بشكل جذري
+    // 6. إنشاء الفهارس (Indexes)
     await db.execute('CREATE INDEX idx_items_category ON items(category_id)');
     await db.execute('CREATE INDEX idx_orders_shift ON orders(shift_id)');
     await db.execute('CREATE INDEX idx_orders_created_at ON orders(created_at)');
@@ -178,47 +180,28 @@ class DatabaseHelper {
     await db.execute('CREATE INDEX idx_shifts_status ON shifts(status)');
   }
 
-  /// دالة مساعدة لفحص ما إذا كان العمود موجوداً بالفعل في الجدول لتجنب أعطال الترقية
   Future<bool> _columnExists(Database db, String tableName, String columnName) async {
     final result = await db.rawQuery("PRAGMA table_info($tableName)");
     return result.any((row) => row['name'] == columnName);
   }
 
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
-    if (oldVersion < 11) {
-      // ترقيات قديمة (محمية الآن بفحص مسبق)
-      if (!await _columnExists(db, 'shifts', 'cashier_id')) {
-        await db.execute('ALTER TABLE shifts ADD COLUMN cashier_id INTEGER DEFAULT 1');
-      }
-      if (!await _columnExists(db, 'shifts', 'starting_cash')) {
-        await db.execute('ALTER TABLE shifts ADD COLUMN starting_cash REAL DEFAULT 0.0');
-      }
-      if (!await _columnExists(db, 'shifts', 'total_expenses')) {
-        await db.execute('ALTER TABLE shifts ADD COLUMN total_expenses REAL DEFAULT 0.0');
-      }
-      if (!await _columnExists(db, 'shifts', 'expected_cash')) {
-        await db.execute('ALTER TABLE shifts ADD COLUMN expected_cash REAL DEFAULT 0.0');
-      }
-      if (!await _columnExists(db, 'shifts', 'actual_cash')) {
-        await db.execute('ALTER TABLE shifts ADD COLUMN actual_cash REAL DEFAULT 0.0');
-      }
-    }
-    
-    if (oldVersion < 12) {
-      // 1. إضافة shift_id للجداول بأمان تام (لن يحدث كراش إذا كان موجوداً)
-      if (!await _columnExists(db, 'orders', 'shift_id')) {
-        await db.execute('ALTER TABLE orders ADD COLUMN shift_id INTEGER DEFAULT 0');
-      }
-      if (!await _columnExists(db, 'expenses', 'shift_id')) {
-        await db.execute('ALTER TABLE expenses ADD COLUMN shift_id INTEGER DEFAULT 0');
-      }
+    // نظراً لأن SQLite لا تدعم تغيير نوع العمود من REAL إلى INTEGER بشكل مباشر،
+    // وبما أننا نقوم بالـ Refactoring لنسخة بيع مبدئية، سيتم مسح الجداول وبناؤها من جديد 
+    // إذا كان الإصدار أقل من 13 لضمان نظافة الهيكل المالي.
+    // (تنبيه: سيؤدي هذا إلى مسح البيانات الحالية أثناء التطوير)
+    if (oldVersion < 13) {
+      await db.execute('DROP TABLE IF EXISTS order_items');
+      await db.execute('DROP TABLE IF EXISTS orders');
+      await db.execute('DROP TABLE IF EXISTS expenses');
+      await db.execute('DROP TABLE IF EXISTS items');
+      await db.execute('DROP TABLE IF EXISTS categories');
+      await db.execute('DROP TABLE IF EXISTS shifts');
+      await db.execute('DROP TABLE IF EXISTS users');
+      await db.execute('DROP TABLE IF EXISTS settings');
+      await db.execute('DROP TABLE IF EXISTS license');
       
-      // 2. إنشاء الفهارس
-      await db.execute('CREATE INDEX IF NOT EXISTS idx_items_category ON items(category_id)');
-      await db.execute('CREATE INDEX IF NOT EXISTS idx_orders_shift ON orders(shift_id)');
-      await db.execute('CREATE INDEX IF NOT EXISTS idx_orders_created_at ON orders(created_at)');
-      await db.execute('CREATE INDEX IF NOT EXISTS idx_expenses_shift ON expenses(shift_id)');
-      await db.execute('CREATE INDEX IF NOT EXISTS idx_shifts_status ON shifts(status)');
+      await _onCreate(db, newVersion);
     }
   }
 }

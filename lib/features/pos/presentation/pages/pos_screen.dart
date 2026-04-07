@@ -180,8 +180,11 @@ class _PosScreenState extends State<PosScreen> {
         BlocBuilder<AuthBloc, AuthState>(
           builder: (context, state) {
             // استخدام state مباشرة بدلاً من context.read لضمان التحديث اللحظي
-            final bool isAdmin = (state is AuthAuthenticated) && state.user.isAdmin;
-            final currentUser = (state is AuthAuthenticated) ? state.user : null;
+            final bool isAdmin =
+                (state is AuthAuthenticated) && state.user.isAdmin;
+            final currentUser = (state is AuthAuthenticated)
+                ? state.user
+                : null;
 
             return Row(
               children: [
@@ -222,10 +225,10 @@ class _PosScreenState extends State<PosScreen> {
                   tooltip: 'سجل الطلبات',
                   onPressed: () => context.push('/orders'),
                 ),
-                
+
                 // 2. المصروفات النثرية
                 IconButton(
-                  icon: const Icon(Icons.money_off, color: Colors.orangeAccent),
+                  icon: const Icon(Icons.money_off),
                   tooltip: 'المصروفات',
                   onPressed: () => context.push('/expenses'),
                 ),
