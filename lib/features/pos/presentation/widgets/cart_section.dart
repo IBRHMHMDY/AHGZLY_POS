@@ -233,7 +233,6 @@ class _CartSectionState extends State<CartSection> {
                             return Row(
                               crossAxisAlignment: CrossAxisAlignment.center,
                               children: [
-                                // تم تصحيح الـ Expanded وتحديد maxLines لحماية النص
                                 Expanded(
                                   child: Column(
                                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -245,12 +244,11 @@ class _CartSectionState extends State<CartSection> {
                                         overflow: TextOverflow.ellipsis,
                                       ),
                                       const SizedBox(height: 2),
-                                      Text('${cartItem.item.price} ج.م', style: const TextStyle(color: Colors.teal, fontWeight: FontWeight.bold, fontSize: 13)),
+                                      Text('${MoneyFormatter.format(cartItem.item.price)} ج.م', style: const TextStyle(color: Colors.teal, fontWeight: FontWeight.bold, fontSize: 13)),
                                     ],
                                   ),
                                 ),
                                 const SizedBox(width: 4),
-                                // 🪄 السحر هنا: mainAxisSize: MainAxisSize.min لحماية الأزرار من التمدد العشوائي
                                 Container(
                                   decoration: BoxDecoration(color: Colors.grey.shade100, borderRadius: BorderRadius.circular(30), border: Border.all(color: Colors.grey.shade300)),
                                   child: Row(

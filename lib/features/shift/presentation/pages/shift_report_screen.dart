@@ -1,5 +1,6 @@
 // lib/features/shift/presentation/pages/shift_report_screen.dart
 
+import 'package:ahgzly_pos/core/utils/money_formatter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -37,7 +38,7 @@ class _ShiftReportScreenState extends State<ShiftReportScreen> {
 
   // 1. دالة إغلاق الوردية (التي تفتح نافذة إدخال المبلغ)
   void _onCloseShiftPressed(Shift shift) async {
-    final actualCash = await showDialog<double>(
+    final actualCash = await showDialog<int>(
       context: context,
       barrierDismissible: false,
       builder: (ctx) => CloseShiftDialog(expectedCash: shift.expectedCash),
@@ -184,7 +185,7 @@ class _ShiftReportScreenState extends State<ShiftReportScreen> {
             const Text('الوردية نشطة وتعمل الآن', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
             const SizedBox(height: 8),
             Text('وقت الفتح: ${DateFormat('yyyy-MM-dd hh:mm a').format(shift.startTime)}', style: const TextStyle(fontSize: 16)),
-            Text('العهدة الافتتاحية: ${shift.startingCash.toStringAsFixed(2)} ج.م', style: const TextStyle(fontSize: 16)),
+            Text('العهدة الافتتاحية: ${MoneyFormatter.format(shift.startingCash)} ج.م', style: const TextStyle(fontSize: 16)),
             
             const SizedBox(height: 40),
 
@@ -205,14 +206,14 @@ class _ShiftReportScreenState extends State<ShiftReportScreen> {
                   const Divider(height: 32, thickness: 2),
                   
                   _buildReportRow('إجمالي عدد الطلبات:', '${shift.totalOrders} طلب'),
-                  _buildReportRow('إجمالي المبيعات:', '${shift.totalSales.toStringAsFixed(2)} ج.م'),
-                  _buildReportRow('المبيعات الكاش:', '${shift.totalCash.toStringAsFixed(2)} ج.م'),
-                  _buildReportRow('المبيعات الفيزا:', '${shift.totalVisa.toStringAsFixed(2)} ج.م'),
-                  _buildReportRow('المبيعات إنستا باي:', '${shift.totalInstapay.toStringAsFixed(2)} ج.م'),
-                  _buildReportRow('إجمالي المصروفات:', '${shift.totalExpenses.toStringAsFixed(2)} ج.م', color: Colors.red),
+                  _buildReportRow('إجمالي المبيعات:', '${MoneyFormatter.format(shift.totalSales)} ج.م'),
+                  _buildReportRow('المبيعات الكاش:', '${MoneyFormatter.format(shift.totalCash)} ج.م'),
+                  _buildReportRow('المبيعات الفيزا:', '${MoneyFormatter.format(shift.totalVisa)} ج.م'),
+                  _buildReportRow('المبيعات إنستا باي:', '${MoneyFormatter.format(shift.totalInstapay)} ج.م'),
+                  _buildReportRow('إجمالي المصروفات:', '${MoneyFormatter.format(shift.totalExpenses)} ج.م', color: Colors.red),
                   
                   const Divider(height: 32, thickness: 2),
-                  _buildReportRow('النقدية المتوقعة في الدرج:', '${shift.expectedCash.toStringAsFixed(2)} ج.م', isBold: true, color: Colors.blueAccent),
+                  _buildReportRow('النقدية المتوقعة في الدرج:', '${MoneyFormatter.format(shift.expectedCash)} ج.م', isBold: true, color: Colors.blueAccent),
                   
                   const SizedBox(height: 40),
                   

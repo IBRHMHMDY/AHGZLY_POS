@@ -5,7 +5,7 @@ import 'package:ahgzly_pos/features/shift/data/models/shift_model.dart';
 abstract class ShiftLocalDataSource {
   Future<ShiftModel?> getActiveShift();
   Future<ShiftModel> openShift({required int startingCash, required int cashierId});
-  Future<ShiftModel> closeShift({required int shiftId, required double actualCash});
+  Future<ShiftModel> closeShift({required int shiftId, required int actualCash});
 }
 
 class ShiftLocalDataSourceImpl implements ShiftLocalDataSource {
@@ -70,7 +70,7 @@ class ShiftLocalDataSourceImpl implements ShiftLocalDataSource {
   }
 
   @override
-  Future<ShiftModel> closeShift({required int shiftId, required double actualCash}) async {
+  Future<ShiftModel> closeShift({required int shiftId, required int actualCash}) async {
     final db = await databaseHelper.database;
     final shiftMaps = await db.query('shifts', where: 'id = ? AND status = ?', whereArgs: [shiftId, 'active']);
     if (shiftMaps.isEmpty) throw CacheException(message: 'لم يتم العثور على وردية نشطة لإغلاقها.');

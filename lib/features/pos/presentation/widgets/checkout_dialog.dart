@@ -274,7 +274,7 @@ class _CheckoutDialogState extends State<CheckoutDialog> {
                             ),
                           ),
                           Text(
-                            '${_change >= 0 ? _change.toStringAsFixed(2) : "0.00"} ج.م',
+                            '${_change >= 0 ? MoneyFormatter.format(_change) : "0.00"} ج.م',
                             style: TextStyle(
                               fontSize: 24,
                               fontWeight: FontWeight.bold,

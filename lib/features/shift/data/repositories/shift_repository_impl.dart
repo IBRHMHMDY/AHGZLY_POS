@@ -36,7 +36,7 @@ class ShiftRepositoryImpl implements ShiftRepository {
   }
 
   @override
-  Future<Either<Failure, Shift>> closeShift({required int shiftId, required double actualCash}) async {
+  Future<Either<Failure, Shift>> closeShift({required int shiftId, required int actualCash}) async {
     try {
       final shift = await localDataSource.closeShift(shiftId: shiftId, actualCash: actualCash);
       return Right(shift);

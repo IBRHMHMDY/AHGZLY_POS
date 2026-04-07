@@ -13,6 +13,6 @@ class OpenShiftSubmittedEvent extends ShiftEvent {
 
 class CloseShiftSubmittedEvent extends ShiftEvent {
   final int shiftId;
-  final double actualCash;
+  final int actualCash;
   CloseShiftSubmittedEvent({required this.shiftId, required this.actualCash});
 }

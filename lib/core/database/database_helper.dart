@@ -180,10 +180,10 @@ class DatabaseHelper {
     await db.execute('CREATE INDEX idx_shifts_status ON shifts(status)');
   }
 
-  Future<bool> _columnExists(Database db, String tableName, String columnName) async {
-    final result = await db.rawQuery("PRAGMA table_info($tableName)");
-    return result.any((row) => row['name'] == columnName);
-  }
+  // Future<bool> _columnExists(Database db, String tableName, String columnName) async {
+  //   final result = await db.rawQuery("PRAGMA table_info($tableName)");
+  //   return result.any((row) => row['name'] == columnName);
+  // }
 
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
     // نظراً لأن SQLite لا تدعم تغيير نوع العمود من REAL إلى INTEGER بشكل مباشر،

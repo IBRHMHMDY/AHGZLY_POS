@@ -68,7 +68,7 @@ class _CloseShiftDialogState extends State<CloseShiftDialog> {
             Icon(Icons.lock_clock, color: Colors.redAccent, size: 28),
             SizedBox(width: 8),
             Text(
-              'إغلاق الوردية (End of Shift)',
+              'إغلاق الوردية',
               style: TextStyle(fontWeight: FontWeight.bold),
             ),
           ],
@@ -97,7 +97,7 @@ class _CloseShiftDialogState extends State<CloseShiftDialog> {
                         ),
                       ),
                       Text(
-                        '${widget.expectedCash.toStringAsFixed(2)} ج.م',
+                        '${MoneyFormatter.format(widget.expectedCash)} ج.م',
                         style: TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,

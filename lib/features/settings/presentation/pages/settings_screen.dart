@@ -207,7 +207,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               final s = state.settings;
               _taxController.text = num.parse((s.taxRate * 100).toStringAsFixed(2)).toString();
               _serviceController.text = num.parse((s.serviceRate * 100).toStringAsFixed(2)).toString();
-              _deliveryController.text = MoneyFormatter.format(state.settings.deliveryFee);;
+              _deliveryController.text = MoneyFormatter.format(state.settings.deliveryFee);
               _selectedPrinterName = s.printerName;
               _restaurantNameController.text = s.restaurantName;
               _taxNumberController.text = s.taxNumber;
