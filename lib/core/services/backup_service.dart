@@ -1,14 +1,17 @@
+// مسار الملف: lib/core/services/backup_service.dart
+
 import 'dart:io';
 import 'package:file_picker/file_picker.dart';
-import 'package:path/path.dart';
-import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+import 'package:path/path.dart' as p;
+import 'package:path_provider/path_provider.dart';
 
 class BackupService {
   /// تصدير قاعدة البيانات لملف خارجي
   Future<bool> exportDatabase() async {
     try {
-      final dbFolder = await getDatabasesPath();
-      final dbPath = join(dbFolder, 'ahgzly_pos.db');
+      // استخدام مسار Drift الجديد
+      final dbFolder = await getApplicationDocumentsDirectory();
+      final dbPath = p.join(dbFolder.path, 'pos_sys_drift.db');
       final dbFile = File(dbPath);
 
       if (!await dbFile.exists()) return false;
@@ -41,14 +44,10 @@ class BackupService {
 
       final backupFile = File(result.files.single.path!);
       
-      final dbFolder = await getDatabasesPath();
-      final dbPath = join(dbFolder, 'ahgzly_pos.db');
-      final dbFile = File(dbPath);
+      // استعادة الملف فوق مسار Drift الجديد
+      final dbFolder = await getApplicationDocumentsDirectory();
+      final dbPath = p.join(dbFolder.path, 'pos_sys_drift.db');
 
-      // استبدال الملف الحالي بملف النسخة الاحتياطية
-      if (await dbFile.exists()) {
-        await dbFile.delete();
-      }
       await backupFile.copy(dbPath);
       return true;
     } catch (e) {

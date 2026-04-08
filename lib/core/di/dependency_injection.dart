@@ -7,7 +7,6 @@ import 'package:get_it/get_it.dart';
 // Core & Security Imports
 // ==========================================
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:ahgzly_pos/core/database/database_helper.dart';
 import 'package:ahgzly_pos/core/services/printer_service.dart';
 import 'package:ahgzly_pos/core/services/security/crypto_service.dart';
 import 'package:ahgzly_pos/core/services/security/device_security_service.dart';
@@ -119,7 +118,6 @@ Future<void> init() async {
 // Core & Security
 // ==========================================
 void _initCore() {
-  sl.registerLazySingleton<DatabaseHelper>(() => DatabaseHelper());
   sl.registerLazySingleton<AppDatabase>(() => AppDatabase());
   sl.registerLazySingleton<PrinterService>(() => PrinterService());
   sl.registerLazySingleton<FlutterSecureStorage>(
@@ -181,7 +179,7 @@ void _initAuth() {
 // ==========================================
 void _initMenu() {
   sl.registerLazySingleton<MenuLocalDataSource>(
-    () => MenuLocalDataSourceImpl(databaseHelper: sl()),
+    () => MenuLocalDataSourceImpl(appDatabase: sl()),
   );
   sl.registerLazySingleton<MenuRepository>(
     () => MenuRepositoryImpl(localDataSource: sl()),
@@ -214,7 +212,7 @@ void _initMenu() {
 // ==========================================
 void _initPos() {
   sl.registerLazySingleton<PosLocalDataSource>(
-    () => PosLocalDataSourceImpl(databaseHelper: sl()),
+    () => PosLocalDataSourceImpl(appDatabase: sl()),
   );
   sl.registerLazySingleton<PosRepository>(
     () => PosRepositoryImpl(localDataSource: sl()),
@@ -232,7 +230,7 @@ void _initPos() {
 // ==========================================
 void _initSettings() {
   sl.registerLazySingleton<SettingsLocalDataSource>(
-    () => SettingsLocalDataSourceImpl(databaseHelper: sl()),
+    () => SettingsLocalDataSourceImpl(appDatabase: sl()),
   );
   sl.registerLazySingleton<SettingsRepository>(
     () => SettingsRepositoryImpl(localDataSource: sl()),
@@ -249,7 +247,7 @@ void _initSettings() {
 // ==========================================
 void _initShift() {
   sl.registerLazySingleton<ShiftLocalDataSource>(
-    () => ShiftLocalDataSourceImpl(databaseHelper: sl()),
+    () => ShiftLocalDataSourceImpl(appDatabase: sl()),
   );
   sl.registerLazySingleton<ShiftRepository>(
     () => ShiftRepositoryImpl(localDataSource: sl()),
@@ -272,7 +270,7 @@ void _initShift() {
 // ==========================================
 void _initOrders() {
   sl.registerLazySingleton<OrdersLocalDataSource>(
-    () => OrdersLocalDataSourceImpl(databaseHelper: sl()),
+    () => OrdersLocalDataSourceImpl(appDatabase: sl()),
   );
   sl.registerLazySingleton<OrdersRepository>(
     () => OrdersRepositoryImpl(localDataSource: sl()),
@@ -289,7 +287,7 @@ void _initOrders() {
 // ==========================================
 void _initExpenses() {
   sl.registerLazySingleton<ExpensesLocalDataSource>(
-    () => ExpensesLocalDataSourceImpl(databaseHelper: sl()),
+    () => ExpensesLocalDataSourceImpl(appDatabase: sl()),
   );
   sl.registerLazySingleton<ExpensesRepository>(
     () => ExpensesRepositoryImpl(localDataSource: sl()),

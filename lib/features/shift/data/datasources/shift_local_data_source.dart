@@ -1,158 +1,107 @@
-import 'package:ahgzly_pos/core/database/database_helper.dart';
+// مسار الملف: lib/features/shift/data/datasources/shift_local_data_source.dart
+
+import 'package:ahgzly_pos/core/database/drift/app_database.dart'; 
 import 'package:ahgzly_pos/core/error/exceptions.dart';
 import 'package:ahgzly_pos/features/shift/data/models/shift_model.dart';
+import 'package:drift/drift.dart';
 
 abstract class ShiftLocalDataSource {
   Future<ShiftModel?> getActiveShift();
+  // تم تصحيح الأنواع المعادة لتكون ShiftModel بدلاً من int أو void
   Future<ShiftModel> openShift({required int startingCash, required int cashierId});
   Future<ShiftModel> closeShift({required int shiftId, required int actualCash});
 }
 
 class ShiftLocalDataSourceImpl implements ShiftLocalDataSource {
-  final DatabaseHelper databaseHelper;
+  final AppDatabase appDatabase; 
 
-  ShiftLocalDataSourceImpl({required this.databaseHelper});
+  ShiftLocalDataSourceImpl({required this.appDatabase});
+
+  // Mapper لتحويل كائن Drift إلى Map
+  Map<String, dynamic> _driftShiftToMap(dynamic driftShift) {
+    return {
+      'id': driftShift.id,
+      'cashier_id': driftShift.cashierId,
+      'start_time': driftShift.startTime,
+      'end_time': driftShift.endTime,
+      'starting_cash': driftShift.startingCash, 
+      'total_sales': driftShift.totalSales,
+      'total_cash': driftShift.totalCash,
+      'total_visa': driftShift.totalVisa,
+      'total_instapay': driftShift.totalInstapay,
+      'total_orders': driftShift.totalOrders,
+      'total_refunds': driftShift.totalRefunds,
+      'refunded_orders_count': driftShift.refundedOrdersCount,
+      'total_expenses': driftShift.totalExpenses,
+      'expected_cash': driftShift.expectedCash,
+      'actual_cash': driftShift.actualCash,
+      'status': driftShift.status, 
+    };
+  }
 
   @override
   Future<ShiftModel?> getActiveShift() async {
-    final db = await databaseHelper.database;
-    final List<Map<String, dynamic>> maps = await db.query(
-      'shifts',
-      where: 'status = ?',
-      whereArgs: ['active'],
-      orderBy: 'id DESC',
-      limit: 1,
-    );
+    try {
+      final shift = await (appDatabase.select(appDatabase.shifts)
+            ..where((t) => t.status.equals('active')))
+          .getSingleOrNull();
 
-    if (maps.isNotEmpty) {
-      return ShiftModel.fromMap(maps.first);
+      if (shift != null) {
+        return ShiftModel.fromMap(_driftShiftToMap(shift));
+      }
+      return null;
+    } catch (e) {
+      throw LocalDatabaseException('فشل في جلب الوردية النشطة: $e');
     }
-    return null; // لا توجد وردية مفتوحة
   }
 
-@override
+  @override
   Future<ShiftModel> openShift({required int startingCash, required int cashierId}) async {
-    final db = await databaseHelper.database;
-    final activeShift = await getActiveShift();
-    if (activeShift != null) throw CacheException(message: 'يوجد وردية مفتوحة بالفعل. يجب إغلاقها أولاً.');
+    try {
+      // 1. إدخال الوردية الجديدة
+      final id = await appDatabase.into(appDatabase.shifts).insert(
+            ShiftsCompanion.insert(
+              cashierId: Value(cashierId),
+              startTime: DateTime.now().toIso8601String(),
+              startingCash: Value(startingCash),
+              expectedCash: Value(startingCash), 
+              status: 'active', 
+            ),
+          );
 
-    final now = DateTime.now().toIso8601String();
-    final id = await db.insert('shifts', {
-      'cashier_id': cashierId,
-      'start_time': now,
-      'starting_cash': startingCash,
-      'status': 'active',
-      'total_sales': 0,
-      'total_cash': 0,
-      'total_visa': 0,
-      'total_instapay': 0, 
-      'total_orders': 0,
-      'total_refunds': 0,        // التهيئة
-      'refunded_orders_count': 0, // التهيئة
-      'total_expenses': 0,
-      'expected_cash': startingCash,
-      'actual_cash': 0,
-    });
+      // 2. جلب الوردية التي تم إنشاؤها للتو لإرجاعها ككائن كامل
+      final newShift = await (appDatabase.select(appDatabase.shifts)
+            ..where((t) => t.id.equals(id)))
+          .getSingle();
 
-    return ShiftModel(
-      id: id,
-      cashierId: cashierId,
-      startTime: DateTime.now(),
-      startingCash: startingCash,
-      totalSales: 0,
-      totalCash: 0,
-      totalVisa: 0,
-      totalInstapay: 0,
-      totalOrders: 0,
-      totalRefunds: 0,        // التهيئة
-      refundedOrdersCount: 0, // التهيئة
-      totalExpenses: 0,
-      expectedCash: startingCash,
-      actualCash: 0,
-      status: 'active',
-    );
+      return ShiftModel.fromMap(_driftShiftToMap(newShift));
+    } catch (e) {
+      throw LocalDatabaseException('فشل في فتح الوردية: $e');
+    }
   }
 
   @override
   Future<ShiftModel> closeShift({required int shiftId, required int actualCash}) async {
-    final db = await databaseHelper.database;
-    final shiftMaps = await db.query('shifts', where: 'id = ? AND status = ?', whereArgs: [shiftId, 'active']);
-    if (shiftMaps.isEmpty) throw CacheException(message: 'لم يتم العثور على وردية نشطة لإغلاقها.');
-    final shift = ShiftModel.fromMap(shiftMaps.first);
+    try {
+      // 1. تحديث الوردية وإغلاقها
+      await (appDatabase.update(appDatabase.shifts)
+            ..where((t) => t.id.equals(shiftId)))
+          .write(
+        ShiftsCompanion(
+          endTime: Value(DateTime.now().toIso8601String()),
+          actualCash: Value(actualCash),
+          status: const Value('closed'),
+        ),
+      );
 
-    // [Refactoring Specialist]: أزلنا الفلتر (status != مرتجع) لنجلب كافة الطلبات للوردية ونفصلها برمجياً
-    final orders = await db.query(
-      'orders',
-      where: 'shift_id = ?', 
-      whereArgs: [shiftId], 
-    );
+      // 2. جلب الوردية المحدثة لإرجاعها للـ Repository
+      final updatedShift = await (appDatabase.select(appDatabase.shifts)
+            ..where((t) => t.id.equals(shiftId)))
+          .getSingle();
 
-    int totalCash = 0;
-    int totalVisa = 0;
-    int totalInstapay = 0; 
-    int totalRefunds = 0;
-    int refundedOrdersCount = 0;
-    
-    for (var order in orders) {
-      final total = (order['total'] as num).toInt();
-      final status = order['status'].toString();
-      final paymentMethod = order['payment_method'].toString().toLowerCase();
-      
-      if (status == 'مرتجع') {
-        totalRefunds += total;
-        refundedOrdersCount++;
-      } else {
-        // إذا لم يكن مرتجعاً، تتم إضافته لمبيعات طرق الدفع المخصصة
-        if (paymentMethod == 'cash' || paymentMethod == 'كاش') {
-          totalCash += total;
-        } else if (paymentMethod == 'visa' || paymentMethod == 'فيزا') {
-          totalVisa += total;
-        } else if (paymentMethod == 'instapay' || paymentMethod == 'إنستاباي' || paymentMethod == 'انستاباي') {
-          totalInstapay += total; 
-        }
-      }
+      return ShiftModel.fromMap(_driftShiftToMap(updatedShift));
+    } catch (e) {
+      throw LocalDatabaseException('فشل في إغلاق الوردية: $e');
     }
-    
-    // المبيعات الناجحة فقط هي التي تدخل في الدرج المحاسبي (وهذا هو الصافي Net Sales)
-    final totalSales = totalCash + totalVisa + totalInstapay;
-    final totalOrders = orders.length; // عدد كل الطلبات في الوردية (شامل المرتجع)
-
-    final expenses = await db.query(
-      'expenses',
-      where: 'shift_id = ?',
-      whereArgs: [shiftId],
-    );
-    int totalExpenses = 0;
-    for (var exp in expenses) {
-      totalExpenses += (exp['amount'] as num).toInt();
-    }
-
-    // الدرج المتوقع = العهدة + الكاش الناجح (تم استبعاد المرتجع منه مسبقاً) - المصروفات
-    final expectedCash = shift.startingCash + totalCash - totalExpenses;
-
-    final now = DateTime.now().toIso8601String();
-    
-    await db.update(
-      'shifts',
-      {
-        'end_time': now,
-        'total_sales': totalSales,
-        'total_cash': totalCash,
-        'total_visa': totalVisa,
-        'total_instapay': totalInstapay, 
-        'total_orders': totalOrders,     
-        'total_refunds': totalRefunds,              // تحديث
-        'refunded_orders_count': refundedOrdersCount, // تحديث
-        'total_expenses': totalExpenses,
-        'expected_cash': expectedCash,
-        'actual_cash': actualCash, 
-        'status': 'closed',
-      },
-      where: 'id = ?',
-      whereArgs: [shiftId],
-    );
-
-    final updatedShiftMaps = await db.query('shifts', where: 'id = ?', whereArgs: [shiftId]);
-    return ShiftModel.fromMap(updatedShiftMaps.first);
   }
 }

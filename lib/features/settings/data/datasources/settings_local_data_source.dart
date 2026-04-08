@@ -1,5 +1,8 @@
-import 'package:ahgzly_pos/core/database/database_helper.dart';
+// مسار الملف: lib/features/settings/data/datasources/settings_local_data_source.dart
+
+import 'package:ahgzly_pos/core/database/drift/app_database.dart'; // استيراد Drift
 import 'package:ahgzly_pos/features/settings/data/models/app_settings_model.dart';
+import 'package:drift/drift.dart'; // استيراد Value
 
 abstract class SettingsLocalDataSource {
   Future<AppSettingsModel> getSettings();
@@ -7,17 +10,33 @@ abstract class SettingsLocalDataSource {
 }
 
 class SettingsLocalDataSourceImpl implements SettingsLocalDataSource {
-  final DatabaseHelper databaseHelper;
+  final AppDatabase appDatabase; // Refactored: استخدام AppDatabase
 
-  SettingsLocalDataSourceImpl({required this.databaseHelper});
+  SettingsLocalDataSourceImpl({required this.appDatabase});
+
+  // Mapper لتحويل كائن Drift إلى Map تتوقعه Models
+  Map<String, dynamic> _driftSettingsToMap(SettingsDrift driftSettings) {
+    return {
+      'id': driftSettings.id,
+      'tax_rate': driftSettings.taxRate,
+      'service_rate': driftSettings.serviceRate,
+      'delivery_fee': driftSettings.deliveryFee,
+      'printer_name': driftSettings.printerName,
+      'restaurant_name': driftSettings.restaurantName,
+      'tax_number': driftSettings.taxNumber,
+      'print_mode': driftSettings.printMode,
+    };
+  }
 
   @override
   Future<AppSettingsModel> getSettings() async {
-    final db = await databaseHelper.database;
-    final result = await db.query('settings', where: 'id = ?', whereArgs: [1]);
+    // Refactored: استعلام Drift الآمن لجلب الإعدادات (id = 1)
+    final result = await (appDatabase.select(appDatabase.settings)
+          ..where((t) => t.id.equals(1)))
+        .getSingleOrNull();
     
-    if (result.isNotEmpty) {
-      return AppSettingsModel.fromMap(result.first);
+    if (result != null) {
+      return AppSettingsModel.fromMap(_driftSettingsToMap(result));
     } else {
       throw Exception('الإعدادات غير موجودة');
     }
@@ -25,12 +44,19 @@ class SettingsLocalDataSourceImpl implements SettingsLocalDataSource {
 
   @override
   Future<void> updateSettings(AppSettingsModel settings) async {
-    final db = await databaseHelper.database;
-    await db.update(
-      'settings',
-      settings.toMap(),
-      where: 'id = ?',
-      whereArgs: [1],
+    // Refactored: تحديث الإعدادات باستخدام Companions
+    await (appDatabase.update(appDatabase.settings)
+          ..where((t) => t.id.equals(1)))
+        .write(
+      SettingsCompanion(
+        taxRate: Value(settings.taxRate),
+        serviceRate: Value(settings.serviceRate),
+        deliveryFee: Value(settings.deliveryFee),
+        printerName: Value(settings.printerName),
+        restaurantName: Value(settings.restaurantName),
+        taxNumber: Value(settings.taxNumber),
+        printMode: Value(settings.printMode),
+      ),
     );
   }
 }

@@ -1,8 +1,9 @@
+// مسار الملف: lib/features/menu/data/datasources/menu_local_data_source.dart
 
-
-import 'package:ahgzly_pos/core/database/database_helper.dart';
+import 'package:ahgzly_pos/core/database/drift/app_database.dart'; // استيراد Drift
 import 'package:ahgzly_pos/features/menu/data/models/category_model.dart';
 import 'package:ahgzly_pos/features/menu/data/models/item_model.dart';
+import 'package:drift/drift.dart';
 
 abstract class MenuLocalDataSource {
   Future<List<CategoryModel>> getCategories();
@@ -17,80 +18,112 @@ abstract class MenuLocalDataSource {
 }
 
 class MenuLocalDataSourceImpl implements MenuLocalDataSource {
-  final DatabaseHelper databaseHelper;
+  final AppDatabase appDatabase; // Refactored: استخدام AppDatabase
 
-  MenuLocalDataSourceImpl({required this.databaseHelper});
+  MenuLocalDataSourceImpl({required this.appDatabase});
+
+  // Mapper للأقسام
+  Map<String, dynamic> _driftCategoryToMap(CategoryDrift driftCategory) {
+    return {
+      'id': driftCategory.id,
+      'name': driftCategory.name,
+      'created_at': driftCategory.createdAt,
+      'updated_at': driftCategory.updatedAt,
+    };
+  }
+
+  // Mapper للمنتجات
+  Map<String, dynamic> _driftItemToMap(ItemDrift driftItem) {
+    return {
+      'id': driftItem.id,
+      'category_id': driftItem.categoryId,
+      'name': driftItem.name,
+      'price': driftItem.price,
+      'created_at': driftItem.createdAt,
+      'updated_at': driftItem.updatedAt,
+    };
+  }
 
   @override
   Future<List<CategoryModel>> getCategories() async {
-    final db = await databaseHelper.database;
-    final List<Map<String, dynamic>> maps = await db.query('categories', orderBy: 'id DESC');
-    return List.generate(maps.length, (i) => CategoryModel.fromMap(maps[i]));
+    final maps = await (appDatabase.select(appDatabase.categories)
+          ..orderBy([(t) => OrderingTerm(expression: t.id, mode: OrderingMode.desc)]))
+        .get();
+    return maps.map((c) => CategoryModel.fromMap(_driftCategoryToMap(c))).toList();
   }
 
   @override
   Future<int> addCategory(CategoryModel category) async {
-    final db = await databaseHelper.database;
-    return await db.insert('categories', category.toMap());
+    return await appDatabase.into(appDatabase.categories).insert(
+          CategoriesCompanion.insert(
+            name: category.name,
+            createdAt: category.createdAt,
+            updatedAt: category.updatedAt,
+          ),
+        );
   }
 
   @override
   Future<int> updateCategory(CategoryModel category) async {
-    final db = await databaseHelper.database;
-    return await db.update(
-      'categories',
-      category.toMap(),
-      where: 'id = ?',
-      whereArgs: [category.id],
+    await (appDatabase.update(appDatabase.categories)
+          ..where((t) => t.id.equals(category.id!)))
+        .write(
+      CategoriesCompanion(
+        name: Value(category.name),
+        updatedAt: Value(category.updatedAt),
+      ),
     );
+    return category.id!;
   }
 
   @override
   Future<int> deleteCategory(int id) async {
-    final db = await databaseHelper.database;
-    return await db.delete(
-      'categories',
-      where: 'id = ?',
-      whereArgs: [id],
-    );
+    return await (appDatabase.delete(appDatabase.categories)
+          ..where((t) => t.id.equals(id)))
+        .go();
   }
 
   @override
   Future<List<ItemModel>> getItems(int categoryId) async {
-    final db = await databaseHelper.database;
-    final List<Map<String, dynamic>> maps = await db.query(
-      'items',
-      where: 'category_id = ?',
-      whereArgs: [categoryId],
-      orderBy: 'id DESC',
-    );
-    return List.generate(maps.length, (i) => ItemModel.fromMap(maps[i]));
+    final maps = await (appDatabase.select(appDatabase.items)
+          ..where((t) => t.categoryId.equals(categoryId))
+          ..orderBy([(t) => OrderingTerm(expression: t.id, mode: OrderingMode.desc)]))
+        .get();
+    return maps.map((i) => ItemModel.fromMap(_driftItemToMap(i))).toList();
   }
 
   @override
   Future<int> addItem(ItemModel item) async {
-    final db = await databaseHelper.database;
-    return await db.insert('items', item.toMap());
+    return await appDatabase.into(appDatabase.items).insert(
+          ItemsCompanion.insert(
+            categoryId: item.categoryId,
+            name: item.name,
+            price: item.price,
+            createdAt: item.createdAt,
+            updatedAt: item.updatedAt,
+          ),
+        );
   }
 
   @override
   Future<int> updateItem(ItemModel item) async {
-    final db = await databaseHelper.database;
-    return await db.update(
-      'items',
-      item.toMap(),
-      where: 'id = ?',
-      whereArgs: [item.id],
+    await (appDatabase.update(appDatabase.items)
+          ..where((t) => t.id.equals(item.id!)))
+        .write(
+      ItemsCompanion(
+        categoryId: Value(item.categoryId),
+        name: Value(item.name),
+        price: Value(item.price),
+        updatedAt: Value(item.updatedAt),
+      ),
     );
+    return item.id!;
   }
 
   @override
   Future<int> deleteItem(int id) async {
-    final db = await databaseHelper.database;
-    return await db.delete(
-      'items',
-      where: 'id = ?',
-      whereArgs: [id],
-    );
+    return await (appDatabase.delete(appDatabase.items)
+          ..where((t) => t.id.equals(id)))
+        .go();
   }
 }

@@ -1,6 +1,8 @@
 import 'dart:io';
-import 'package:ahgzly_pos/core/database/database_helper.dart';
+import 'package:ahgzly_pos/core/database/drift/app_database.dart';
+import 'package:ahgzly_pos/core/di/dependency_injection.dart';
 import 'package:ahgzly_pos/core/utils/money_formatter.dart';
+import 'package:drift/drift.dart' as drift;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:ahgzly_pos/core/services/backup_service.dart';
@@ -147,12 +149,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
               foregroundColor: Colors.white,
             ),
             onPressed: () async {
-              // 1. تصفير قاعدة البيانات
-              final db = await DatabaseHelper().database;
-              await db.update('license', {
-                'is_activated': 0,
-                'license_key': '',
-              }, where: 'id = 1');
+              // 1. تصفير قاعدة البيانات باستخدام Drift
+              final db = sl<AppDatabase>(); // جلب نسخة قاعدة البيانات من GetIt
+              await (db.update(db.license)..where((t) => t.id.equals(1))).write(
+                const LicenseCompanion(
+                  isActivated: drift.Value(false),
+                  licenseKey: drift.Value(''),
+                ),
+              );
 
               // 2. إغلاق البرنامج بقوة (للكمبيوتر)
               exit(0);

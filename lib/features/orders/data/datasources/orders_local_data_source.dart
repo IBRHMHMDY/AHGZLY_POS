@@ -1,6 +1,9 @@
-import 'package:ahgzly_pos/core/database/database_helper.dart';
-import 'package:ahgzly_pos/core/error/exceptions.dart'; // [Refactoring Specialist]: ضروري لالتقاط الأخطاء
+// مسار الملف: lib/features/orders/data/datasources/orders_local_data_source.dart
+
+import 'package:ahgzly_pos/core/database/drift/app_database.dart'; // استيراد Drift
+import 'package:ahgzly_pos/core/error/exceptions.dart';
 import 'package:ahgzly_pos/features/orders/data/models/order_history_model.dart';
+import 'package:drift/drift.dart';
 
 abstract class OrdersLocalDataSource {
   Future<List<OrderHistoryModel>> getOrdersHistory({required bool isAdmin, required int? shiftId});
@@ -8,97 +11,133 @@ abstract class OrdersLocalDataSource {
 }
 
 class OrdersLocalDataSourceImpl implements OrdersLocalDataSource {
-  final DatabaseHelper databaseHelper;
-  OrdersLocalDataSourceImpl({required this.databaseHelper});
+  final AppDatabase appDatabase; // Refactored: استخدام AppDatabase
+
+  OrdersLocalDataSourceImpl({required this.appDatabase});
+
+  // Mapper لتحويل كائن Order الخاص بـ Drift إلى Map ليقبله Model القديم
+  Map<String, dynamic> _driftOrderToMap(OrderDrift order) {
+    return {
+      'id': order.id,
+      'order_type': order.orderType,
+      'sub_total': order.subTotal,
+      'discount': order.discount,
+      'total': order.total,
+      'payment_method': order.paymentMethod,
+      'created_at': order.createdAt,
+      'status': order.status,
+      'shift_id': order.shiftId,
+    };
+  }
+
+  // Mapper لعناصر الطلب 
+  Map<String, dynamic> _driftItemToMap(int quantity, int unitPrice, String itemName) {
+    return {
+      'quantity': quantity,
+      'unit_price': unitPrice,
+      'item_name': itemName,
+    };
+  }
 
   @override
   Future<List<OrderHistoryModel>> getOrdersHistory({required bool isAdmin, required int? shiftId}) async {
-    final db = await databaseHelper.database;
-    final List<Map<String, dynamic>> ordersMap;
-    List<OrderHistoryModel> orders = [];
-    if(isAdmin){
-      ordersMap = await db.query('orders', orderBy: 'id DESC');
-    }else{
-      if (shiftId == null) return [];
-      ordersMap = await db.query(
-        'orders', 
-        where: 'shift_id = ?', 
-        whereArgs: [shiftId], 
-        orderBy: 'id DESC'
-      );
+    try {
+      List<OrderDrift> ordersDrift = [];
+      
+      // 1. جلب الطلبات بناءً على الصلاحية
+      if (isAdmin) {
+        ordersDrift = await (appDatabase.select(appDatabase.orders)
+              ..orderBy([(t) => OrderingTerm(expression: t.id, mode: OrderingMode.desc)]))
+            .get();
+      } else {
+        if (shiftId == null) return [];
+        ordersDrift = await (appDatabase.select(appDatabase.orders)
+              ..where((t) => t.shiftId.equals(shiftId))
+              ..orderBy([(t) => OrderingTerm(expression: t.id, mode: OrderingMode.desc)]))
+            .get();
+      }
+
+      List<OrderHistoryModel> orders = [];
+      
+      // 2. جلب العناصر التابعة لكل طلب (الاستعاضة عن RawQuery بـ Type-Safe JOIN)
+      for (var order in ordersDrift) {
+        final query = appDatabase.select(appDatabase.orderItems).join([
+          innerJoin(appDatabase.items, appDatabase.items.id.equalsExp(appDatabase.orderItems.itemId))
+        ])..where(appDatabase.orderItems.orderId.equals(order.id));
+        
+        final rows = await query.get();
+        
+        List<OrderHistoryItemModel> items = [];
+        for (var row in rows) {
+          final orderItem = row.readTable(appDatabase.orderItems);
+          final item = row.readTable(appDatabase.items); // جلب بيانات المنتج المرتبط
+          
+          items.add(OrderHistoryItemModel.fromMap(
+            _driftItemToMap(orderItem.quantity, orderItem.unitPrice, item.name)
+          ));
+        }
+        
+        orders.add(OrderHistoryModel.fromMap(_driftOrderToMap(order), items));
+      }
+      
+      return orders;
+    } catch (e) {
+      throw CacheException(message: 'فشل في جلب سجل الطلبات: $e');
     }
-    for (var order in ordersMap) {
-      final orderId = order['id'];
-      final List<Map<String, dynamic>> itemsMap = await db.rawQuery('''
-        SELECT oi.quantity, oi.unit_price, i.name as item_name
-        FROM order_items oi
-        JOIN items i ON oi.item_id = i.id
-        WHERE oi.order_id = ?
-      ''', [orderId]);
-      final items = itemsMap.map((item) => OrderHistoryItemModel.fromMap(item)).toList();
-      orders.add(OrderHistoryModel.fromMap(order, items));
-    }
-    return orders;
   }
 
   @override
   Future<void> refundOrder(int orderId) async {
-    final db = await databaseHelper.database;
-    
     try {
-      // [Refactoring Specialist]: استخدام Transaction لضمان تزامن المرتجع مع الوردية
-      await db.transaction((txn) async {
-        // 1. جلب الفاتورة لمعرفة قيمتها وطريقة الدفع والوردية التابعة لها
-        final orderResult = await txn.query(
-          'orders',
-          where: 'id = ?',
-          whereArgs: [orderId],
-        );
+      await appDatabase.transaction(() async {
+        // 1. جلب الفاتورة من Drift
+        final order = await (appDatabase.select(appDatabase.orders)
+              ..where((t) => t.id.equals(orderId)))
+            .getSingleOrNull();
         
-        if (orderResult.isEmpty) {
+        if (order == null) {
           throw CacheException(message: 'لم يتم العثور على الفاتورة.');
         }
 
-        final order = orderResult.first;
-        final String status = order['status'] as String;
-        
-        if (status == 'مرتجع') {
+        if (order.status == 'مرتجع') {
           throw CacheException(message: 'هذه الفاتورة مسترجعة بالفعل.');
         }
 
-        final int total = (order['total'] as num).toInt();
-        final String paymentMethod = order['payment_method'].toString().toLowerCase();
-        final int shiftId = (order['shift_id'] as num).toInt();
-
         // 2. تحديث حالة الفاتورة إلى مرتجع
-        await txn.update(
-          'orders', 
-          {'status': 'مرتجع'}, 
-          where: 'id = ?', 
-          whereArgs: [orderId],
+        await (appDatabase.update(appDatabase.orders)..where((t) => t.id.equals(orderId))).write(
+          const OrdersCompanion(status: Value('مرتجع'))
         );
 
-        // 3. تحديث إحصائيات الوردية لحظياً (Live Update) لتعكس التقرير اللحظي Z/X Report
-        String paymentColumn = 'total_cash';
-        if (paymentMethod == 'visa' || paymentMethod == 'فيزا') paymentColumn = 'total_visa';
-        if (paymentMethod == 'instapay' || paymentMethod == 'إنستاباي' || paymentMethod == 'انستاباي') paymentColumn = 'total_instapay';
+        // 3. جلب الوردية وتحديث إحصائياتها لحظياً
+        final shiftId = order.shiftId;
+        final shift = await (appDatabase.select(appDatabase.shifts)
+              ..where((t) => t.id.equals(shiftId) & t.status.equals('active')))
+            .getSingleOrNull();
 
-        await txn.rawUpdate('''
-          UPDATE shifts 
-          SET total_sales = total_sales - ?, 
-              $paymentColumn = $paymentColumn - ?, 
-              expected_cash = expected_cash - ?, 
-              total_refunds = total_refunds + ?,
-              refunded_orders_count = refunded_orders_count + 1,
-              total_orders = total_orders - 1
-          WHERE id = ? AND status = 'active'
-        ''', [
-          total, 
-          total, 
-          (paymentColumn == 'total_cash' ? total : 0), // نخصم المرتجع من الدرج المتوقع فقط إذا كان كاش
-          total,
-          shiftId
-        ]);
+        if (shift == null) {
+          throw CacheException(message: 'لا يمكن استرجاع الفاتورة: الوردية الخاصة بها مغلقة أو غير نشطة.');
+        }
+
+        final total = order.total;
+        final paymentMethod = order.paymentMethod.toLowerCase();
+        final isCash = paymentMethod == 'cash' || paymentMethod == 'كاش';
+        final isVisa = paymentMethod == 'visa' || paymentMethod == 'فيزا';
+        final isInstapay = paymentMethod == 'instapay' || paymentMethod == 'إنستاباي' || paymentMethod == 'انستاباي';
+
+        // حساب القيم الجديدة بأمان (خصم المرتجع)
+        final updatedShift = shift.copyWith(
+          totalSales: shift.totalSales - total,
+          totalRefunds: shift.totalRefunds + total,
+          refundedOrdersCount: shift.refundedOrdersCount + 1,
+          totalOrders: shift.totalOrders - 1,
+          totalCash: isCash ? shift.totalCash - total : shift.totalCash,
+          totalVisa: isVisa ? shift.totalVisa - total : shift.totalVisa,
+          totalInstapay: isInstapay ? shift.totalInstapay - total : shift.totalInstapay,
+          expectedCash: isCash ? shift.expectedCash - total : shift.expectedCash,
+        );
+
+        // حفظ الوردية بعد التحديث
+        await appDatabase.update(appDatabase.shifts).replace(updatedShift);
       });
     } catch (e) {
       if (e is CacheException) rethrow;

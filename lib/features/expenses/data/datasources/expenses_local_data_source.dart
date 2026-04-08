@@ -1,8 +1,9 @@
 // مسار الملف: lib/features/expenses/data/datasources/expenses_local_data_source.dart
 
-import 'package:ahgzly_pos/core/database/database_helper.dart';
+import 'package:ahgzly_pos/core/database/drift/app_database.dart'; // استيراد Drift
 import 'package:ahgzly_pos/core/error/exceptions.dart';
 import 'package:ahgzly_pos/features/expenses/data/models/expense_model.dart';
+import 'package:drift/drift.dart';
 
 abstract class ExpensesLocalDataSource {
   Future<List<ExpenseModel>> getExpenses({required bool isAdmin, required int? shiftId});
@@ -11,53 +12,75 @@ abstract class ExpensesLocalDataSource {
 }
 
 class ExpensesLocalDataSourceImpl implements ExpensesLocalDataSource {
-  final DatabaseHelper databaseHelper;
+  final AppDatabase appDatabase; // Refactored: استخدام AppDatabase
 
-  ExpensesLocalDataSourceImpl({required this.databaseHelper});
+  ExpensesLocalDataSourceImpl({required this.appDatabase});
+
+  // Mapper لتحويل كائن Drift إلى Map يقبله Model
+  Map<String, dynamic> _driftExpenseToMap(ExpenseDrift driftExpense) {
+    return {
+      'id': driftExpense.id,
+      'shift_id': driftExpense.shiftId,
+      'amount': driftExpense.amount,
+      'reason': driftExpense.reason,
+      'created_at': driftExpense.createdAt,
+    };
+  }
 
   @override
   Future<List<ExpenseModel>> getExpenses({required bool isAdmin, required int? shiftId}) async {
-    final db = await databaseHelper.database;
-    
-    if (isAdmin) {
-      final result = await db.query('expenses', orderBy: 'id DESC');
-      return result.map((e) => ExpenseModel.fromMap(e)).toList();
-    } else {
-      if (shiftId == null) return [];
-      final result = await db.query(
-        'expenses',
-        where: 'shift_id = ?',
-        whereArgs: [shiftId],
-        orderBy: 'id DESC',
-      );
-      return result.map((e) => ExpenseModel.fromMap(e)).toList();
+    try {
+      List<ExpenseDrift> driftExpenses;
+      
+      if (isAdmin) {
+        driftExpenses = await (appDatabase.select(appDatabase.expenses)
+              ..orderBy([(t) => OrderingTerm(expression: t.id, mode: OrderingMode.desc)]))
+            .get();
+      } else {
+        if (shiftId == null) return [];
+        driftExpenses = await (appDatabase.select(appDatabase.expenses)
+              ..where((t) => t.shiftId.equals(shiftId))
+              ..orderBy([(t) => OrderingTerm(expression: t.id, mode: OrderingMode.desc)]))
+            .get();
+      }
+      
+      return driftExpenses.map((e) => ExpenseModel.fromMap(_driftExpenseToMap(e))).toList();
+    } catch (e) {
+      throw CacheException(message: 'فشل في جلب المصروفات: $e');
     }
   }
 
   @override
   Future<void> addExpense(ExpenseModel expense) async {
-    final db = await databaseHelper.database;
-    
     try {
-      await db.transaction((txn) async {
-        final shiftResult = await txn.query(
-          'shifts',
-          where: 'id = ? AND status = ?',
-          whereArgs: [expense.shiftId, 'active'],
-        );
+      // استخدام Transaction لضمان تزامن حفظ المصروف وخصمه من الدرج
+      await appDatabase.transaction(() async {
+        // 1. جلب الوردية والتحقق من نشاطها
+        final shift = await (appDatabase.select(appDatabase.shifts)
+              ..where((t) => t.id.equals(expense.shiftId) & t.status.equals('active')))
+            .getSingleOrNull();
 
-        if (shiftResult.isEmpty) {
+        if (shift == null) {
           throw CacheException(message: 'لا يمكن إضافة مصروف: لا توجد وردية نشطة.');
         }
 
-        await txn.insert('expenses', expense.toMap());
+        // 2. إدخال المصروف الجديد
+        await appDatabase.into(appDatabase.expenses).insert(
+          ExpensesCompanion.insert(
+            shiftId: expense.shiftId,
+            amount: expense.amount,
+            reason: expense.reason,
+            createdAt: expense.createdAt,
+          ),
+        );
 
-        await txn.rawUpdate('''
-          UPDATE shifts 
-          SET total_expenses = total_expenses + ?, 
-              expected_cash = expected_cash - ? 
-          WHERE id = ? AND status = 'active'
-        ''', [expense.amount, expense.amount, expense.shiftId]);
+        // 3. تحديث حسابات الوردية (تقليل العهدة المتوقعة وزيادة المصروفات)
+        final updatedShift = shift.copyWith(
+          totalExpenses: shift.totalExpenses + expense.amount,
+          expectedCash: shift.expectedCash - expense.amount,
+        );
+
+        await appDatabase.update(appDatabase.shifts).replace(updatedShift);
       });
     } catch (e) {
       if (e is CacheException) rethrow;
@@ -67,30 +90,35 @@ class ExpensesLocalDataSourceImpl implements ExpensesLocalDataSource {
 
   @override
   Future<void> deleteExpense(int id) async {
-    final db = await databaseHelper.database;
-    
     try {
-      // [Refactoring Specialist]: استخدام Transaction لضمان عودة المبلغ لدرج النقدية عند حذف المصروف بالخطأ
-      await db.transaction((txn) async {
-        final expResult = await txn.query('expenses', where: 'id = ?', whereArgs: [id]);
-        if (expResult.isEmpty) {
+      await appDatabase.transaction(() async {
+        // 1. جلب المصروف المراد حذفه لمعرفة قيمته
+        final expense = await (appDatabase.select(appDatabase.expenses)
+              ..where((t) => t.id.equals(id)))
+            .getSingleOrNull();
+
+        if (expense == null) {
           throw CacheException(message: 'لم يتم العثور على المصروف.');
         }
-        
-        final expense = expResult.first;
-        final int amount = (expense['amount'] as num).toInt();
-        final int shiftId = (expense['shift_id'] as num).toInt();
 
-        // 1. حذف المصروف
-        await txn.delete('expenses', where: 'id = ?', whereArgs: [id]);
+        // 2. جلب الوردية الخاصة بهذا المصروف
+        final shift = await (appDatabase.select(appDatabase.shifts)
+              ..where((t) => t.id.equals(expense.shiftId) & t.status.equals('active')))
+            .getSingleOrNull();
 
-        // 2. إرجاع المبلغ لحسابات الوردية (تقليل إجمالي المصروفات وزيادة الدرج)
-        await txn.rawUpdate('''
-          UPDATE shifts 
-          SET total_expenses = total_expenses - ?, 
-              expected_cash = expected_cash + ? 
-          WHERE id = ? AND status = 'active'
-        ''', [amount, amount, shiftId]);
+        // 3. إذا كانت الوردية لا تزال نشطة، نقوم بإرجاع المبلغ للدرج وتقليل المصروفات
+        if (shift != null) {
+          final updatedShift = shift.copyWith(
+            totalExpenses: shift.totalExpenses - expense.amount,
+            expectedCash: shift.expectedCash + expense.amount,
+          );
+          await appDatabase.update(appDatabase.shifts).replace(updatedShift);
+        }
+
+        // 4. حذف المصروف نهائياً
+        await (appDatabase.delete(appDatabase.expenses)
+              ..where((t) => t.id.equals(id)))
+            .go();
       });
     } catch (e) {
       if (e is CacheException) rethrow;
