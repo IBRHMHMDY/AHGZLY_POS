@@ -1,16 +1,16 @@
 import 'package:go_router/go_router.dart';
-import 'package:ahgzly_pos/features/auth/presentation/pages/login_screen.dart';
-import 'package:ahgzly_pos/features/splash/presentation/pages/splash_screen.dart';
-import 'package:ahgzly_pos/features/license/presentation/pages/license_screen.dart';
-import 'package:ahgzly_pos/features/pos/presentation/pages/pos_screen.dart';
-import 'package:ahgzly_pos/features/menu/presentation/pages/menu_screen.dart';
-import 'package:ahgzly_pos/features/orders/presentation/pages/orders_screen.dart';
-import 'package:ahgzly_pos/features/shift/presentation/pages/shift_report_screen.dart';
-import 'package:ahgzly_pos/features/expenses/presentation/pages/expenses_screen.dart';
-import 'package:ahgzly_pos/features/settings/presentation/pages/settings_screen.dart';
-import 'package:ahgzly_pos/features/shift/presentation/pages/open_shift_screen.dart';
-import 'package:ahgzly_pos/features/users/presentation/pages/users_screen.dart';
-import 'package:ahgzly_pos/features/auth/presentation/pages/lock_screen.dart';
+import 'package:ahgzly_pos/features/auth/presentation/screens/login_screen.dart';
+import 'package:ahgzly_pos/features/splash/presentation/screens/splash_screen.dart';
+import 'package:ahgzly_pos/features/license/presentation/screens/license_screen.dart';
+import 'package:ahgzly_pos/features/pos/presentation/screens/pos_screen.dart';
+import 'package:ahgzly_pos/features/menu/presentation/screens/menu_screen.dart';
+import 'package:ahgzly_pos/features/orders/presentation/screens/orders_screen.dart';
+import 'package:ahgzly_pos/features/shift/presentation/screens/shift_report_screen.dart';
+import 'package:ahgzly_pos/features/expenses/presentation/screens/expenses_screen.dart';
+import 'package:ahgzly_pos/features/settings/presentation/screens/settings_screen.dart';
+import 'package:ahgzly_pos/features/shift/presentation/screens/open_shift_screen.dart';
+import 'package:ahgzly_pos/features/users/presentation/screens/users_screen.dart';
+import 'package:ahgzly_pos/features/auth/presentation/screens/lock_screen.dart';
 import 'package:ahgzly_pos/core/common/entities/user.dart';
 
 class AppRouter {
