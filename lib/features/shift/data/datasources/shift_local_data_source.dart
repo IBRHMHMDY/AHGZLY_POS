@@ -83,8 +83,8 @@ class ShiftLocalDataSourceImpl implements ShiftLocalDataSource {
     // [Refactoring Specialist]: أزلنا الفلتر (status != مرتجع) لنجلب كافة الطلبات للوردية ونفصلها برمجياً
     final orders = await db.query(
       'orders',
-      where: 'created_at >= ?', 
-      whereArgs: [shift.startTime.toIso8601String()], 
+      where: 'shift_id = ?', 
+      whereArgs: [shiftId], 
     );
 
     int totalCash = 0;
@@ -119,8 +119,8 @@ class ShiftLocalDataSourceImpl implements ShiftLocalDataSource {
 
     final expenses = await db.query(
       'expenses',
-      where: 'created_at >= ?',
-      whereArgs: [shift.startTime.toIso8601String()],
+      where: 'shift_id = ?',
+      whereArgs: [shiftId],
     );
     int totalExpenses = 0;
     for (var exp in expenses) {

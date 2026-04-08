@@ -192,7 +192,7 @@ class DatabaseHelper {
     // وبما أننا نقوم بالـ Refactoring لنسخة بيع مبدئية، سيتم مسح الجداول وبناؤها من جديد 
     // إذا كان الإصدار أقل من 13 لضمان نظافة الهيكل المالي.
     // (تنبيه: سيؤدي هذا إلى مسح البيانات الحالية أثناء التطوير)
-    if (oldVersion < 13) {
+    if (oldVersion < 14) {
       await db.execute('DROP TABLE IF EXISTS order_items');
       await db.execute('DROP TABLE IF EXISTS orders');
       await db.execute('DROP TABLE IF EXISTS expenses');

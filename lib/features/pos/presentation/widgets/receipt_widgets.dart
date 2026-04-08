@@ -527,19 +527,14 @@ class ZReportReceiptWidget extends StatelessWidget {
               ),
             
             const Divider(color: Colors.black, thickness: 2),
-
-            // استخدام الدالة العامة _buildRow التي قمت أنت بتجهيزها مسبقاً
             _buildRow('العهدة الافتتاحية:', shift.startingCash),
             _buildRow('إجمالي المبيعات:', shift.totalSales),
             _buildRow('مبيعات الكاش:', shift.totalCash),
             _buildRow('مبيعات الفيزا:', shift.totalVisa),
             _buildRow('مبيعات إنستاباي:', shift.totalInstapay),
             const Divider(color: Colors.black, thickness: 1),
-            if (shift.totalRefunds > 0) ...[
-              _buildRow('عدد طلبات المرتجع:', shift.refundedOrdersCount),
-              _buildRow('إجمالي المرتجعات:', shift.totalRefunds),
-              const Divider(color: Colors.black, thickness: 1),
-            ],
+            _buildRow('عدد طلبات المرتجع:', shift.refundedOrdersCount),
+            _buildRow('إجمالي المرتجعات:', shift.totalRefunds),
             const Divider(color: Colors.black, thickness: 1),
             _buildRow('إجمالي المصروفات:', shift.totalExpenses),
             const Divider(color: Colors.black, thickness: 2),
