@@ -3,7 +3,8 @@
 import 'package:drift/drift.dart';
 
 // 1. جدول الترخيص
-class LicenseTable extends Table {
+@DataClassName('LicenseDrift')
+class License extends Table {
   IntColumn get id => integer().autoIncrement()();
   BoolColumn get isActivated => boolean().withDefault(const Constant(false))();
   TextColumn get licenseKey => text().withDefault(const Constant(""))();
@@ -11,7 +12,8 @@ class LicenseTable extends Table {
 }
 
 // 2. جدول الإعدادات
-class SettingsTable extends Table {
+@DataClassName('SettingsDrift')
+class Settings extends Table {
   IntColumn get id => integer().autoIncrement()();
   RealColumn get taxRate => real()();
   RealColumn get serviceRate => real()();
@@ -23,7 +25,8 @@ class SettingsTable extends Table {
 }
 
 // 3. جدول المستخدمين
-class UsersTable extends Table {
+@DataClassName('UserDrift')
+class Users extends Table {
   IntColumn get id => integer().autoIncrement()();
   TextColumn get name => text()();
   TextColumn get pinHash => text()();
@@ -35,9 +38,10 @@ class UsersTable extends Table {
 }
 
 // 4. جدول الورديات
-class ShiftsTable extends Table {
+@DataClassName('ShiftDrift')
+class Shifts extends Table {
   IntColumn get id => integer().autoIncrement()();
-  IntColumn get cashierId => integer().nullable().references(UsersTable, #id)();
+  IntColumn get cashierId => integer().nullable().references(Users, #id)();
   TextColumn get startTime => text()();
   TextColumn get endTime => text().nullable()();
   IntColumn get startingCash => integer().withDefault(const Constant(0))();
@@ -55,7 +59,8 @@ class ShiftsTable extends Table {
 }
 
 // 5. جدول الأقسام
-class CategoriesTable extends Table {
+@DataClassName('CategoryDrift')
+class Categories extends Table {
   IntColumn get id => integer().autoIncrement()();
   TextColumn get name => text()();
   TextColumn get createdAt => text()();
@@ -63,9 +68,10 @@ class CategoriesTable extends Table {
 }
 
 // 6. جدول المنتجات
-class ItemsTable extends Table {
+@DataClassName('ItemDrift')
+class Items extends Table {
   IntColumn get id => integer().autoIncrement()();
-  IntColumn get categoryId => integer().references(CategoriesTable, #id)();
+  IntColumn get categoryId => integer().references(Categories, #id)();
   TextColumn get name => text()();
   IntColumn get price => integer()(); // بالسنت (Cents)
   TextColumn get createdAt => text()();
@@ -73,18 +79,20 @@ class ItemsTable extends Table {
 }
 
 // 7. جدول المصروفات
-class ExpensesTable extends Table {
+@DataClassName('ExpenseDrift')
+class Expenses extends Table {
   IntColumn get id => integer().autoIncrement()();
-  IntColumn get shiftId => integer().references(ShiftsTable, #id)();
+  IntColumn get shiftId => integer().references(Shifts, #id)();
   IntColumn get amount => integer()(); // بالسنت (Cents)
   TextColumn get reason => text()();
   TextColumn get createdAt => text()();
 }
 
 // 8. جدول الطلبات
-class OrdersTable extends Table {
+@DataClassName('OrderDrift')
+class Orders extends Table {
   IntColumn get id => integer().autoIncrement()();
-  IntColumn get shiftId => integer().references(ShiftsTable, #id)();
+  IntColumn get shiftId => integer().references(Shifts, #id)();
   TextColumn get orderType => text()();
   IntColumn get subTotal => integer()(); // بالسنت
   IntColumn get discount => integer().withDefault(const Constant(0))(); // بالسنت
@@ -101,10 +109,11 @@ class OrdersTable extends Table {
 }
 
 // 9. جدول عناصر الطلب
-class OrderItemsTable extends Table {
+@DataClassName('OrderItemsDrift')
+class OrderItems extends Table {
   IntColumn get id => integer().autoIncrement()();
-  IntColumn get orderId => integer().references(OrdersTable, #id)(); // Cascade Delete سيتم إدارته عبر Drift
-  IntColumn get itemId => integer().references(ItemsTable, #id)();
+  IntColumn get orderId => integer().references(Orders, #id)(); // Cascade Delete سيتم إدارته عبر Drift
+  IntColumn get itemId => integer().references(Items, #id)();
   IntColumn get quantity => integer()();
   IntColumn get unitPrice => integer()(); // بالسنت
   TextColumn get notes => text().nullable()();

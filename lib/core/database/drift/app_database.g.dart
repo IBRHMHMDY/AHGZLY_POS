@@ -3,12 +3,12 @@
 part of 'app_database.dart';
 
 // ignore_for_file: type=lint
-class $LicenseTableTable extends LicenseTable
-    with TableInfo<$LicenseTableTable, LicenseTableData> {
+class $LicenseTable extends License
+    with TableInfo<$LicenseTable, LicenseDrift> {
   @override
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
-  $LicenseTableTable(this.attachedDatabase, [this._alias]);
+  $LicenseTable(this.attachedDatabase, [this._alias]);
   static const VerificationMeta _idMeta = const VerificationMeta('id');
   @override
   late final GeneratedColumn<int> id = GeneratedColumn<int>(
@@ -72,10 +72,10 @@ class $LicenseTableTable extends LicenseTable
   String get aliasedName => _alias ?? actualTableName;
   @override
   String get actualTableName => $name;
-  static const String $name = 'license_table';
+  static const String $name = 'license';
   @override
   VerificationContext validateIntegrity(
-    Insertable<LicenseTableData> instance, {
+    Insertable<LicenseDrift> instance, {
     bool isInserting = false,
   }) {
     final context = VerificationContext();
@@ -113,9 +113,9 @@ class $LicenseTableTable extends LicenseTable
   @override
   Set<GeneratedColumn> get $primaryKey => {id};
   @override
-  LicenseTableData map(Map<String, dynamic> data, {String? tablePrefix}) {
+  LicenseDrift map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
-    return LicenseTableData(
+    return LicenseDrift(
       id: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}id'],
@@ -136,18 +136,17 @@ class $LicenseTableTable extends LicenseTable
   }
 
   @override
-  $LicenseTableTable createAlias(String alias) {
-    return $LicenseTableTable(attachedDatabase, alias);
+  $LicenseTable createAlias(String alias) {
+    return $LicenseTable(attachedDatabase, alias);
   }
 }
 
-class LicenseTableData extends DataClass
-    implements Insertable<LicenseTableData> {
+class LicenseDrift extends DataClass implements Insertable<LicenseDrift> {
   final int id;
   final bool isActivated;
   final String licenseKey;
   final String trialStartDate;
-  const LicenseTableData({
+  const LicenseDrift({
     required this.id,
     required this.isActivated,
     required this.licenseKey,
@@ -163,8 +162,8 @@ class LicenseTableData extends DataClass
     return map;
   }
 
-  LicenseTableCompanion toCompanion(bool nullToAbsent) {
-    return LicenseTableCompanion(
+  LicenseCompanion toCompanion(bool nullToAbsent) {
+    return LicenseCompanion(
       id: Value(id),
       isActivated: Value(isActivated),
       licenseKey: Value(licenseKey),
@@ -172,12 +171,12 @@ class LicenseTableData extends DataClass
     );
   }
 
-  factory LicenseTableData.fromJson(
+  factory LicenseDrift.fromJson(
     Map<String, dynamic> json, {
     ValueSerializer? serializer,
   }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
-    return LicenseTableData(
+    return LicenseDrift(
       id: serializer.fromJson<int>(json['id']),
       isActivated: serializer.fromJson<bool>(json['isActivated']),
       licenseKey: serializer.fromJson<String>(json['licenseKey']),
@@ -195,19 +194,19 @@ class LicenseTableData extends DataClass
     };
   }
 
-  LicenseTableData copyWith({
+  LicenseDrift copyWith({
     int? id,
     bool? isActivated,
     String? licenseKey,
     String? trialStartDate,
-  }) => LicenseTableData(
+  }) => LicenseDrift(
     id: id ?? this.id,
     isActivated: isActivated ?? this.isActivated,
     licenseKey: licenseKey ?? this.licenseKey,
     trialStartDate: trialStartDate ?? this.trialStartDate,
   );
-  LicenseTableData copyWithCompanion(LicenseTableCompanion data) {
-    return LicenseTableData(
+  LicenseDrift copyWithCompanion(LicenseCompanion data) {
+    return LicenseDrift(
       id: data.id.present ? data.id.value : this.id,
       isActivated: data.isActivated.present
           ? data.isActivated.value
@@ -223,7 +222,7 @@ class LicenseTableData extends DataClass
 
   @override
   String toString() {
-    return (StringBuffer('LicenseTableData(')
+    return (StringBuffer('LicenseDrift(')
           ..write('id: $id, ')
           ..write('isActivated: $isActivated, ')
           ..write('licenseKey: $licenseKey, ')
@@ -237,31 +236,31 @@ class LicenseTableData extends DataClass
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      (other is LicenseTableData &&
+      (other is LicenseDrift &&
           other.id == this.id &&
           other.isActivated == this.isActivated &&
           other.licenseKey == this.licenseKey &&
           other.trialStartDate == this.trialStartDate);
 }
 
-class LicenseTableCompanion extends UpdateCompanion<LicenseTableData> {
+class LicenseCompanion extends UpdateCompanion<LicenseDrift> {
   final Value<int> id;
   final Value<bool> isActivated;
   final Value<String> licenseKey;
   final Value<String> trialStartDate;
-  const LicenseTableCompanion({
+  const LicenseCompanion({
     this.id = const Value.absent(),
     this.isActivated = const Value.absent(),
     this.licenseKey = const Value.absent(),
     this.trialStartDate = const Value.absent(),
   });
-  LicenseTableCompanion.insert({
+  LicenseCompanion.insert({
     this.id = const Value.absent(),
     this.isActivated = const Value.absent(),
     this.licenseKey = const Value.absent(),
     this.trialStartDate = const Value.absent(),
   });
-  static Insertable<LicenseTableData> custom({
+  static Insertable<LicenseDrift> custom({
     Expression<int>? id,
     Expression<bool>? isActivated,
     Expression<String>? licenseKey,
@@ -275,13 +274,13 @@ class LicenseTableCompanion extends UpdateCompanion<LicenseTableData> {
     });
   }
 
-  LicenseTableCompanion copyWith({
+  LicenseCompanion copyWith({
     Value<int>? id,
     Value<bool>? isActivated,
     Value<String>? licenseKey,
     Value<String>? trialStartDate,
   }) {
-    return LicenseTableCompanion(
+    return LicenseCompanion(
       id: id ?? this.id,
       isActivated: isActivated ?? this.isActivated,
       licenseKey: licenseKey ?? this.licenseKey,
@@ -309,7 +308,7 @@ class LicenseTableCompanion extends UpdateCompanion<LicenseTableData> {
 
   @override
   String toString() {
-    return (StringBuffer('LicenseTableCompanion(')
+    return (StringBuffer('LicenseCompanion(')
           ..write('id: $id, ')
           ..write('isActivated: $isActivated, ')
           ..write('licenseKey: $licenseKey, ')
@@ -319,12 +318,12 @@ class LicenseTableCompanion extends UpdateCompanion<LicenseTableData> {
   }
 }
 
-class $SettingsTableTable extends SettingsTable
-    with TableInfo<$SettingsTableTable, SettingsTableData> {
+class $SettingsTable extends Settings
+    with TableInfo<$SettingsTable, SettingsDrift> {
   @override
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
-  $SettingsTableTable(this.attachedDatabase, [this._alias]);
+  $SettingsTable(this.attachedDatabase, [this._alias]);
   static const VerificationMeta _idMeta = const VerificationMeta('id');
   @override
   late final GeneratedColumn<int> id = GeneratedColumn<int>(
@@ -430,10 +429,10 @@ class $SettingsTableTable extends SettingsTable
   String get aliasedName => _alias ?? actualTableName;
   @override
   String get actualTableName => $name;
-  static const String $name = 'settings_table';
+  static const String $name = 'settings';
   @override
   VerificationContext validateIntegrity(
-    Insertable<SettingsTableData> instance, {
+    Insertable<SettingsDrift> instance, {
     bool isInserting = false,
   }) {
     final context = VerificationContext();
@@ -515,9 +514,9 @@ class $SettingsTableTable extends SettingsTable
   @override
   Set<GeneratedColumn> get $primaryKey => {id};
   @override
-  SettingsTableData map(Map<String, dynamic> data, {String? tablePrefix}) {
+  SettingsDrift map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
-    return SettingsTableData(
+    return SettingsDrift(
       id: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}id'],
@@ -554,13 +553,12 @@ class $SettingsTableTable extends SettingsTable
   }
 
   @override
-  $SettingsTableTable createAlias(String alias) {
-    return $SettingsTableTable(attachedDatabase, alias);
+  $SettingsTable createAlias(String alias) {
+    return $SettingsTable(attachedDatabase, alias);
   }
 }
 
-class SettingsTableData extends DataClass
-    implements Insertable<SettingsTableData> {
+class SettingsDrift extends DataClass implements Insertable<SettingsDrift> {
   final int id;
   final double taxRate;
   final double serviceRate;
@@ -569,7 +567,7 @@ class SettingsTableData extends DataClass
   final String restaurantName;
   final String taxNumber;
   final String printMode;
-  const SettingsTableData({
+  const SettingsDrift({
     required this.id,
     required this.taxRate,
     required this.serviceRate,
@@ -593,8 +591,8 @@ class SettingsTableData extends DataClass
     return map;
   }
 
-  SettingsTableCompanion toCompanion(bool nullToAbsent) {
-    return SettingsTableCompanion(
+  SettingsCompanion toCompanion(bool nullToAbsent) {
+    return SettingsCompanion(
       id: Value(id),
       taxRate: Value(taxRate),
       serviceRate: Value(serviceRate),
@@ -606,12 +604,12 @@ class SettingsTableData extends DataClass
     );
   }
 
-  factory SettingsTableData.fromJson(
+  factory SettingsDrift.fromJson(
     Map<String, dynamic> json, {
     ValueSerializer? serializer,
   }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
-    return SettingsTableData(
+    return SettingsDrift(
       id: serializer.fromJson<int>(json['id']),
       taxRate: serializer.fromJson<double>(json['taxRate']),
       serviceRate: serializer.fromJson<double>(json['serviceRate']),
@@ -637,7 +635,7 @@ class SettingsTableData extends DataClass
     };
   }
 
-  SettingsTableData copyWith({
+  SettingsDrift copyWith({
     int? id,
     double? taxRate,
     double? serviceRate,
@@ -646,7 +644,7 @@ class SettingsTableData extends DataClass
     String? restaurantName,
     String? taxNumber,
     String? printMode,
-  }) => SettingsTableData(
+  }) => SettingsDrift(
     id: id ?? this.id,
     taxRate: taxRate ?? this.taxRate,
     serviceRate: serviceRate ?? this.serviceRate,
@@ -656,8 +654,8 @@ class SettingsTableData extends DataClass
     taxNumber: taxNumber ?? this.taxNumber,
     printMode: printMode ?? this.printMode,
   );
-  SettingsTableData copyWithCompanion(SettingsTableCompanion data) {
-    return SettingsTableData(
+  SettingsDrift copyWithCompanion(SettingsCompanion data) {
+    return SettingsDrift(
       id: data.id.present ? data.id.value : this.id,
       taxRate: data.taxRate.present ? data.taxRate.value : this.taxRate,
       serviceRate: data.serviceRate.present
@@ -679,7 +677,7 @@ class SettingsTableData extends DataClass
 
   @override
   String toString() {
-    return (StringBuffer('SettingsTableData(')
+    return (StringBuffer('SettingsDrift(')
           ..write('id: $id, ')
           ..write('taxRate: $taxRate, ')
           ..write('serviceRate: $serviceRate, ')
@@ -706,7 +704,7 @@ class SettingsTableData extends DataClass
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      (other is SettingsTableData &&
+      (other is SettingsDrift &&
           other.id == this.id &&
           other.taxRate == this.taxRate &&
           other.serviceRate == this.serviceRate &&
@@ -717,7 +715,7 @@ class SettingsTableData extends DataClass
           other.printMode == this.printMode);
 }
 
-class SettingsTableCompanion extends UpdateCompanion<SettingsTableData> {
+class SettingsCompanion extends UpdateCompanion<SettingsDrift> {
   final Value<int> id;
   final Value<double> taxRate;
   final Value<double> serviceRate;
@@ -726,7 +724,7 @@ class SettingsTableCompanion extends UpdateCompanion<SettingsTableData> {
   final Value<String> restaurantName;
   final Value<String> taxNumber;
   final Value<String> printMode;
-  const SettingsTableCompanion({
+  const SettingsCompanion({
     this.id = const Value.absent(),
     this.taxRate = const Value.absent(),
     this.serviceRate = const Value.absent(),
@@ -736,7 +734,7 @@ class SettingsTableCompanion extends UpdateCompanion<SettingsTableData> {
     this.taxNumber = const Value.absent(),
     this.printMode = const Value.absent(),
   });
-  SettingsTableCompanion.insert({
+  SettingsCompanion.insert({
     this.id = const Value.absent(),
     required double taxRate,
     required double serviceRate,
@@ -752,7 +750,7 @@ class SettingsTableCompanion extends UpdateCompanion<SettingsTableData> {
        restaurantName = Value(restaurantName),
        taxNumber = Value(taxNumber),
        printMode = Value(printMode);
-  static Insertable<SettingsTableData> custom({
+  static Insertable<SettingsDrift> custom({
     Expression<int>? id,
     Expression<double>? taxRate,
     Expression<double>? serviceRate,
@@ -774,7 +772,7 @@ class SettingsTableCompanion extends UpdateCompanion<SettingsTableData> {
     });
   }
 
-  SettingsTableCompanion copyWith({
+  SettingsCompanion copyWith({
     Value<int>? id,
     Value<double>? taxRate,
     Value<double>? serviceRate,
@@ -784,7 +782,7 @@ class SettingsTableCompanion extends UpdateCompanion<SettingsTableData> {
     Value<String>? taxNumber,
     Value<String>? printMode,
   }) {
-    return SettingsTableCompanion(
+    return SettingsCompanion(
       id: id ?? this.id,
       taxRate: taxRate ?? this.taxRate,
       serviceRate: serviceRate ?? this.serviceRate,
@@ -828,7 +826,7 @@ class SettingsTableCompanion extends UpdateCompanion<SettingsTableData> {
 
   @override
   String toString() {
-    return (StringBuffer('SettingsTableCompanion(')
+    return (StringBuffer('SettingsCompanion(')
           ..write('id: $id, ')
           ..write('taxRate: $taxRate, ')
           ..write('serviceRate: $serviceRate, ')
@@ -842,12 +840,11 @@ class SettingsTableCompanion extends UpdateCompanion<SettingsTableData> {
   }
 }
 
-class $UsersTableTable extends UsersTable
-    with TableInfo<$UsersTableTable, UsersTableData> {
+class $UsersTable extends Users with TableInfo<$UsersTable, UserDrift> {
   @override
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
-  $UsersTableTable(this.attachedDatabase, [this._alias]);
+  $UsersTable(this.attachedDatabase, [this._alias]);
   static const VerificationMeta _idMeta = const VerificationMeta('id');
   @override
   late final GeneratedColumn<int> id = GeneratedColumn<int>(
@@ -952,10 +949,10 @@ class $UsersTableTable extends UsersTable
   String get aliasedName => _alias ?? actualTableName;
   @override
   String get actualTableName => $name;
-  static const String $name = 'users_table';
+  static const String $name = 'users';
   @override
   VerificationContext validateIntegrity(
-    Insertable<UsersTableData> instance, {
+    Insertable<UserDrift> instance, {
     bool isInserting = false,
   }) {
     final context = VerificationContext();
@@ -1025,9 +1022,9 @@ class $UsersTableTable extends UsersTable
   @override
   Set<GeneratedColumn> get $primaryKey => {id};
   @override
-  UsersTableData map(Map<String, dynamic> data, {String? tablePrefix}) {
+  UserDrift map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
-    return UsersTableData(
+    return UserDrift(
       id: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}id'],
@@ -1064,12 +1061,12 @@ class $UsersTableTable extends UsersTable
   }
 
   @override
-  $UsersTableTable createAlias(String alias) {
-    return $UsersTableTable(attachedDatabase, alias);
+  $UsersTable createAlias(String alias) {
+    return $UsersTable(attachedDatabase, alias);
   }
 }
 
-class UsersTableData extends DataClass implements Insertable<UsersTableData> {
+class UserDrift extends DataClass implements Insertable<UserDrift> {
   final int id;
   final String name;
   final String pinHash;
@@ -1078,7 +1075,7 @@ class UsersTableData extends DataClass implements Insertable<UsersTableData> {
   final bool isActive;
   final int failedAttempts;
   final String? lockoutUntil;
-  const UsersTableData({
+  const UserDrift({
     required this.id,
     required this.name,
     required this.pinHash,
@@ -1104,8 +1101,8 @@ class UsersTableData extends DataClass implements Insertable<UsersTableData> {
     return map;
   }
 
-  UsersTableCompanion toCompanion(bool nullToAbsent) {
-    return UsersTableCompanion(
+  UsersCompanion toCompanion(bool nullToAbsent) {
+    return UsersCompanion(
       id: Value(id),
       name: Value(name),
       pinHash: Value(pinHash),
@@ -1119,12 +1116,12 @@ class UsersTableData extends DataClass implements Insertable<UsersTableData> {
     );
   }
 
-  factory UsersTableData.fromJson(
+  factory UserDrift.fromJson(
     Map<String, dynamic> json, {
     ValueSerializer? serializer,
   }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
-    return UsersTableData(
+    return UserDrift(
       id: serializer.fromJson<int>(json['id']),
       name: serializer.fromJson<String>(json['name']),
       pinHash: serializer.fromJson<String>(json['pinHash']),
@@ -1150,7 +1147,7 @@ class UsersTableData extends DataClass implements Insertable<UsersTableData> {
     };
   }
 
-  UsersTableData copyWith({
+  UserDrift copyWith({
     int? id,
     String? name,
     String? pinHash,
@@ -1159,7 +1156,7 @@ class UsersTableData extends DataClass implements Insertable<UsersTableData> {
     bool? isActive,
     int? failedAttempts,
     Value<String?> lockoutUntil = const Value.absent(),
-  }) => UsersTableData(
+  }) => UserDrift(
     id: id ?? this.id,
     name: name ?? this.name,
     pinHash: pinHash ?? this.pinHash,
@@ -1169,8 +1166,8 @@ class UsersTableData extends DataClass implements Insertable<UsersTableData> {
     failedAttempts: failedAttempts ?? this.failedAttempts,
     lockoutUntil: lockoutUntil.present ? lockoutUntil.value : this.lockoutUntil,
   );
-  UsersTableData copyWithCompanion(UsersTableCompanion data) {
-    return UsersTableData(
+  UserDrift copyWithCompanion(UsersCompanion data) {
+    return UserDrift(
       id: data.id.present ? data.id.value : this.id,
       name: data.name.present ? data.name.value : this.name,
       pinHash: data.pinHash.present ? data.pinHash.value : this.pinHash,
@@ -1188,7 +1185,7 @@ class UsersTableData extends DataClass implements Insertable<UsersTableData> {
 
   @override
   String toString() {
-    return (StringBuffer('UsersTableData(')
+    return (StringBuffer('UserDrift(')
           ..write('id: $id, ')
           ..write('name: $name, ')
           ..write('pinHash: $pinHash, ')
@@ -1215,7 +1212,7 @@ class UsersTableData extends DataClass implements Insertable<UsersTableData> {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      (other is UsersTableData &&
+      (other is UserDrift &&
           other.id == this.id &&
           other.name == this.name &&
           other.pinHash == this.pinHash &&
@@ -1226,7 +1223,7 @@ class UsersTableData extends DataClass implements Insertable<UsersTableData> {
           other.lockoutUntil == this.lockoutUntil);
 }
 
-class UsersTableCompanion extends UpdateCompanion<UsersTableData> {
+class UsersCompanion extends UpdateCompanion<UserDrift> {
   final Value<int> id;
   final Value<String> name;
   final Value<String> pinHash;
@@ -1235,7 +1232,7 @@ class UsersTableCompanion extends UpdateCompanion<UsersTableData> {
   final Value<bool> isActive;
   final Value<int> failedAttempts;
   final Value<String?> lockoutUntil;
-  const UsersTableCompanion({
+  const UsersCompanion({
     this.id = const Value.absent(),
     this.name = const Value.absent(),
     this.pinHash = const Value.absent(),
@@ -1245,7 +1242,7 @@ class UsersTableCompanion extends UpdateCompanion<UsersTableData> {
     this.failedAttempts = const Value.absent(),
     this.lockoutUntil = const Value.absent(),
   });
-  UsersTableCompanion.insert({
+  UsersCompanion.insert({
     this.id = const Value.absent(),
     required String name,
     required String pinHash,
@@ -1258,7 +1255,7 @@ class UsersTableCompanion extends UpdateCompanion<UsersTableData> {
        pinHash = Value(pinHash),
        salt = Value(salt),
        role = Value(role);
-  static Insertable<UsersTableData> custom({
+  static Insertable<UserDrift> custom({
     Expression<int>? id,
     Expression<String>? name,
     Expression<String>? pinHash,
@@ -1280,7 +1277,7 @@ class UsersTableCompanion extends UpdateCompanion<UsersTableData> {
     });
   }
 
-  UsersTableCompanion copyWith({
+  UsersCompanion copyWith({
     Value<int>? id,
     Value<String>? name,
     Value<String>? pinHash,
@@ -1290,7 +1287,7 @@ class UsersTableCompanion extends UpdateCompanion<UsersTableData> {
     Value<int>? failedAttempts,
     Value<String?>? lockoutUntil,
   }) {
-    return UsersTableCompanion(
+    return UsersCompanion(
       id: id ?? this.id,
       name: name ?? this.name,
       pinHash: pinHash ?? this.pinHash,
@@ -1334,7 +1331,7 @@ class UsersTableCompanion extends UpdateCompanion<UsersTableData> {
 
   @override
   String toString() {
-    return (StringBuffer('UsersTableCompanion(')
+    return (StringBuffer('UsersCompanion(')
           ..write('id: $id, ')
           ..write('name: $name, ')
           ..write('pinHash: $pinHash, ')
@@ -1348,12 +1345,11 @@ class UsersTableCompanion extends UpdateCompanion<UsersTableData> {
   }
 }
 
-class $ShiftsTableTable extends ShiftsTable
-    with TableInfo<$ShiftsTableTable, ShiftsTableData> {
+class $ShiftsTable extends Shifts with TableInfo<$ShiftsTable, ShiftDrift> {
   @override
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
-  $ShiftsTableTable(this.attachedDatabase, [this._alias]);
+  $ShiftsTable(this.attachedDatabase, [this._alias]);
   static const VerificationMeta _idMeta = const VerificationMeta('id');
   @override
   late final GeneratedColumn<int> id = GeneratedColumn<int>(
@@ -1378,7 +1374,7 @@ class $ShiftsTableTable extends ShiftsTable
     type: DriftSqlType.int,
     requiredDuringInsert: false,
     defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'REFERENCES users_table (id)',
+      'REFERENCES users (id)',
     ),
   );
   static const VerificationMeta _startTimeMeta = const VerificationMeta(
@@ -1566,10 +1562,10 @@ class $ShiftsTableTable extends ShiftsTable
   String get aliasedName => _alias ?? actualTableName;
   @override
   String get actualTableName => $name;
-  static const String $name = 'shifts_table';
+  static const String $name = 'shifts';
   @override
   VerificationContext validateIntegrity(
-    Insertable<ShiftsTableData> instance, {
+    Insertable<ShiftDrift> instance, {
     bool isInserting = false,
   }) {
     final context = VerificationContext();
@@ -1698,9 +1694,9 @@ class $ShiftsTableTable extends ShiftsTable
   @override
   Set<GeneratedColumn> get $primaryKey => {id};
   @override
-  ShiftsTableData map(Map<String, dynamic> data, {String? tablePrefix}) {
+  ShiftDrift map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
-    return ShiftsTableData(
+    return ShiftDrift(
       id: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}id'],
@@ -1769,12 +1765,12 @@ class $ShiftsTableTable extends ShiftsTable
   }
 
   @override
-  $ShiftsTableTable createAlias(String alias) {
-    return $ShiftsTableTable(attachedDatabase, alias);
+  $ShiftsTable createAlias(String alias) {
+    return $ShiftsTable(attachedDatabase, alias);
   }
 }
 
-class ShiftsTableData extends DataClass implements Insertable<ShiftsTableData> {
+class ShiftDrift extends DataClass implements Insertable<ShiftDrift> {
   final int id;
   final int? cashierId;
   final String startTime;
@@ -1791,7 +1787,7 @@ class ShiftsTableData extends DataClass implements Insertable<ShiftsTableData> {
   final int expectedCash;
   final int actualCash;
   final String status;
-  const ShiftsTableData({
+  const ShiftDrift({
     required this.id,
     this.cashierId,
     required this.startTime,
@@ -1835,8 +1831,8 @@ class ShiftsTableData extends DataClass implements Insertable<ShiftsTableData> {
     return map;
   }
 
-  ShiftsTableCompanion toCompanion(bool nullToAbsent) {
-    return ShiftsTableCompanion(
+  ShiftsCompanion toCompanion(bool nullToAbsent) {
+    return ShiftsCompanion(
       id: Value(id),
       cashierId: cashierId == null && nullToAbsent
           ? const Value.absent()
@@ -1860,12 +1856,12 @@ class ShiftsTableData extends DataClass implements Insertable<ShiftsTableData> {
     );
   }
 
-  factory ShiftsTableData.fromJson(
+  factory ShiftDrift.fromJson(
     Map<String, dynamic> json, {
     ValueSerializer? serializer,
   }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
-    return ShiftsTableData(
+    return ShiftDrift(
       id: serializer.fromJson<int>(json['id']),
       cashierId: serializer.fromJson<int?>(json['cashierId']),
       startTime: serializer.fromJson<String>(json['startTime']),
@@ -1909,7 +1905,7 @@ class ShiftsTableData extends DataClass implements Insertable<ShiftsTableData> {
     };
   }
 
-  ShiftsTableData copyWith({
+  ShiftDrift copyWith({
     int? id,
     Value<int?> cashierId = const Value.absent(),
     String? startTime,
@@ -1926,7 +1922,7 @@ class ShiftsTableData extends DataClass implements Insertable<ShiftsTableData> {
     int? expectedCash,
     int? actualCash,
     String? status,
-  }) => ShiftsTableData(
+  }) => ShiftDrift(
     id: id ?? this.id,
     cashierId: cashierId.present ? cashierId.value : this.cashierId,
     startTime: startTime ?? this.startTime,
@@ -1944,8 +1940,8 @@ class ShiftsTableData extends DataClass implements Insertable<ShiftsTableData> {
     actualCash: actualCash ?? this.actualCash,
     status: status ?? this.status,
   );
-  ShiftsTableData copyWithCompanion(ShiftsTableCompanion data) {
-    return ShiftsTableData(
+  ShiftDrift copyWithCompanion(ShiftsCompanion data) {
+    return ShiftDrift(
       id: data.id.present ? data.id.value : this.id,
       cashierId: data.cashierId.present ? data.cashierId.value : this.cashierId,
       startTime: data.startTime.present ? data.startTime.value : this.startTime,
@@ -1985,7 +1981,7 @@ class ShiftsTableData extends DataClass implements Insertable<ShiftsTableData> {
 
   @override
   String toString() {
-    return (StringBuffer('ShiftsTableData(')
+    return (StringBuffer('ShiftDrift(')
           ..write('id: $id, ')
           ..write('cashierId: $cashierId, ')
           ..write('startTime: $startTime, ')
@@ -2028,7 +2024,7 @@ class ShiftsTableData extends DataClass implements Insertable<ShiftsTableData> {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      (other is ShiftsTableData &&
+      (other is ShiftDrift &&
           other.id == this.id &&
           other.cashierId == this.cashierId &&
           other.startTime == this.startTime &&
@@ -2047,7 +2043,7 @@ class ShiftsTableData extends DataClass implements Insertable<ShiftsTableData> {
           other.status == this.status);
 }
 
-class ShiftsTableCompanion extends UpdateCompanion<ShiftsTableData> {
+class ShiftsCompanion extends UpdateCompanion<ShiftDrift> {
   final Value<int> id;
   final Value<int?> cashierId;
   final Value<String> startTime;
@@ -2064,7 +2060,7 @@ class ShiftsTableCompanion extends UpdateCompanion<ShiftsTableData> {
   final Value<int> expectedCash;
   final Value<int> actualCash;
   final Value<String> status;
-  const ShiftsTableCompanion({
+  const ShiftsCompanion({
     this.id = const Value.absent(),
     this.cashierId = const Value.absent(),
     this.startTime = const Value.absent(),
@@ -2082,7 +2078,7 @@ class ShiftsTableCompanion extends UpdateCompanion<ShiftsTableData> {
     this.actualCash = const Value.absent(),
     this.status = const Value.absent(),
   });
-  ShiftsTableCompanion.insert({
+  ShiftsCompanion.insert({
     this.id = const Value.absent(),
     this.cashierId = const Value.absent(),
     required String startTime,
@@ -2101,7 +2097,7 @@ class ShiftsTableCompanion extends UpdateCompanion<ShiftsTableData> {
     required String status,
   }) : startTime = Value(startTime),
        status = Value(status);
-  static Insertable<ShiftsTableData> custom({
+  static Insertable<ShiftDrift> custom({
     Expression<int>? id,
     Expression<int>? cashierId,
     Expression<String>? startTime,
@@ -2140,7 +2136,7 @@ class ShiftsTableCompanion extends UpdateCompanion<ShiftsTableData> {
     });
   }
 
-  ShiftsTableCompanion copyWith({
+  ShiftsCompanion copyWith({
     Value<int>? id,
     Value<int?>? cashierId,
     Value<String>? startTime,
@@ -2158,7 +2154,7 @@ class ShiftsTableCompanion extends UpdateCompanion<ShiftsTableData> {
     Value<int>? actualCash,
     Value<String>? status,
   }) {
-    return ShiftsTableCompanion(
+    return ShiftsCompanion(
       id: id ?? this.id,
       cashierId: cashierId ?? this.cashierId,
       startTime: startTime ?? this.startTime,
@@ -2234,7 +2230,7 @@ class ShiftsTableCompanion extends UpdateCompanion<ShiftsTableData> {
 
   @override
   String toString() {
-    return (StringBuffer('ShiftsTableCompanion(')
+    return (StringBuffer('ShiftsCompanion(')
           ..write('id: $id, ')
           ..write('cashierId: $cashierId, ')
           ..write('startTime: $startTime, ')
@@ -2256,12 +2252,12 @@ class ShiftsTableCompanion extends UpdateCompanion<ShiftsTableData> {
   }
 }
 
-class $CategoriesTableTable extends CategoriesTable
-    with TableInfo<$CategoriesTableTable, CategoriesTableData> {
+class $CategoriesTable extends Categories
+    with TableInfo<$CategoriesTable, CategoryDrift> {
   @override
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
-  $CategoriesTableTable(this.attachedDatabase, [this._alias]);
+  $CategoriesTable(this.attachedDatabase, [this._alias]);
   static const VerificationMeta _idMeta = const VerificationMeta('id');
   @override
   late final GeneratedColumn<int> id = GeneratedColumn<int>(
@@ -2312,10 +2308,10 @@ class $CategoriesTableTable extends CategoriesTable
   String get aliasedName => _alias ?? actualTableName;
   @override
   String get actualTableName => $name;
-  static const String $name = 'categories_table';
+  static const String $name = 'categories';
   @override
   VerificationContext validateIntegrity(
-    Insertable<CategoriesTableData> instance, {
+    Insertable<CategoryDrift> instance, {
     bool isInserting = false,
   }) {
     final context = VerificationContext();
@@ -2353,9 +2349,9 @@ class $CategoriesTableTable extends CategoriesTable
   @override
   Set<GeneratedColumn> get $primaryKey => {id};
   @override
-  CategoriesTableData map(Map<String, dynamic> data, {String? tablePrefix}) {
+  CategoryDrift map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
-    return CategoriesTableData(
+    return CategoryDrift(
       id: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}id'],
@@ -2376,18 +2372,17 @@ class $CategoriesTableTable extends CategoriesTable
   }
 
   @override
-  $CategoriesTableTable createAlias(String alias) {
-    return $CategoriesTableTable(attachedDatabase, alias);
+  $CategoriesTable createAlias(String alias) {
+    return $CategoriesTable(attachedDatabase, alias);
   }
 }
 
-class CategoriesTableData extends DataClass
-    implements Insertable<CategoriesTableData> {
+class CategoryDrift extends DataClass implements Insertable<CategoryDrift> {
   final int id;
   final String name;
   final String createdAt;
   final String updatedAt;
-  const CategoriesTableData({
+  const CategoryDrift({
     required this.id,
     required this.name,
     required this.createdAt,
@@ -2403,8 +2398,8 @@ class CategoriesTableData extends DataClass
     return map;
   }
 
-  CategoriesTableCompanion toCompanion(bool nullToAbsent) {
-    return CategoriesTableCompanion(
+  CategoriesCompanion toCompanion(bool nullToAbsent) {
+    return CategoriesCompanion(
       id: Value(id),
       name: Value(name),
       createdAt: Value(createdAt),
@@ -2412,12 +2407,12 @@ class CategoriesTableData extends DataClass
     );
   }
 
-  factory CategoriesTableData.fromJson(
+  factory CategoryDrift.fromJson(
     Map<String, dynamic> json, {
     ValueSerializer? serializer,
   }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
-    return CategoriesTableData(
+    return CategoryDrift(
       id: serializer.fromJson<int>(json['id']),
       name: serializer.fromJson<String>(json['name']),
       createdAt: serializer.fromJson<String>(json['createdAt']),
@@ -2435,19 +2430,19 @@ class CategoriesTableData extends DataClass
     };
   }
 
-  CategoriesTableData copyWith({
+  CategoryDrift copyWith({
     int? id,
     String? name,
     String? createdAt,
     String? updatedAt,
-  }) => CategoriesTableData(
+  }) => CategoryDrift(
     id: id ?? this.id,
     name: name ?? this.name,
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
   );
-  CategoriesTableData copyWithCompanion(CategoriesTableCompanion data) {
-    return CategoriesTableData(
+  CategoryDrift copyWithCompanion(CategoriesCompanion data) {
+    return CategoryDrift(
       id: data.id.present ? data.id.value : this.id,
       name: data.name.present ? data.name.value : this.name,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
@@ -2457,7 +2452,7 @@ class CategoriesTableData extends DataClass
 
   @override
   String toString() {
-    return (StringBuffer('CategoriesTableData(')
+    return (StringBuffer('CategoryDrift(')
           ..write('id: $id, ')
           ..write('name: $name, ')
           ..write('createdAt: $createdAt, ')
@@ -2471,25 +2466,25 @@ class CategoriesTableData extends DataClass
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      (other is CategoriesTableData &&
+      (other is CategoryDrift &&
           other.id == this.id &&
           other.name == this.name &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt);
 }
 
-class CategoriesTableCompanion extends UpdateCompanion<CategoriesTableData> {
+class CategoriesCompanion extends UpdateCompanion<CategoryDrift> {
   final Value<int> id;
   final Value<String> name;
   final Value<String> createdAt;
   final Value<String> updatedAt;
-  const CategoriesTableCompanion({
+  const CategoriesCompanion({
     this.id = const Value.absent(),
     this.name = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
   });
-  CategoriesTableCompanion.insert({
+  CategoriesCompanion.insert({
     this.id = const Value.absent(),
     required String name,
     required String createdAt,
@@ -2497,7 +2492,7 @@ class CategoriesTableCompanion extends UpdateCompanion<CategoriesTableData> {
   }) : name = Value(name),
        createdAt = Value(createdAt),
        updatedAt = Value(updatedAt);
-  static Insertable<CategoriesTableData> custom({
+  static Insertable<CategoryDrift> custom({
     Expression<int>? id,
     Expression<String>? name,
     Expression<String>? createdAt,
@@ -2511,13 +2506,13 @@ class CategoriesTableCompanion extends UpdateCompanion<CategoriesTableData> {
     });
   }
 
-  CategoriesTableCompanion copyWith({
+  CategoriesCompanion copyWith({
     Value<int>? id,
     Value<String>? name,
     Value<String>? createdAt,
     Value<String>? updatedAt,
   }) {
-    return CategoriesTableCompanion(
+    return CategoriesCompanion(
       id: id ?? this.id,
       name: name ?? this.name,
       createdAt: createdAt ?? this.createdAt,
@@ -2545,7 +2540,7 @@ class CategoriesTableCompanion extends UpdateCompanion<CategoriesTableData> {
 
   @override
   String toString() {
-    return (StringBuffer('CategoriesTableCompanion(')
+    return (StringBuffer('CategoriesCompanion(')
           ..write('id: $id, ')
           ..write('name: $name, ')
           ..write('createdAt: $createdAt, ')
@@ -2555,12 +2550,11 @@ class CategoriesTableCompanion extends UpdateCompanion<CategoriesTableData> {
   }
 }
 
-class $ItemsTableTable extends ItemsTable
-    with TableInfo<$ItemsTableTable, ItemsTableData> {
+class $ItemsTable extends Items with TableInfo<$ItemsTable, ItemDrift> {
   @override
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
-  $ItemsTableTable(this.attachedDatabase, [this._alias]);
+  $ItemsTable(this.attachedDatabase, [this._alias]);
   static const VerificationMeta _idMeta = const VerificationMeta('id');
   @override
   late final GeneratedColumn<int> id = GeneratedColumn<int>(
@@ -2585,7 +2579,7 @@ class $ItemsTableTable extends ItemsTable
     type: DriftSqlType.int,
     requiredDuringInsert: true,
     defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'REFERENCES categories_table (id)',
+      'REFERENCES categories (id)',
     ),
   );
   static const VerificationMeta _nameMeta = const VerificationMeta('name');
@@ -2641,10 +2635,10 @@ class $ItemsTableTable extends ItemsTable
   String get aliasedName => _alias ?? actualTableName;
   @override
   String get actualTableName => $name;
-  static const String $name = 'items_table';
+  static const String $name = 'items';
   @override
   VerificationContext validateIntegrity(
-    Insertable<ItemsTableData> instance, {
+    Insertable<ItemDrift> instance, {
     bool isInserting = false,
   }) {
     final context = VerificationContext();
@@ -2698,9 +2692,9 @@ class $ItemsTableTable extends ItemsTable
   @override
   Set<GeneratedColumn> get $primaryKey => {id};
   @override
-  ItemsTableData map(Map<String, dynamic> data, {String? tablePrefix}) {
+  ItemDrift map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
-    return ItemsTableData(
+    return ItemDrift(
       id: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}id'],
@@ -2729,19 +2723,19 @@ class $ItemsTableTable extends ItemsTable
   }
 
   @override
-  $ItemsTableTable createAlias(String alias) {
-    return $ItemsTableTable(attachedDatabase, alias);
+  $ItemsTable createAlias(String alias) {
+    return $ItemsTable(attachedDatabase, alias);
   }
 }
 
-class ItemsTableData extends DataClass implements Insertable<ItemsTableData> {
+class ItemDrift extends DataClass implements Insertable<ItemDrift> {
   final int id;
   final int categoryId;
   final String name;
   final int price;
   final String createdAt;
   final String updatedAt;
-  const ItemsTableData({
+  const ItemDrift({
     required this.id,
     required this.categoryId,
     required this.name,
@@ -2761,8 +2755,8 @@ class ItemsTableData extends DataClass implements Insertable<ItemsTableData> {
     return map;
   }
 
-  ItemsTableCompanion toCompanion(bool nullToAbsent) {
-    return ItemsTableCompanion(
+  ItemsCompanion toCompanion(bool nullToAbsent) {
+    return ItemsCompanion(
       id: Value(id),
       categoryId: Value(categoryId),
       name: Value(name),
@@ -2772,12 +2766,12 @@ class ItemsTableData extends DataClass implements Insertable<ItemsTableData> {
     );
   }
 
-  factory ItemsTableData.fromJson(
+  factory ItemDrift.fromJson(
     Map<String, dynamic> json, {
     ValueSerializer? serializer,
   }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
-    return ItemsTableData(
+    return ItemDrift(
       id: serializer.fromJson<int>(json['id']),
       categoryId: serializer.fromJson<int>(json['categoryId']),
       name: serializer.fromJson<String>(json['name']),
@@ -2799,14 +2793,14 @@ class ItemsTableData extends DataClass implements Insertable<ItemsTableData> {
     };
   }
 
-  ItemsTableData copyWith({
+  ItemDrift copyWith({
     int? id,
     int? categoryId,
     String? name,
     int? price,
     String? createdAt,
     String? updatedAt,
-  }) => ItemsTableData(
+  }) => ItemDrift(
     id: id ?? this.id,
     categoryId: categoryId ?? this.categoryId,
     name: name ?? this.name,
@@ -2814,8 +2808,8 @@ class ItemsTableData extends DataClass implements Insertable<ItemsTableData> {
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
   );
-  ItemsTableData copyWithCompanion(ItemsTableCompanion data) {
-    return ItemsTableData(
+  ItemDrift copyWithCompanion(ItemsCompanion data) {
+    return ItemDrift(
       id: data.id.present ? data.id.value : this.id,
       categoryId: data.categoryId.present
           ? data.categoryId.value
@@ -2829,7 +2823,7 @@ class ItemsTableData extends DataClass implements Insertable<ItemsTableData> {
 
   @override
   String toString() {
-    return (StringBuffer('ItemsTableData(')
+    return (StringBuffer('ItemDrift(')
           ..write('id: $id, ')
           ..write('categoryId: $categoryId, ')
           ..write('name: $name, ')
@@ -2846,7 +2840,7 @@ class ItemsTableData extends DataClass implements Insertable<ItemsTableData> {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      (other is ItemsTableData &&
+      (other is ItemDrift &&
           other.id == this.id &&
           other.categoryId == this.categoryId &&
           other.name == this.name &&
@@ -2855,14 +2849,14 @@ class ItemsTableData extends DataClass implements Insertable<ItemsTableData> {
           other.updatedAt == this.updatedAt);
 }
 
-class ItemsTableCompanion extends UpdateCompanion<ItemsTableData> {
+class ItemsCompanion extends UpdateCompanion<ItemDrift> {
   final Value<int> id;
   final Value<int> categoryId;
   final Value<String> name;
   final Value<int> price;
   final Value<String> createdAt;
   final Value<String> updatedAt;
-  const ItemsTableCompanion({
+  const ItemsCompanion({
     this.id = const Value.absent(),
     this.categoryId = const Value.absent(),
     this.name = const Value.absent(),
@@ -2870,7 +2864,7 @@ class ItemsTableCompanion extends UpdateCompanion<ItemsTableData> {
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
   });
-  ItemsTableCompanion.insert({
+  ItemsCompanion.insert({
     this.id = const Value.absent(),
     required int categoryId,
     required String name,
@@ -2882,7 +2876,7 @@ class ItemsTableCompanion extends UpdateCompanion<ItemsTableData> {
        price = Value(price),
        createdAt = Value(createdAt),
        updatedAt = Value(updatedAt);
-  static Insertable<ItemsTableData> custom({
+  static Insertable<ItemDrift> custom({
     Expression<int>? id,
     Expression<int>? categoryId,
     Expression<String>? name,
@@ -2900,7 +2894,7 @@ class ItemsTableCompanion extends UpdateCompanion<ItemsTableData> {
     });
   }
 
-  ItemsTableCompanion copyWith({
+  ItemsCompanion copyWith({
     Value<int>? id,
     Value<int>? categoryId,
     Value<String>? name,
@@ -2908,7 +2902,7 @@ class ItemsTableCompanion extends UpdateCompanion<ItemsTableData> {
     Value<String>? createdAt,
     Value<String>? updatedAt,
   }) {
-    return ItemsTableCompanion(
+    return ItemsCompanion(
       id: id ?? this.id,
       categoryId: categoryId ?? this.categoryId,
       name: name ?? this.name,
@@ -2944,7 +2938,7 @@ class ItemsTableCompanion extends UpdateCompanion<ItemsTableData> {
 
   @override
   String toString() {
-    return (StringBuffer('ItemsTableCompanion(')
+    return (StringBuffer('ItemsCompanion(')
           ..write('id: $id, ')
           ..write('categoryId: $categoryId, ')
           ..write('name: $name, ')
@@ -2956,12 +2950,12 @@ class ItemsTableCompanion extends UpdateCompanion<ItemsTableData> {
   }
 }
 
-class $ExpensesTableTable extends ExpensesTable
-    with TableInfo<$ExpensesTableTable, ExpensesTableData> {
+class $ExpensesTable extends Expenses
+    with TableInfo<$ExpensesTable, ExpenseDrift> {
   @override
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
-  $ExpensesTableTable(this.attachedDatabase, [this._alias]);
+  $ExpensesTable(this.attachedDatabase, [this._alias]);
   static const VerificationMeta _idMeta = const VerificationMeta('id');
   @override
   late final GeneratedColumn<int> id = GeneratedColumn<int>(
@@ -2986,7 +2980,7 @@ class $ExpensesTableTable extends ExpensesTable
     type: DriftSqlType.int,
     requiredDuringInsert: true,
     defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'REFERENCES shifts_table (id)',
+      'REFERENCES shifts (id)',
     ),
   );
   static const VerificationMeta _amountMeta = const VerificationMeta('amount');
@@ -3030,10 +3024,10 @@ class $ExpensesTableTable extends ExpensesTable
   String get aliasedName => _alias ?? actualTableName;
   @override
   String get actualTableName => $name;
-  static const String $name = 'expenses_table';
+  static const String $name = 'expenses';
   @override
   VerificationContext validateIntegrity(
-    Insertable<ExpensesTableData> instance, {
+    Insertable<ExpenseDrift> instance, {
     bool isInserting = false,
   }) {
     final context = VerificationContext();
@@ -3079,9 +3073,9 @@ class $ExpensesTableTable extends ExpensesTable
   @override
   Set<GeneratedColumn> get $primaryKey => {id};
   @override
-  ExpensesTableData map(Map<String, dynamic> data, {String? tablePrefix}) {
+  ExpenseDrift map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
-    return ExpensesTableData(
+    return ExpenseDrift(
       id: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}id'],
@@ -3106,19 +3100,18 @@ class $ExpensesTableTable extends ExpensesTable
   }
 
   @override
-  $ExpensesTableTable createAlias(String alias) {
-    return $ExpensesTableTable(attachedDatabase, alias);
+  $ExpensesTable createAlias(String alias) {
+    return $ExpensesTable(attachedDatabase, alias);
   }
 }
 
-class ExpensesTableData extends DataClass
-    implements Insertable<ExpensesTableData> {
+class ExpenseDrift extends DataClass implements Insertable<ExpenseDrift> {
   final int id;
   final int shiftId;
   final int amount;
   final String reason;
   final String createdAt;
-  const ExpensesTableData({
+  const ExpenseDrift({
     required this.id,
     required this.shiftId,
     required this.amount,
@@ -3136,8 +3129,8 @@ class ExpensesTableData extends DataClass
     return map;
   }
 
-  ExpensesTableCompanion toCompanion(bool nullToAbsent) {
-    return ExpensesTableCompanion(
+  ExpensesCompanion toCompanion(bool nullToAbsent) {
+    return ExpensesCompanion(
       id: Value(id),
       shiftId: Value(shiftId),
       amount: Value(amount),
@@ -3146,12 +3139,12 @@ class ExpensesTableData extends DataClass
     );
   }
 
-  factory ExpensesTableData.fromJson(
+  factory ExpenseDrift.fromJson(
     Map<String, dynamic> json, {
     ValueSerializer? serializer,
   }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
-    return ExpensesTableData(
+    return ExpenseDrift(
       id: serializer.fromJson<int>(json['id']),
       shiftId: serializer.fromJson<int>(json['shiftId']),
       amount: serializer.fromJson<int>(json['amount']),
@@ -3171,21 +3164,21 @@ class ExpensesTableData extends DataClass
     };
   }
 
-  ExpensesTableData copyWith({
+  ExpenseDrift copyWith({
     int? id,
     int? shiftId,
     int? amount,
     String? reason,
     String? createdAt,
-  }) => ExpensesTableData(
+  }) => ExpenseDrift(
     id: id ?? this.id,
     shiftId: shiftId ?? this.shiftId,
     amount: amount ?? this.amount,
     reason: reason ?? this.reason,
     createdAt: createdAt ?? this.createdAt,
   );
-  ExpensesTableData copyWithCompanion(ExpensesTableCompanion data) {
-    return ExpensesTableData(
+  ExpenseDrift copyWithCompanion(ExpensesCompanion data) {
+    return ExpenseDrift(
       id: data.id.present ? data.id.value : this.id,
       shiftId: data.shiftId.present ? data.shiftId.value : this.shiftId,
       amount: data.amount.present ? data.amount.value : this.amount,
@@ -3196,7 +3189,7 @@ class ExpensesTableData extends DataClass
 
   @override
   String toString() {
-    return (StringBuffer('ExpensesTableData(')
+    return (StringBuffer('ExpenseDrift(')
           ..write('id: $id, ')
           ..write('shiftId: $shiftId, ')
           ..write('amount: $amount, ')
@@ -3211,7 +3204,7 @@ class ExpensesTableData extends DataClass
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      (other is ExpensesTableData &&
+      (other is ExpenseDrift &&
           other.id == this.id &&
           other.shiftId == this.shiftId &&
           other.amount == this.amount &&
@@ -3219,20 +3212,20 @@ class ExpensesTableData extends DataClass
           other.createdAt == this.createdAt);
 }
 
-class ExpensesTableCompanion extends UpdateCompanion<ExpensesTableData> {
+class ExpensesCompanion extends UpdateCompanion<ExpenseDrift> {
   final Value<int> id;
   final Value<int> shiftId;
   final Value<int> amount;
   final Value<String> reason;
   final Value<String> createdAt;
-  const ExpensesTableCompanion({
+  const ExpensesCompanion({
     this.id = const Value.absent(),
     this.shiftId = const Value.absent(),
     this.amount = const Value.absent(),
     this.reason = const Value.absent(),
     this.createdAt = const Value.absent(),
   });
-  ExpensesTableCompanion.insert({
+  ExpensesCompanion.insert({
     this.id = const Value.absent(),
     required int shiftId,
     required int amount,
@@ -3242,7 +3235,7 @@ class ExpensesTableCompanion extends UpdateCompanion<ExpensesTableData> {
        amount = Value(amount),
        reason = Value(reason),
        createdAt = Value(createdAt);
-  static Insertable<ExpensesTableData> custom({
+  static Insertable<ExpenseDrift> custom({
     Expression<int>? id,
     Expression<int>? shiftId,
     Expression<int>? amount,
@@ -3258,14 +3251,14 @@ class ExpensesTableCompanion extends UpdateCompanion<ExpensesTableData> {
     });
   }
 
-  ExpensesTableCompanion copyWith({
+  ExpensesCompanion copyWith({
     Value<int>? id,
     Value<int>? shiftId,
     Value<int>? amount,
     Value<String>? reason,
     Value<String>? createdAt,
   }) {
-    return ExpensesTableCompanion(
+    return ExpensesCompanion(
       id: id ?? this.id,
       shiftId: shiftId ?? this.shiftId,
       amount: amount ?? this.amount,
@@ -3297,7 +3290,7 @@ class ExpensesTableCompanion extends UpdateCompanion<ExpensesTableData> {
 
   @override
   String toString() {
-    return (StringBuffer('ExpensesTableCompanion(')
+    return (StringBuffer('ExpensesCompanion(')
           ..write('id: $id, ')
           ..write('shiftId: $shiftId, ')
           ..write('amount: $amount, ')
@@ -3308,12 +3301,11 @@ class ExpensesTableCompanion extends UpdateCompanion<ExpensesTableData> {
   }
 }
 
-class $OrdersTableTable extends OrdersTable
-    with TableInfo<$OrdersTableTable, OrdersTableData> {
+class $OrdersTable extends Orders with TableInfo<$OrdersTable, OrderDrift> {
   @override
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
-  $OrdersTableTable(this.attachedDatabase, [this._alias]);
+  $OrdersTable(this.attachedDatabase, [this._alias]);
   static const VerificationMeta _idMeta = const VerificationMeta('id');
   @override
   late final GeneratedColumn<int> id = GeneratedColumn<int>(
@@ -3338,7 +3330,7 @@ class $OrdersTableTable extends OrdersTable
     type: DriftSqlType.int,
     requiredDuringInsert: true,
     defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'REFERENCES shifts_table (id)',
+      'REFERENCES shifts (id)',
     ),
   );
   static const VerificationMeta _orderTypeMeta = const VerificationMeta(
@@ -3506,10 +3498,10 @@ class $OrdersTableTable extends OrdersTable
   String get aliasedName => _alias ?? actualTableName;
   @override
   String get actualTableName => $name;
-  static const String $name = 'orders_table';
+  static const String $name = 'orders';
   @override
   VerificationContext validateIntegrity(
-    Insertable<OrdersTableData> instance, {
+    Insertable<OrderDrift> instance, {
     bool isInserting = false,
   }) {
     final context = VerificationContext();
@@ -3642,9 +3634,9 @@ class $OrdersTableTable extends OrdersTable
   @override
   Set<GeneratedColumn> get $primaryKey => {id};
   @override
-  OrdersTableData map(Map<String, dynamic> data, {String? tablePrefix}) {
+  OrderDrift map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
-    return OrdersTableData(
+    return OrderDrift(
       id: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}id'],
@@ -3709,12 +3701,12 @@ class $OrdersTableTable extends OrdersTable
   }
 
   @override
-  $OrdersTableTable createAlias(String alias) {
-    return $OrdersTableTable(attachedDatabase, alias);
+  $OrdersTable createAlias(String alias) {
+    return $OrdersTable(attachedDatabase, alias);
   }
 }
 
-class OrdersTableData extends DataClass implements Insertable<OrdersTableData> {
+class OrderDrift extends DataClass implements Insertable<OrderDrift> {
   final int id;
   final int shiftId;
   final String orderType;
@@ -3730,7 +3722,7 @@ class OrdersTableData extends DataClass implements Insertable<OrdersTableData> {
   final String customerPhone;
   final String customerAddress;
   final String createdAt;
-  const OrdersTableData({
+  const OrderDrift({
     required this.id,
     required this.shiftId,
     required this.orderType,
@@ -3768,8 +3760,8 @@ class OrdersTableData extends DataClass implements Insertable<OrdersTableData> {
     return map;
   }
 
-  OrdersTableCompanion toCompanion(bool nullToAbsent) {
-    return OrdersTableCompanion(
+  OrdersCompanion toCompanion(bool nullToAbsent) {
+    return OrdersCompanion(
       id: Value(id),
       shiftId: Value(shiftId),
       orderType: Value(orderType),
@@ -3788,12 +3780,12 @@ class OrdersTableData extends DataClass implements Insertable<OrdersTableData> {
     );
   }
 
-  factory OrdersTableData.fromJson(
+  factory OrderDrift.fromJson(
     Map<String, dynamic> json, {
     ValueSerializer? serializer,
   }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
-    return OrdersTableData(
+    return OrderDrift(
       id: serializer.fromJson<int>(json['id']),
       shiftId: serializer.fromJson<int>(json['shiftId']),
       orderType: serializer.fromJson<String>(json['orderType']),
@@ -3833,7 +3825,7 @@ class OrdersTableData extends DataClass implements Insertable<OrdersTableData> {
     };
   }
 
-  OrdersTableData copyWith({
+  OrderDrift copyWith({
     int? id,
     int? shiftId,
     String? orderType,
@@ -3849,7 +3841,7 @@ class OrdersTableData extends DataClass implements Insertable<OrdersTableData> {
     String? customerPhone,
     String? customerAddress,
     String? createdAt,
-  }) => OrdersTableData(
+  }) => OrderDrift(
     id: id ?? this.id,
     shiftId: shiftId ?? this.shiftId,
     orderType: orderType ?? this.orderType,
@@ -3866,8 +3858,8 @@ class OrdersTableData extends DataClass implements Insertable<OrdersTableData> {
     customerAddress: customerAddress ?? this.customerAddress,
     createdAt: createdAt ?? this.createdAt,
   );
-  OrdersTableData copyWithCompanion(OrdersTableCompanion data) {
-    return OrdersTableData(
+  OrderDrift copyWithCompanion(OrdersCompanion data) {
+    return OrderDrift(
       id: data.id.present ? data.id.value : this.id,
       shiftId: data.shiftId.present ? data.shiftId.value : this.shiftId,
       orderType: data.orderType.present ? data.orderType.value : this.orderType,
@@ -3900,7 +3892,7 @@ class OrdersTableData extends DataClass implements Insertable<OrdersTableData> {
 
   @override
   String toString() {
-    return (StringBuffer('OrdersTableData(')
+    return (StringBuffer('OrderDrift(')
           ..write('id: $id, ')
           ..write('shiftId: $shiftId, ')
           ..write('orderType: $orderType, ')
@@ -3941,7 +3933,7 @@ class OrdersTableData extends DataClass implements Insertable<OrdersTableData> {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      (other is OrdersTableData &&
+      (other is OrderDrift &&
           other.id == this.id &&
           other.shiftId == this.shiftId &&
           other.orderType == this.orderType &&
@@ -3959,7 +3951,7 @@ class OrdersTableData extends DataClass implements Insertable<OrdersTableData> {
           other.createdAt == this.createdAt);
 }
 
-class OrdersTableCompanion extends UpdateCompanion<OrdersTableData> {
+class OrdersCompanion extends UpdateCompanion<OrderDrift> {
   final Value<int> id;
   final Value<int> shiftId;
   final Value<String> orderType;
@@ -3975,7 +3967,7 @@ class OrdersTableCompanion extends UpdateCompanion<OrdersTableData> {
   final Value<String> customerPhone;
   final Value<String> customerAddress;
   final Value<String> createdAt;
-  const OrdersTableCompanion({
+  const OrdersCompanion({
     this.id = const Value.absent(),
     this.shiftId = const Value.absent(),
     this.orderType = const Value.absent(),
@@ -3992,7 +3984,7 @@ class OrdersTableCompanion extends UpdateCompanion<OrdersTableData> {
     this.customerAddress = const Value.absent(),
     this.createdAt = const Value.absent(),
   });
-  OrdersTableCompanion.insert({
+  OrdersCompanion.insert({
     this.id = const Value.absent(),
     required int shiftId,
     required String orderType,
@@ -4018,7 +4010,7 @@ class OrdersTableCompanion extends UpdateCompanion<OrdersTableData> {
        paymentMethod = Value(paymentMethod),
        status = Value(status),
        createdAt = Value(createdAt);
-  static Insertable<OrdersTableData> custom({
+  static Insertable<OrderDrift> custom({
     Expression<int>? id,
     Expression<int>? shiftId,
     Expression<String>? orderType,
@@ -4054,7 +4046,7 @@ class OrdersTableCompanion extends UpdateCompanion<OrdersTableData> {
     });
   }
 
-  OrdersTableCompanion copyWith({
+  OrdersCompanion copyWith({
     Value<int>? id,
     Value<int>? shiftId,
     Value<String>? orderType,
@@ -4071,7 +4063,7 @@ class OrdersTableCompanion extends UpdateCompanion<OrdersTableData> {
     Value<String>? customerAddress,
     Value<String>? createdAt,
   }) {
-    return OrdersTableCompanion(
+    return OrdersCompanion(
       id: id ?? this.id,
       shiftId: shiftId ?? this.shiftId,
       orderType: orderType ?? this.orderType,
@@ -4143,7 +4135,7 @@ class OrdersTableCompanion extends UpdateCompanion<OrdersTableData> {
 
   @override
   String toString() {
-    return (StringBuffer('OrdersTableCompanion(')
+    return (StringBuffer('OrdersCompanion(')
           ..write('id: $id, ')
           ..write('shiftId: $shiftId, ')
           ..write('orderType: $orderType, ')
@@ -4164,12 +4156,12 @@ class OrdersTableCompanion extends UpdateCompanion<OrdersTableData> {
   }
 }
 
-class $OrderItemsTableTable extends OrderItemsTable
-    with TableInfo<$OrderItemsTableTable, OrderItemsTableData> {
+class $OrderItemsTable extends OrderItems
+    with TableInfo<$OrderItemsTable, OrderItemsDrift> {
   @override
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
-  $OrderItemsTableTable(this.attachedDatabase, [this._alias]);
+  $OrderItemsTable(this.attachedDatabase, [this._alias]);
   static const VerificationMeta _idMeta = const VerificationMeta('id');
   @override
   late final GeneratedColumn<int> id = GeneratedColumn<int>(
@@ -4194,7 +4186,7 @@ class $OrderItemsTableTable extends OrderItemsTable
     type: DriftSqlType.int,
     requiredDuringInsert: true,
     defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'REFERENCES orders_table (id)',
+      'REFERENCES orders (id)',
     ),
   );
   static const VerificationMeta _itemIdMeta = const VerificationMeta('itemId');
@@ -4206,7 +4198,7 @@ class $OrderItemsTableTable extends OrderItemsTable
     type: DriftSqlType.int,
     requiredDuringInsert: true,
     defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'REFERENCES items_table (id)',
+      'REFERENCES items (id)',
     ),
   );
   static const VerificationMeta _quantityMeta = const VerificationMeta(
@@ -4253,10 +4245,10 @@ class $OrderItemsTableTable extends OrderItemsTable
   String get aliasedName => _alias ?? actualTableName;
   @override
   String get actualTableName => $name;
-  static const String $name = 'order_items_table';
+  static const String $name = 'order_items';
   @override
   VerificationContext validateIntegrity(
-    Insertable<OrderItemsTableData> instance, {
+    Insertable<OrderItemsDrift> instance, {
     bool isInserting = false,
   }) {
     final context = VerificationContext();
@@ -4308,9 +4300,9 @@ class $OrderItemsTableTable extends OrderItemsTable
   @override
   Set<GeneratedColumn> get $primaryKey => {id};
   @override
-  OrderItemsTableData map(Map<String, dynamic> data, {String? tablePrefix}) {
+  OrderItemsDrift map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
-    return OrderItemsTableData(
+    return OrderItemsDrift(
       id: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}id'],
@@ -4339,20 +4331,19 @@ class $OrderItemsTableTable extends OrderItemsTable
   }
 
   @override
-  $OrderItemsTableTable createAlias(String alias) {
-    return $OrderItemsTableTable(attachedDatabase, alias);
+  $OrderItemsTable createAlias(String alias) {
+    return $OrderItemsTable(attachedDatabase, alias);
   }
 }
 
-class OrderItemsTableData extends DataClass
-    implements Insertable<OrderItemsTableData> {
+class OrderItemsDrift extends DataClass implements Insertable<OrderItemsDrift> {
   final int id;
   final int orderId;
   final int itemId;
   final int quantity;
   final int unitPrice;
   final String? notes;
-  const OrderItemsTableData({
+  const OrderItemsDrift({
     required this.id,
     required this.orderId,
     required this.itemId,
@@ -4374,8 +4365,8 @@ class OrderItemsTableData extends DataClass
     return map;
   }
 
-  OrderItemsTableCompanion toCompanion(bool nullToAbsent) {
-    return OrderItemsTableCompanion(
+  OrderItemsCompanion toCompanion(bool nullToAbsent) {
+    return OrderItemsCompanion(
       id: Value(id),
       orderId: Value(orderId),
       itemId: Value(itemId),
@@ -4387,12 +4378,12 @@ class OrderItemsTableData extends DataClass
     );
   }
 
-  factory OrderItemsTableData.fromJson(
+  factory OrderItemsDrift.fromJson(
     Map<String, dynamic> json, {
     ValueSerializer? serializer,
   }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
-    return OrderItemsTableData(
+    return OrderItemsDrift(
       id: serializer.fromJson<int>(json['id']),
       orderId: serializer.fromJson<int>(json['orderId']),
       itemId: serializer.fromJson<int>(json['itemId']),
@@ -4414,14 +4405,14 @@ class OrderItemsTableData extends DataClass
     };
   }
 
-  OrderItemsTableData copyWith({
+  OrderItemsDrift copyWith({
     int? id,
     int? orderId,
     int? itemId,
     int? quantity,
     int? unitPrice,
     Value<String?> notes = const Value.absent(),
-  }) => OrderItemsTableData(
+  }) => OrderItemsDrift(
     id: id ?? this.id,
     orderId: orderId ?? this.orderId,
     itemId: itemId ?? this.itemId,
@@ -4429,8 +4420,8 @@ class OrderItemsTableData extends DataClass
     unitPrice: unitPrice ?? this.unitPrice,
     notes: notes.present ? notes.value : this.notes,
   );
-  OrderItemsTableData copyWithCompanion(OrderItemsTableCompanion data) {
-    return OrderItemsTableData(
+  OrderItemsDrift copyWithCompanion(OrderItemsCompanion data) {
+    return OrderItemsDrift(
       id: data.id.present ? data.id.value : this.id,
       orderId: data.orderId.present ? data.orderId.value : this.orderId,
       itemId: data.itemId.present ? data.itemId.value : this.itemId,
@@ -4442,7 +4433,7 @@ class OrderItemsTableData extends DataClass
 
   @override
   String toString() {
-    return (StringBuffer('OrderItemsTableData(')
+    return (StringBuffer('OrderItemsDrift(')
           ..write('id: $id, ')
           ..write('orderId: $orderId, ')
           ..write('itemId: $itemId, ')
@@ -4459,7 +4450,7 @@ class OrderItemsTableData extends DataClass
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      (other is OrderItemsTableData &&
+      (other is OrderItemsDrift &&
           other.id == this.id &&
           other.orderId == this.orderId &&
           other.itemId == this.itemId &&
@@ -4468,14 +4459,14 @@ class OrderItemsTableData extends DataClass
           other.notes == this.notes);
 }
 
-class OrderItemsTableCompanion extends UpdateCompanion<OrderItemsTableData> {
+class OrderItemsCompanion extends UpdateCompanion<OrderItemsDrift> {
   final Value<int> id;
   final Value<int> orderId;
   final Value<int> itemId;
   final Value<int> quantity;
   final Value<int> unitPrice;
   final Value<String?> notes;
-  const OrderItemsTableCompanion({
+  const OrderItemsCompanion({
     this.id = const Value.absent(),
     this.orderId = const Value.absent(),
     this.itemId = const Value.absent(),
@@ -4483,7 +4474,7 @@ class OrderItemsTableCompanion extends UpdateCompanion<OrderItemsTableData> {
     this.unitPrice = const Value.absent(),
     this.notes = const Value.absent(),
   });
-  OrderItemsTableCompanion.insert({
+  OrderItemsCompanion.insert({
     this.id = const Value.absent(),
     required int orderId,
     required int itemId,
@@ -4494,7 +4485,7 @@ class OrderItemsTableCompanion extends UpdateCompanion<OrderItemsTableData> {
        itemId = Value(itemId),
        quantity = Value(quantity),
        unitPrice = Value(unitPrice);
-  static Insertable<OrderItemsTableData> custom({
+  static Insertable<OrderItemsDrift> custom({
     Expression<int>? id,
     Expression<int>? orderId,
     Expression<int>? itemId,
@@ -4512,7 +4503,7 @@ class OrderItemsTableCompanion extends UpdateCompanion<OrderItemsTableData> {
     });
   }
 
-  OrderItemsTableCompanion copyWith({
+  OrderItemsCompanion copyWith({
     Value<int>? id,
     Value<int>? orderId,
     Value<int>? itemId,
@@ -4520,7 +4511,7 @@ class OrderItemsTableCompanion extends UpdateCompanion<OrderItemsTableData> {
     Value<int>? unitPrice,
     Value<String?>? notes,
   }) {
-    return OrderItemsTableCompanion(
+    return OrderItemsCompanion(
       id: id ?? this.id,
       orderId: orderId ?? this.orderId,
       itemId: itemId ?? this.itemId,
@@ -4556,7 +4547,7 @@ class OrderItemsTableCompanion extends UpdateCompanion<OrderItemsTableData> {
 
   @override
   String toString() {
-    return (StringBuffer('OrderItemsTableCompanion(')
+    return (StringBuffer('OrderItemsCompanion(')
           ..write('id: $id, ')
           ..write('orderId: $orderId, ')
           ..write('itemId: $itemId, ')
@@ -4571,54 +4562,50 @@ class OrderItemsTableCompanion extends UpdateCompanion<OrderItemsTableData> {
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
-  late final $LicenseTableTable licenseTable = $LicenseTableTable(this);
-  late final $SettingsTableTable settingsTable = $SettingsTableTable(this);
-  late final $UsersTableTable usersTable = $UsersTableTable(this);
-  late final $ShiftsTableTable shiftsTable = $ShiftsTableTable(this);
-  late final $CategoriesTableTable categoriesTable = $CategoriesTableTable(
-    this,
-  );
-  late final $ItemsTableTable itemsTable = $ItemsTableTable(this);
-  late final $ExpensesTableTable expensesTable = $ExpensesTableTable(this);
-  late final $OrdersTableTable ordersTable = $OrdersTableTable(this);
-  late final $OrderItemsTableTable orderItemsTable = $OrderItemsTableTable(
-    this,
-  );
+  late final $LicenseTable license = $LicenseTable(this);
+  late final $SettingsTable settings = $SettingsTable(this);
+  late final $UsersTable users = $UsersTable(this);
+  late final $ShiftsTable shifts = $ShiftsTable(this);
+  late final $CategoriesTable categories = $CategoriesTable(this);
+  late final $ItemsTable items = $ItemsTable(this);
+  late final $ExpensesTable expenses = $ExpensesTable(this);
+  late final $OrdersTable orders = $OrdersTable(this);
+  late final $OrderItemsTable orderItems = $OrderItemsTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
   @override
   List<DatabaseSchemaEntity> get allSchemaEntities => [
-    licenseTable,
-    settingsTable,
-    usersTable,
-    shiftsTable,
-    categoriesTable,
-    itemsTable,
-    expensesTable,
-    ordersTable,
-    orderItemsTable,
+    license,
+    settings,
+    users,
+    shifts,
+    categories,
+    items,
+    expenses,
+    orders,
+    orderItems,
   ];
 }
 
-typedef $$LicenseTableTableCreateCompanionBuilder =
-    LicenseTableCompanion Function({
+typedef $$LicenseTableCreateCompanionBuilder =
+    LicenseCompanion Function({
       Value<int> id,
       Value<bool> isActivated,
       Value<String> licenseKey,
       Value<String> trialStartDate,
     });
-typedef $$LicenseTableTableUpdateCompanionBuilder =
-    LicenseTableCompanion Function({
+typedef $$LicenseTableUpdateCompanionBuilder =
+    LicenseCompanion Function({
       Value<int> id,
       Value<bool> isActivated,
       Value<String> licenseKey,
       Value<String> trialStartDate,
     });
 
-class $$LicenseTableTableFilterComposer
-    extends Composer<_$AppDatabase, $LicenseTableTable> {
-  $$LicenseTableTableFilterComposer({
+class $$LicenseTableFilterComposer
+    extends Composer<_$AppDatabase, $LicenseTable> {
+  $$LicenseTableFilterComposer({
     required super.$db,
     required super.$table,
     super.joinBuilder,
@@ -4646,9 +4633,9 @@ class $$LicenseTableTableFilterComposer
   );
 }
 
-class $$LicenseTableTableOrderingComposer
-    extends Composer<_$AppDatabase, $LicenseTableTable> {
-  $$LicenseTableTableOrderingComposer({
+class $$LicenseTableOrderingComposer
+    extends Composer<_$AppDatabase, $LicenseTable> {
+  $$LicenseTableOrderingComposer({
     required super.$db,
     required super.$table,
     super.joinBuilder,
@@ -4676,9 +4663,9 @@ class $$LicenseTableTableOrderingComposer
   );
 }
 
-class $$LicenseTableTableAnnotationComposer
-    extends Composer<_$AppDatabase, $LicenseTableTable> {
-  $$LicenseTableTableAnnotationComposer({
+class $$LicenseTableAnnotationComposer
+    extends Composer<_$AppDatabase, $LicenseTable> {
+  $$LicenseTableAnnotationComposer({
     required super.$db,
     required super.$table,
     super.joinBuilder,
@@ -4704,42 +4691,42 @@ class $$LicenseTableTableAnnotationComposer
   );
 }
 
-class $$LicenseTableTableTableManager
+class $$LicenseTableTableManager
     extends
         RootTableManager<
           _$AppDatabase,
-          $LicenseTableTable,
-          LicenseTableData,
-          $$LicenseTableTableFilterComposer,
-          $$LicenseTableTableOrderingComposer,
-          $$LicenseTableTableAnnotationComposer,
-          $$LicenseTableTableCreateCompanionBuilder,
-          $$LicenseTableTableUpdateCompanionBuilder,
+          $LicenseTable,
+          LicenseDrift,
+          $$LicenseTableFilterComposer,
+          $$LicenseTableOrderingComposer,
+          $$LicenseTableAnnotationComposer,
+          $$LicenseTableCreateCompanionBuilder,
+          $$LicenseTableUpdateCompanionBuilder,
           (
-            LicenseTableData,
-            BaseReferences<_$AppDatabase, $LicenseTableTable, LicenseTableData>,
+            LicenseDrift,
+            BaseReferences<_$AppDatabase, $LicenseTable, LicenseDrift>,
           ),
-          LicenseTableData,
+          LicenseDrift,
           PrefetchHooks Function()
         > {
-  $$LicenseTableTableTableManager(_$AppDatabase db, $LicenseTableTable table)
+  $$LicenseTableTableManager(_$AppDatabase db, $LicenseTable table)
     : super(
         TableManagerState(
           db: db,
           table: table,
           createFilteringComposer: () =>
-              $$LicenseTableTableFilterComposer($db: db, $table: table),
+              $$LicenseTableFilterComposer($db: db, $table: table),
           createOrderingComposer: () =>
-              $$LicenseTableTableOrderingComposer($db: db, $table: table),
+              $$LicenseTableOrderingComposer($db: db, $table: table),
           createComputedFieldComposer: () =>
-              $$LicenseTableTableAnnotationComposer($db: db, $table: table),
+              $$LicenseTableAnnotationComposer($db: db, $table: table),
           updateCompanionCallback:
               ({
                 Value<int> id = const Value.absent(),
                 Value<bool> isActivated = const Value.absent(),
                 Value<String> licenseKey = const Value.absent(),
                 Value<String> trialStartDate = const Value.absent(),
-              }) => LicenseTableCompanion(
+              }) => LicenseCompanion(
                 id: id,
                 isActivated: isActivated,
                 licenseKey: licenseKey,
@@ -4751,7 +4738,7 @@ class $$LicenseTableTableTableManager
                 Value<bool> isActivated = const Value.absent(),
                 Value<String> licenseKey = const Value.absent(),
                 Value<String> trialStartDate = const Value.absent(),
-              }) => LicenseTableCompanion.insert(
+              }) => LicenseCompanion.insert(
                 id: id,
                 isActivated: isActivated,
                 licenseKey: licenseKey,
@@ -4765,25 +4752,25 @@ class $$LicenseTableTableTableManager
       );
 }
 
-typedef $$LicenseTableTableProcessedTableManager =
+typedef $$LicenseTableProcessedTableManager =
     ProcessedTableManager<
       _$AppDatabase,
-      $LicenseTableTable,
-      LicenseTableData,
-      $$LicenseTableTableFilterComposer,
-      $$LicenseTableTableOrderingComposer,
-      $$LicenseTableTableAnnotationComposer,
-      $$LicenseTableTableCreateCompanionBuilder,
-      $$LicenseTableTableUpdateCompanionBuilder,
+      $LicenseTable,
+      LicenseDrift,
+      $$LicenseTableFilterComposer,
+      $$LicenseTableOrderingComposer,
+      $$LicenseTableAnnotationComposer,
+      $$LicenseTableCreateCompanionBuilder,
+      $$LicenseTableUpdateCompanionBuilder,
       (
-        LicenseTableData,
-        BaseReferences<_$AppDatabase, $LicenseTableTable, LicenseTableData>,
+        LicenseDrift,
+        BaseReferences<_$AppDatabase, $LicenseTable, LicenseDrift>,
       ),
-      LicenseTableData,
+      LicenseDrift,
       PrefetchHooks Function()
     >;
-typedef $$SettingsTableTableCreateCompanionBuilder =
-    SettingsTableCompanion Function({
+typedef $$SettingsTableCreateCompanionBuilder =
+    SettingsCompanion Function({
       Value<int> id,
       required double taxRate,
       required double serviceRate,
@@ -4793,8 +4780,8 @@ typedef $$SettingsTableTableCreateCompanionBuilder =
       required String taxNumber,
       required String printMode,
     });
-typedef $$SettingsTableTableUpdateCompanionBuilder =
-    SettingsTableCompanion Function({
+typedef $$SettingsTableUpdateCompanionBuilder =
+    SettingsCompanion Function({
       Value<int> id,
       Value<double> taxRate,
       Value<double> serviceRate,
@@ -4805,9 +4792,9 @@ typedef $$SettingsTableTableUpdateCompanionBuilder =
       Value<String> printMode,
     });
 
-class $$SettingsTableTableFilterComposer
-    extends Composer<_$AppDatabase, $SettingsTableTable> {
-  $$SettingsTableTableFilterComposer({
+class $$SettingsTableFilterComposer
+    extends Composer<_$AppDatabase, $SettingsTable> {
+  $$SettingsTableFilterComposer({
     required super.$db,
     required super.$table,
     super.joinBuilder,
@@ -4855,9 +4842,9 @@ class $$SettingsTableTableFilterComposer
   );
 }
 
-class $$SettingsTableTableOrderingComposer
-    extends Composer<_$AppDatabase, $SettingsTableTable> {
-  $$SettingsTableTableOrderingComposer({
+class $$SettingsTableOrderingComposer
+    extends Composer<_$AppDatabase, $SettingsTable> {
+  $$SettingsTableOrderingComposer({
     required super.$db,
     required super.$table,
     super.joinBuilder,
@@ -4905,9 +4892,9 @@ class $$SettingsTableTableOrderingComposer
   );
 }
 
-class $$SettingsTableTableAnnotationComposer
-    extends Composer<_$AppDatabase, $SettingsTableTable> {
-  $$SettingsTableTableAnnotationComposer({
+class $$SettingsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $SettingsTable> {
+  $$SettingsTableAnnotationComposer({
     required super.$db,
     required super.$table,
     super.joinBuilder,
@@ -4947,39 +4934,35 @@ class $$SettingsTableTableAnnotationComposer
       $composableBuilder(column: $table.printMode, builder: (column) => column);
 }
 
-class $$SettingsTableTableTableManager
+class $$SettingsTableTableManager
     extends
         RootTableManager<
           _$AppDatabase,
-          $SettingsTableTable,
-          SettingsTableData,
-          $$SettingsTableTableFilterComposer,
-          $$SettingsTableTableOrderingComposer,
-          $$SettingsTableTableAnnotationComposer,
-          $$SettingsTableTableCreateCompanionBuilder,
-          $$SettingsTableTableUpdateCompanionBuilder,
+          $SettingsTable,
+          SettingsDrift,
+          $$SettingsTableFilterComposer,
+          $$SettingsTableOrderingComposer,
+          $$SettingsTableAnnotationComposer,
+          $$SettingsTableCreateCompanionBuilder,
+          $$SettingsTableUpdateCompanionBuilder,
           (
-            SettingsTableData,
-            BaseReferences<
-              _$AppDatabase,
-              $SettingsTableTable,
-              SettingsTableData
-            >,
+            SettingsDrift,
+            BaseReferences<_$AppDatabase, $SettingsTable, SettingsDrift>,
           ),
-          SettingsTableData,
+          SettingsDrift,
           PrefetchHooks Function()
         > {
-  $$SettingsTableTableTableManager(_$AppDatabase db, $SettingsTableTable table)
+  $$SettingsTableTableManager(_$AppDatabase db, $SettingsTable table)
     : super(
         TableManagerState(
           db: db,
           table: table,
           createFilteringComposer: () =>
-              $$SettingsTableTableFilterComposer($db: db, $table: table),
+              $$SettingsTableFilterComposer($db: db, $table: table),
           createOrderingComposer: () =>
-              $$SettingsTableTableOrderingComposer($db: db, $table: table),
+              $$SettingsTableOrderingComposer($db: db, $table: table),
           createComputedFieldComposer: () =>
-              $$SettingsTableTableAnnotationComposer($db: db, $table: table),
+              $$SettingsTableAnnotationComposer($db: db, $table: table),
           updateCompanionCallback:
               ({
                 Value<int> id = const Value.absent(),
@@ -4990,7 +4973,7 @@ class $$SettingsTableTableTableManager
                 Value<String> restaurantName = const Value.absent(),
                 Value<String> taxNumber = const Value.absent(),
                 Value<String> printMode = const Value.absent(),
-              }) => SettingsTableCompanion(
+              }) => SettingsCompanion(
                 id: id,
                 taxRate: taxRate,
                 serviceRate: serviceRate,
@@ -5010,7 +4993,7 @@ class $$SettingsTableTableTableManager
                 required String restaurantName,
                 required String taxNumber,
                 required String printMode,
-              }) => SettingsTableCompanion.insert(
+              }) => SettingsCompanion.insert(
                 id: id,
                 taxRate: taxRate,
                 serviceRate: serviceRate,
@@ -5028,25 +5011,25 @@ class $$SettingsTableTableTableManager
       );
 }
 
-typedef $$SettingsTableTableProcessedTableManager =
+typedef $$SettingsTableProcessedTableManager =
     ProcessedTableManager<
       _$AppDatabase,
-      $SettingsTableTable,
-      SettingsTableData,
-      $$SettingsTableTableFilterComposer,
-      $$SettingsTableTableOrderingComposer,
-      $$SettingsTableTableAnnotationComposer,
-      $$SettingsTableTableCreateCompanionBuilder,
-      $$SettingsTableTableUpdateCompanionBuilder,
+      $SettingsTable,
+      SettingsDrift,
+      $$SettingsTableFilterComposer,
+      $$SettingsTableOrderingComposer,
+      $$SettingsTableAnnotationComposer,
+      $$SettingsTableCreateCompanionBuilder,
+      $$SettingsTableUpdateCompanionBuilder,
       (
-        SettingsTableData,
-        BaseReferences<_$AppDatabase, $SettingsTableTable, SettingsTableData>,
+        SettingsDrift,
+        BaseReferences<_$AppDatabase, $SettingsTable, SettingsDrift>,
       ),
-      SettingsTableData,
+      SettingsDrift,
       PrefetchHooks Function()
     >;
-typedef $$UsersTableTableCreateCompanionBuilder =
-    UsersTableCompanion Function({
+typedef $$UsersTableCreateCompanionBuilder =
+    UsersCompanion Function({
       Value<int> id,
       required String name,
       required String pinHash,
@@ -5056,8 +5039,8 @@ typedef $$UsersTableTableCreateCompanionBuilder =
       Value<int> failedAttempts,
       Value<String?> lockoutUntil,
     });
-typedef $$UsersTableTableUpdateCompanionBuilder =
-    UsersTableCompanion Function({
+typedef $$UsersTableUpdateCompanionBuilder =
+    UsersCompanion Function({
       Value<int> id,
       Value<String> name,
       Value<String> pinHash,
@@ -5068,32 +5051,32 @@ typedef $$UsersTableTableUpdateCompanionBuilder =
       Value<String?> lockoutUntil,
     });
 
-final class $$UsersTableTableReferences
-    extends BaseReferences<_$AppDatabase, $UsersTableTable, UsersTableData> {
-  $$UsersTableTableReferences(super.$_db, super.$_table, super.$_typedResult);
+final class $$UsersTableReferences
+    extends BaseReferences<_$AppDatabase, $UsersTable, UserDrift> {
+  $$UsersTableReferences(super.$_db, super.$_table, super.$_typedResult);
 
-  static MultiTypedResultKey<$ShiftsTableTable, List<ShiftsTableData>>
-  _shiftsTableRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
-    db.shiftsTable,
-    aliasName: $_aliasNameGenerator(db.usersTable.id, db.shiftsTable.cashierId),
+  static MultiTypedResultKey<$ShiftsTable, List<ShiftDrift>> _shiftsRefsTable(
+    _$AppDatabase db,
+  ) => MultiTypedResultKey.fromTable(
+    db.shifts,
+    aliasName: $_aliasNameGenerator(db.users.id, db.shifts.cashierId),
   );
 
-  $$ShiftsTableTableProcessedTableManager get shiftsTableRefs {
-    final manager = $$ShiftsTableTableTableManager(
+  $$ShiftsTableProcessedTableManager get shiftsRefs {
+    final manager = $$ShiftsTableTableManager(
       $_db,
-      $_db.shiftsTable,
+      $_db.shifts,
     ).filter((f) => f.cashierId.id.sqlEquals($_itemColumn<int>('id')!));
 
-    final cache = $_typedResult.readTableOrNull(_shiftsTableRefsTable($_db));
+    final cache = $_typedResult.readTableOrNull(_shiftsRefsTable($_db));
     return ProcessedTableManager(
       manager.$state.copyWith(prefetchedData: cache),
     );
   }
 }
 
-class $$UsersTableTableFilterComposer
-    extends Composer<_$AppDatabase, $UsersTableTable> {
-  $$UsersTableTableFilterComposer({
+class $$UsersTableFilterComposer extends Composer<_$AppDatabase, $UsersTable> {
+  $$UsersTableFilterComposer({
     required super.$db,
     required super.$table,
     super.joinBuilder,
@@ -5140,22 +5123,22 @@ class $$UsersTableTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
-  Expression<bool> shiftsTableRefs(
-    Expression<bool> Function($$ShiftsTableTableFilterComposer f) f,
+  Expression<bool> shiftsRefs(
+    Expression<bool> Function($$ShiftsTableFilterComposer f) f,
   ) {
-    final $$ShiftsTableTableFilterComposer composer = $composerBuilder(
+    final $$ShiftsTableFilterComposer composer = $composerBuilder(
       composer: this,
       getCurrentColumn: (t) => t.id,
-      referencedTable: $db.shiftsTable,
+      referencedTable: $db.shifts,
       getReferencedColumn: (t) => t.cashierId,
       builder:
           (
             joinBuilder, {
             $addJoinBuilderToRootComposer,
             $removeJoinBuilderFromRootComposer,
-          }) => $$ShiftsTableTableFilterComposer(
+          }) => $$ShiftsTableFilterComposer(
             $db: $db,
-            $table: $db.shiftsTable,
+            $table: $db.shifts,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -5166,9 +5149,9 @@ class $$UsersTableTableFilterComposer
   }
 }
 
-class $$UsersTableTableOrderingComposer
-    extends Composer<_$AppDatabase, $UsersTableTable> {
-  $$UsersTableTableOrderingComposer({
+class $$UsersTableOrderingComposer
+    extends Composer<_$AppDatabase, $UsersTable> {
+  $$UsersTableOrderingComposer({
     required super.$db,
     required super.$table,
     super.joinBuilder,
@@ -5216,9 +5199,9 @@ class $$UsersTableTableOrderingComposer
   );
 }
 
-class $$UsersTableTableAnnotationComposer
-    extends Composer<_$AppDatabase, $UsersTableTable> {
-  $$UsersTableTableAnnotationComposer({
+class $$UsersTableAnnotationComposer
+    extends Composer<_$AppDatabase, $UsersTable> {
+  $$UsersTableAnnotationComposer({
     required super.$db,
     required super.$table,
     super.joinBuilder,
@@ -5253,22 +5236,22 @@ class $$UsersTableTableAnnotationComposer
     builder: (column) => column,
   );
 
-  Expression<T> shiftsTableRefs<T extends Object>(
-    Expression<T> Function($$ShiftsTableTableAnnotationComposer a) f,
+  Expression<T> shiftsRefs<T extends Object>(
+    Expression<T> Function($$ShiftsTableAnnotationComposer a) f,
   ) {
-    final $$ShiftsTableTableAnnotationComposer composer = $composerBuilder(
+    final $$ShiftsTableAnnotationComposer composer = $composerBuilder(
       composer: this,
       getCurrentColumn: (t) => t.id,
-      referencedTable: $db.shiftsTable,
+      referencedTable: $db.shifts,
       getReferencedColumn: (t) => t.cashierId,
       builder:
           (
             joinBuilder, {
             $addJoinBuilderToRootComposer,
             $removeJoinBuilderFromRootComposer,
-          }) => $$ShiftsTableTableAnnotationComposer(
+          }) => $$ShiftsTableAnnotationComposer(
             $db: $db,
-            $table: $db.shiftsTable,
+            $table: $db.shifts,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -5279,32 +5262,32 @@ class $$UsersTableTableAnnotationComposer
   }
 }
 
-class $$UsersTableTableTableManager
+class $$UsersTableTableManager
     extends
         RootTableManager<
           _$AppDatabase,
-          $UsersTableTable,
-          UsersTableData,
-          $$UsersTableTableFilterComposer,
-          $$UsersTableTableOrderingComposer,
-          $$UsersTableTableAnnotationComposer,
-          $$UsersTableTableCreateCompanionBuilder,
-          $$UsersTableTableUpdateCompanionBuilder,
-          (UsersTableData, $$UsersTableTableReferences),
-          UsersTableData,
-          PrefetchHooks Function({bool shiftsTableRefs})
+          $UsersTable,
+          UserDrift,
+          $$UsersTableFilterComposer,
+          $$UsersTableOrderingComposer,
+          $$UsersTableAnnotationComposer,
+          $$UsersTableCreateCompanionBuilder,
+          $$UsersTableUpdateCompanionBuilder,
+          (UserDrift, $$UsersTableReferences),
+          UserDrift,
+          PrefetchHooks Function({bool shiftsRefs})
         > {
-  $$UsersTableTableTableManager(_$AppDatabase db, $UsersTableTable table)
+  $$UsersTableTableManager(_$AppDatabase db, $UsersTable table)
     : super(
         TableManagerState(
           db: db,
           table: table,
           createFilteringComposer: () =>
-              $$UsersTableTableFilterComposer($db: db, $table: table),
+              $$UsersTableFilterComposer($db: db, $table: table),
           createOrderingComposer: () =>
-              $$UsersTableTableOrderingComposer($db: db, $table: table),
+              $$UsersTableOrderingComposer($db: db, $table: table),
           createComputedFieldComposer: () =>
-              $$UsersTableTableAnnotationComposer($db: db, $table: table),
+              $$UsersTableAnnotationComposer($db: db, $table: table),
           updateCompanionCallback:
               ({
                 Value<int> id = const Value.absent(),
@@ -5315,7 +5298,7 @@ class $$UsersTableTableTableManager
                 Value<bool> isActive = const Value.absent(),
                 Value<int> failedAttempts = const Value.absent(),
                 Value<String?> lockoutUntil = const Value.absent(),
-              }) => UsersTableCompanion(
+              }) => UsersCompanion(
                 id: id,
                 name: name,
                 pinHash: pinHash,
@@ -5335,7 +5318,7 @@ class $$UsersTableTableTableManager
                 Value<bool> isActive = const Value.absent(),
                 Value<int> failedAttempts = const Value.absent(),
                 Value<String?> lockoutUntil = const Value.absent(),
-              }) => UsersTableCompanion.insert(
+              }) => UsersCompanion.insert(
                 id: id,
                 name: name,
                 pinHash: pinHash,
@@ -5347,34 +5330,29 @@ class $$UsersTableTableTableManager
               ),
           withReferenceMapper: (p0) => p0
               .map(
-                (e) => (
-                  e.readTable(table),
-                  $$UsersTableTableReferences(db, table, e),
-                ),
+                (e) =>
+                    (e.readTable(table), $$UsersTableReferences(db, table, e)),
               )
               .toList(),
-          prefetchHooksCallback: ({shiftsTableRefs = false}) {
+          prefetchHooksCallback: ({shiftsRefs = false}) {
             return PrefetchHooks(
               db: db,
-              explicitlyWatchedTables: [if (shiftsTableRefs) db.shiftsTable],
+              explicitlyWatchedTables: [if (shiftsRefs) db.shifts],
               addJoins: null,
               getPrefetchedDataCallback: (items) async {
                 return [
-                  if (shiftsTableRefs)
+                  if (shiftsRefs)
                     await $_getPrefetchedData<
-                      UsersTableData,
-                      $UsersTableTable,
-                      ShiftsTableData
+                      UserDrift,
+                      $UsersTable,
+                      ShiftDrift
                     >(
                       currentTable: table,
-                      referencedTable: $$UsersTableTableReferences
-                          ._shiftsTableRefsTable(db),
+                      referencedTable: $$UsersTableReferences._shiftsRefsTable(
+                        db,
+                      ),
                       managerFromTypedResult: (p0) =>
-                          $$UsersTableTableReferences(
-                            db,
-                            table,
-                            p0,
-                          ).shiftsTableRefs,
+                          $$UsersTableReferences(db, table, p0).shiftsRefs,
                       referencedItemsForCurrentItem: (item, referencedItems) =>
                           referencedItems.where((e) => e.cashierId == item.id),
                       typedResults: items,
@@ -5387,22 +5365,22 @@ class $$UsersTableTableTableManager
       );
 }
 
-typedef $$UsersTableTableProcessedTableManager =
+typedef $$UsersTableProcessedTableManager =
     ProcessedTableManager<
       _$AppDatabase,
-      $UsersTableTable,
-      UsersTableData,
-      $$UsersTableTableFilterComposer,
-      $$UsersTableTableOrderingComposer,
-      $$UsersTableTableAnnotationComposer,
-      $$UsersTableTableCreateCompanionBuilder,
-      $$UsersTableTableUpdateCompanionBuilder,
-      (UsersTableData, $$UsersTableTableReferences),
-      UsersTableData,
-      PrefetchHooks Function({bool shiftsTableRefs})
+      $UsersTable,
+      UserDrift,
+      $$UsersTableFilterComposer,
+      $$UsersTableOrderingComposer,
+      $$UsersTableAnnotationComposer,
+      $$UsersTableCreateCompanionBuilder,
+      $$UsersTableUpdateCompanionBuilder,
+      (UserDrift, $$UsersTableReferences),
+      UserDrift,
+      PrefetchHooks Function({bool shiftsRefs})
     >;
-typedef $$ShiftsTableTableCreateCompanionBuilder =
-    ShiftsTableCompanion Function({
+typedef $$ShiftsTableCreateCompanionBuilder =
+    ShiftsCompanion Function({
       Value<int> id,
       Value<int?> cashierId,
       required String startTime,
@@ -5420,8 +5398,8 @@ typedef $$ShiftsTableTableCreateCompanionBuilder =
       Value<int> actualCash,
       required String status,
     });
-typedef $$ShiftsTableTableUpdateCompanionBuilder =
-    ShiftsTableCompanion Function({
+typedef $$ShiftsTableUpdateCompanionBuilder =
+    ShiftsCompanion Function({
       Value<int> id,
       Value<int?> cashierId,
       Value<String> startTime,
@@ -5440,21 +5418,20 @@ typedef $$ShiftsTableTableUpdateCompanionBuilder =
       Value<String> status,
     });
 
-final class $$ShiftsTableTableReferences
-    extends BaseReferences<_$AppDatabase, $ShiftsTableTable, ShiftsTableData> {
-  $$ShiftsTableTableReferences(super.$_db, super.$_table, super.$_typedResult);
+final class $$ShiftsTableReferences
+    extends BaseReferences<_$AppDatabase, $ShiftsTable, ShiftDrift> {
+  $$ShiftsTableReferences(super.$_db, super.$_table, super.$_typedResult);
 
-  static $UsersTableTable _cashierIdTable(_$AppDatabase db) =>
-      db.usersTable.createAlias(
-        $_aliasNameGenerator(db.shiftsTable.cashierId, db.usersTable.id),
-      );
+  static $UsersTable _cashierIdTable(_$AppDatabase db) => db.users.createAlias(
+    $_aliasNameGenerator(db.shifts.cashierId, db.users.id),
+  );
 
-  $$UsersTableTableProcessedTableManager? get cashierId {
+  $$UsersTableProcessedTableManager? get cashierId {
     final $_column = $_itemColumn<int>('cashier_id');
     if ($_column == null) return null;
-    final manager = $$UsersTableTableTableManager(
+    final manager = $$UsersTableTableManager(
       $_db,
-      $_db.usersTable,
+      $_db.users,
     ).filter((f) => f.id.sqlEquals($_column));
     final item = $_typedResult.readTableOrNull(_cashierIdTable($_db));
     if (item == null) return manager;
@@ -5463,49 +5440,47 @@ final class $$ShiftsTableTableReferences
     );
   }
 
-  static MultiTypedResultKey<$ExpensesTableTable, List<ExpensesTableData>>
-  _expensesTableRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
-    db.expensesTable,
-    aliasName: $_aliasNameGenerator(
-      db.shiftsTable.id,
-      db.expensesTable.shiftId,
-    ),
+  static MultiTypedResultKey<$ExpensesTable, List<ExpenseDrift>>
+  _expensesRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
+    db.expenses,
+    aliasName: $_aliasNameGenerator(db.shifts.id, db.expenses.shiftId),
   );
 
-  $$ExpensesTableTableProcessedTableManager get expensesTableRefs {
-    final manager = $$ExpensesTableTableTableManager(
+  $$ExpensesTableProcessedTableManager get expensesRefs {
+    final manager = $$ExpensesTableTableManager(
       $_db,
-      $_db.expensesTable,
+      $_db.expenses,
     ).filter((f) => f.shiftId.id.sqlEquals($_itemColumn<int>('id')!));
 
-    final cache = $_typedResult.readTableOrNull(_expensesTableRefsTable($_db));
+    final cache = $_typedResult.readTableOrNull(_expensesRefsTable($_db));
     return ProcessedTableManager(
       manager.$state.copyWith(prefetchedData: cache),
     );
   }
 
-  static MultiTypedResultKey<$OrdersTableTable, List<OrdersTableData>>
-  _ordersTableRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
-    db.ordersTable,
-    aliasName: $_aliasNameGenerator(db.shiftsTable.id, db.ordersTable.shiftId),
+  static MultiTypedResultKey<$OrdersTable, List<OrderDrift>> _ordersRefsTable(
+    _$AppDatabase db,
+  ) => MultiTypedResultKey.fromTable(
+    db.orders,
+    aliasName: $_aliasNameGenerator(db.shifts.id, db.orders.shiftId),
   );
 
-  $$OrdersTableTableProcessedTableManager get ordersTableRefs {
-    final manager = $$OrdersTableTableTableManager(
+  $$OrdersTableProcessedTableManager get ordersRefs {
+    final manager = $$OrdersTableTableManager(
       $_db,
-      $_db.ordersTable,
+      $_db.orders,
     ).filter((f) => f.shiftId.id.sqlEquals($_itemColumn<int>('id')!));
 
-    final cache = $_typedResult.readTableOrNull(_ordersTableRefsTable($_db));
+    final cache = $_typedResult.readTableOrNull(_ordersRefsTable($_db));
     return ProcessedTableManager(
       manager.$state.copyWith(prefetchedData: cache),
     );
   }
 }
 
-class $$ShiftsTableTableFilterComposer
-    extends Composer<_$AppDatabase, $ShiftsTableTable> {
-  $$ShiftsTableTableFilterComposer({
+class $$ShiftsTableFilterComposer
+    extends Composer<_$AppDatabase, $ShiftsTable> {
+  $$ShiftsTableFilterComposer({
     required super.$db,
     required super.$table,
     super.joinBuilder,
@@ -5587,20 +5562,20 @@ class $$ShiftsTableTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
-  $$UsersTableTableFilterComposer get cashierId {
-    final $$UsersTableTableFilterComposer composer = $composerBuilder(
+  $$UsersTableFilterComposer get cashierId {
+    final $$UsersTableFilterComposer composer = $composerBuilder(
       composer: this,
       getCurrentColumn: (t) => t.cashierId,
-      referencedTable: $db.usersTable,
+      referencedTable: $db.users,
       getReferencedColumn: (t) => t.id,
       builder:
           (
             joinBuilder, {
             $addJoinBuilderToRootComposer,
             $removeJoinBuilderFromRootComposer,
-          }) => $$UsersTableTableFilterComposer(
+          }) => $$UsersTableFilterComposer(
             $db: $db,
-            $table: $db.usersTable,
+            $table: $db.users,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -5610,22 +5585,22 @@ class $$ShiftsTableTableFilterComposer
     return composer;
   }
 
-  Expression<bool> expensesTableRefs(
-    Expression<bool> Function($$ExpensesTableTableFilterComposer f) f,
+  Expression<bool> expensesRefs(
+    Expression<bool> Function($$ExpensesTableFilterComposer f) f,
   ) {
-    final $$ExpensesTableTableFilterComposer composer = $composerBuilder(
+    final $$ExpensesTableFilterComposer composer = $composerBuilder(
       composer: this,
       getCurrentColumn: (t) => t.id,
-      referencedTable: $db.expensesTable,
+      referencedTable: $db.expenses,
       getReferencedColumn: (t) => t.shiftId,
       builder:
           (
             joinBuilder, {
             $addJoinBuilderToRootComposer,
             $removeJoinBuilderFromRootComposer,
-          }) => $$ExpensesTableTableFilterComposer(
+          }) => $$ExpensesTableFilterComposer(
             $db: $db,
-            $table: $db.expensesTable,
+            $table: $db.expenses,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -5635,22 +5610,22 @@ class $$ShiftsTableTableFilterComposer
     return f(composer);
   }
 
-  Expression<bool> ordersTableRefs(
-    Expression<bool> Function($$OrdersTableTableFilterComposer f) f,
+  Expression<bool> ordersRefs(
+    Expression<bool> Function($$OrdersTableFilterComposer f) f,
   ) {
-    final $$OrdersTableTableFilterComposer composer = $composerBuilder(
+    final $$OrdersTableFilterComposer composer = $composerBuilder(
       composer: this,
       getCurrentColumn: (t) => t.id,
-      referencedTable: $db.ordersTable,
+      referencedTable: $db.orders,
       getReferencedColumn: (t) => t.shiftId,
       builder:
           (
             joinBuilder, {
             $addJoinBuilderToRootComposer,
             $removeJoinBuilderFromRootComposer,
-          }) => $$OrdersTableTableFilterComposer(
+          }) => $$OrdersTableFilterComposer(
             $db: $db,
-            $table: $db.ordersTable,
+            $table: $db.orders,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -5661,9 +5636,9 @@ class $$ShiftsTableTableFilterComposer
   }
 }
 
-class $$ShiftsTableTableOrderingComposer
-    extends Composer<_$AppDatabase, $ShiftsTableTable> {
-  $$ShiftsTableTableOrderingComposer({
+class $$ShiftsTableOrderingComposer
+    extends Composer<_$AppDatabase, $ShiftsTable> {
+  $$ShiftsTableOrderingComposer({
     required super.$db,
     required super.$table,
     super.joinBuilder,
@@ -5745,20 +5720,20 @@ class $$ShiftsTableTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
-  $$UsersTableTableOrderingComposer get cashierId {
-    final $$UsersTableTableOrderingComposer composer = $composerBuilder(
+  $$UsersTableOrderingComposer get cashierId {
+    final $$UsersTableOrderingComposer composer = $composerBuilder(
       composer: this,
       getCurrentColumn: (t) => t.cashierId,
-      referencedTable: $db.usersTable,
+      referencedTable: $db.users,
       getReferencedColumn: (t) => t.id,
       builder:
           (
             joinBuilder, {
             $addJoinBuilderToRootComposer,
             $removeJoinBuilderFromRootComposer,
-          }) => $$UsersTableTableOrderingComposer(
+          }) => $$UsersTableOrderingComposer(
             $db: $db,
-            $table: $db.usersTable,
+            $table: $db.users,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -5769,9 +5744,9 @@ class $$ShiftsTableTableOrderingComposer
   }
 }
 
-class $$ShiftsTableTableAnnotationComposer
-    extends Composer<_$AppDatabase, $ShiftsTableTable> {
-  $$ShiftsTableTableAnnotationComposer({
+class $$ShiftsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $ShiftsTable> {
+  $$ShiftsTableAnnotationComposer({
     required super.$db,
     required super.$table,
     super.joinBuilder,
@@ -5841,20 +5816,20 @@ class $$ShiftsTableTableAnnotationComposer
   GeneratedColumn<String> get status =>
       $composableBuilder(column: $table.status, builder: (column) => column);
 
-  $$UsersTableTableAnnotationComposer get cashierId {
-    final $$UsersTableTableAnnotationComposer composer = $composerBuilder(
+  $$UsersTableAnnotationComposer get cashierId {
+    final $$UsersTableAnnotationComposer composer = $composerBuilder(
       composer: this,
       getCurrentColumn: (t) => t.cashierId,
-      referencedTable: $db.usersTable,
+      referencedTable: $db.users,
       getReferencedColumn: (t) => t.id,
       builder:
           (
             joinBuilder, {
             $addJoinBuilderToRootComposer,
             $removeJoinBuilderFromRootComposer,
-          }) => $$UsersTableTableAnnotationComposer(
+          }) => $$UsersTableAnnotationComposer(
             $db: $db,
-            $table: $db.usersTable,
+            $table: $db.users,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -5864,22 +5839,22 @@ class $$ShiftsTableTableAnnotationComposer
     return composer;
   }
 
-  Expression<T> expensesTableRefs<T extends Object>(
-    Expression<T> Function($$ExpensesTableTableAnnotationComposer a) f,
+  Expression<T> expensesRefs<T extends Object>(
+    Expression<T> Function($$ExpensesTableAnnotationComposer a) f,
   ) {
-    final $$ExpensesTableTableAnnotationComposer composer = $composerBuilder(
+    final $$ExpensesTableAnnotationComposer composer = $composerBuilder(
       composer: this,
       getCurrentColumn: (t) => t.id,
-      referencedTable: $db.expensesTable,
+      referencedTable: $db.expenses,
       getReferencedColumn: (t) => t.shiftId,
       builder:
           (
             joinBuilder, {
             $addJoinBuilderToRootComposer,
             $removeJoinBuilderFromRootComposer,
-          }) => $$ExpensesTableTableAnnotationComposer(
+          }) => $$ExpensesTableAnnotationComposer(
             $db: $db,
-            $table: $db.expensesTable,
+            $table: $db.expenses,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -5889,22 +5864,22 @@ class $$ShiftsTableTableAnnotationComposer
     return f(composer);
   }
 
-  Expression<T> ordersTableRefs<T extends Object>(
-    Expression<T> Function($$OrdersTableTableAnnotationComposer a) f,
+  Expression<T> ordersRefs<T extends Object>(
+    Expression<T> Function($$OrdersTableAnnotationComposer a) f,
   ) {
-    final $$OrdersTableTableAnnotationComposer composer = $composerBuilder(
+    final $$OrdersTableAnnotationComposer composer = $composerBuilder(
       composer: this,
       getCurrentColumn: (t) => t.id,
-      referencedTable: $db.ordersTable,
+      referencedTable: $db.orders,
       getReferencedColumn: (t) => t.shiftId,
       builder:
           (
             joinBuilder, {
             $addJoinBuilderToRootComposer,
             $removeJoinBuilderFromRootComposer,
-          }) => $$OrdersTableTableAnnotationComposer(
+          }) => $$OrdersTableAnnotationComposer(
             $db: $db,
-            $table: $db.ordersTable,
+            $table: $db.orders,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -5915,36 +5890,36 @@ class $$ShiftsTableTableAnnotationComposer
   }
 }
 
-class $$ShiftsTableTableTableManager
+class $$ShiftsTableTableManager
     extends
         RootTableManager<
           _$AppDatabase,
-          $ShiftsTableTable,
-          ShiftsTableData,
-          $$ShiftsTableTableFilterComposer,
-          $$ShiftsTableTableOrderingComposer,
-          $$ShiftsTableTableAnnotationComposer,
-          $$ShiftsTableTableCreateCompanionBuilder,
-          $$ShiftsTableTableUpdateCompanionBuilder,
-          (ShiftsTableData, $$ShiftsTableTableReferences),
-          ShiftsTableData,
+          $ShiftsTable,
+          ShiftDrift,
+          $$ShiftsTableFilterComposer,
+          $$ShiftsTableOrderingComposer,
+          $$ShiftsTableAnnotationComposer,
+          $$ShiftsTableCreateCompanionBuilder,
+          $$ShiftsTableUpdateCompanionBuilder,
+          (ShiftDrift, $$ShiftsTableReferences),
+          ShiftDrift,
           PrefetchHooks Function({
             bool cashierId,
-            bool expensesTableRefs,
-            bool ordersTableRefs,
+            bool expensesRefs,
+            bool ordersRefs,
           })
         > {
-  $$ShiftsTableTableTableManager(_$AppDatabase db, $ShiftsTableTable table)
+  $$ShiftsTableTableManager(_$AppDatabase db, $ShiftsTable table)
     : super(
         TableManagerState(
           db: db,
           table: table,
           createFilteringComposer: () =>
-              $$ShiftsTableTableFilterComposer($db: db, $table: table),
+              $$ShiftsTableFilterComposer($db: db, $table: table),
           createOrderingComposer: () =>
-              $$ShiftsTableTableOrderingComposer($db: db, $table: table),
+              $$ShiftsTableOrderingComposer($db: db, $table: table),
           createComputedFieldComposer: () =>
-              $$ShiftsTableTableAnnotationComposer($db: db, $table: table),
+              $$ShiftsTableAnnotationComposer($db: db, $table: table),
           updateCompanionCallback:
               ({
                 Value<int> id = const Value.absent(),
@@ -5963,7 +5938,7 @@ class $$ShiftsTableTableTableManager
                 Value<int> expectedCash = const Value.absent(),
                 Value<int> actualCash = const Value.absent(),
                 Value<String> status = const Value.absent(),
-              }) => ShiftsTableCompanion(
+              }) => ShiftsCompanion(
                 id: id,
                 cashierId: cashierId,
                 startTime: startTime,
@@ -5999,7 +5974,7 @@ class $$ShiftsTableTableTableManager
                 Value<int> expectedCash = const Value.absent(),
                 Value<int> actualCash = const Value.absent(),
                 required String status,
-              }) => ShiftsTableCompanion.insert(
+              }) => ShiftsCompanion.insert(
                 id: id,
                 cashierId: cashierId,
                 startTime: startTime,
@@ -6019,23 +5994,17 @@ class $$ShiftsTableTableTableManager
               ),
           withReferenceMapper: (p0) => p0
               .map(
-                (e) => (
-                  e.readTable(table),
-                  $$ShiftsTableTableReferences(db, table, e),
-                ),
+                (e) =>
+                    (e.readTable(table), $$ShiftsTableReferences(db, table, e)),
               )
               .toList(),
           prefetchHooksCallback:
-              ({
-                cashierId = false,
-                expensesTableRefs = false,
-                ordersTableRefs = false,
-              }) {
+              ({cashierId = false, expensesRefs = false, ordersRefs = false}) {
                 return PrefetchHooks(
                   db: db,
                   explicitlyWatchedTables: [
-                    if (expensesTableRefs) db.expensesTable,
-                    if (ordersTableRefs) db.ordersTable,
+                    if (expensesRefs) db.expenses,
+                    if (ordersRefs) db.orders,
                   ],
                   addJoins:
                       <
@@ -6058,13 +6027,11 @@ class $$ShiftsTableTableTableManager
                               state.withJoin(
                                     currentTable: table,
                                     currentColumn: table.cashierId,
-                                    referencedTable:
-                                        $$ShiftsTableTableReferences
-                                            ._cashierIdTable(db),
-                                    referencedColumn:
-                                        $$ShiftsTableTableReferences
-                                            ._cashierIdTable(db)
-                                            .id,
+                                    referencedTable: $$ShiftsTableReferences
+                                        ._cashierIdTable(db),
+                                    referencedColumn: $$ShiftsTableReferences
+                                        ._cashierIdTable(db)
+                                        .id,
                                   )
                                   as T;
                         }
@@ -6073,42 +6040,38 @@ class $$ShiftsTableTableTableManager
                       },
                   getPrefetchedDataCallback: (items) async {
                     return [
-                      if (expensesTableRefs)
+                      if (expensesRefs)
                         await $_getPrefetchedData<
-                          ShiftsTableData,
-                          $ShiftsTableTable,
-                          ExpensesTableData
+                          ShiftDrift,
+                          $ShiftsTable,
+                          ExpenseDrift
                         >(
                           currentTable: table,
-                          referencedTable: $$ShiftsTableTableReferences
-                              ._expensesTableRefsTable(db),
+                          referencedTable: $$ShiftsTableReferences
+                              ._expensesRefsTable(db),
                           managerFromTypedResult: (p0) =>
-                              $$ShiftsTableTableReferences(
+                              $$ShiftsTableReferences(
                                 db,
                                 table,
                                 p0,
-                              ).expensesTableRefs,
+                              ).expensesRefs,
                           referencedItemsForCurrentItem:
                               (item, referencedItems) => referencedItems.where(
                                 (e) => e.shiftId == item.id,
                               ),
                           typedResults: items,
                         ),
-                      if (ordersTableRefs)
+                      if (ordersRefs)
                         await $_getPrefetchedData<
-                          ShiftsTableData,
-                          $ShiftsTableTable,
-                          OrdersTableData
+                          ShiftDrift,
+                          $ShiftsTable,
+                          OrderDrift
                         >(
                           currentTable: table,
-                          referencedTable: $$ShiftsTableTableReferences
-                              ._ordersTableRefsTable(db),
+                          referencedTable: $$ShiftsTableReferences
+                              ._ordersRefsTable(db),
                           managerFromTypedResult: (p0) =>
-                              $$ShiftsTableTableReferences(
-                                db,
-                                table,
-                                p0,
-                              ).ordersTableRefs,
+                              $$ShiftsTableReferences(db, table, p0).ordersRefs,
                           referencedItemsForCurrentItem:
                               (item, referencedItems) => referencedItems.where(
                                 (e) => e.shiftId == item.id,
@@ -6123,77 +6086,66 @@ class $$ShiftsTableTableTableManager
       );
 }
 
-typedef $$ShiftsTableTableProcessedTableManager =
+typedef $$ShiftsTableProcessedTableManager =
     ProcessedTableManager<
       _$AppDatabase,
-      $ShiftsTableTable,
-      ShiftsTableData,
-      $$ShiftsTableTableFilterComposer,
-      $$ShiftsTableTableOrderingComposer,
-      $$ShiftsTableTableAnnotationComposer,
-      $$ShiftsTableTableCreateCompanionBuilder,
-      $$ShiftsTableTableUpdateCompanionBuilder,
-      (ShiftsTableData, $$ShiftsTableTableReferences),
-      ShiftsTableData,
+      $ShiftsTable,
+      ShiftDrift,
+      $$ShiftsTableFilterComposer,
+      $$ShiftsTableOrderingComposer,
+      $$ShiftsTableAnnotationComposer,
+      $$ShiftsTableCreateCompanionBuilder,
+      $$ShiftsTableUpdateCompanionBuilder,
+      (ShiftDrift, $$ShiftsTableReferences),
+      ShiftDrift,
       PrefetchHooks Function({
         bool cashierId,
-        bool expensesTableRefs,
-        bool ordersTableRefs,
+        bool expensesRefs,
+        bool ordersRefs,
       })
     >;
-typedef $$CategoriesTableTableCreateCompanionBuilder =
-    CategoriesTableCompanion Function({
+typedef $$CategoriesTableCreateCompanionBuilder =
+    CategoriesCompanion Function({
       Value<int> id,
       required String name,
       required String createdAt,
       required String updatedAt,
     });
-typedef $$CategoriesTableTableUpdateCompanionBuilder =
-    CategoriesTableCompanion Function({
+typedef $$CategoriesTableUpdateCompanionBuilder =
+    CategoriesCompanion Function({
       Value<int> id,
       Value<String> name,
       Value<String> createdAt,
       Value<String> updatedAt,
     });
 
-final class $$CategoriesTableTableReferences
-    extends
-        BaseReferences<
-          _$AppDatabase,
-          $CategoriesTableTable,
-          CategoriesTableData
-        > {
-  $$CategoriesTableTableReferences(
-    super.$_db,
-    super.$_table,
-    super.$_typedResult,
+final class $$CategoriesTableReferences
+    extends BaseReferences<_$AppDatabase, $CategoriesTable, CategoryDrift> {
+  $$CategoriesTableReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static MultiTypedResultKey<$ItemsTable, List<ItemDrift>> _itemsRefsTable(
+    _$AppDatabase db,
+  ) => MultiTypedResultKey.fromTable(
+    db.items,
+    aliasName: $_aliasNameGenerator(db.categories.id, db.items.categoryId),
   );
 
-  static MultiTypedResultKey<$ItemsTableTable, List<ItemsTableData>>
-  _itemsTableRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
-    db.itemsTable,
-    aliasName: $_aliasNameGenerator(
-      db.categoriesTable.id,
-      db.itemsTable.categoryId,
-    ),
-  );
-
-  $$ItemsTableTableProcessedTableManager get itemsTableRefs {
-    final manager = $$ItemsTableTableTableManager(
+  $$ItemsTableProcessedTableManager get itemsRefs {
+    final manager = $$ItemsTableTableManager(
       $_db,
-      $_db.itemsTable,
+      $_db.items,
     ).filter((f) => f.categoryId.id.sqlEquals($_itemColumn<int>('id')!));
 
-    final cache = $_typedResult.readTableOrNull(_itemsTableRefsTable($_db));
+    final cache = $_typedResult.readTableOrNull(_itemsRefsTable($_db));
     return ProcessedTableManager(
       manager.$state.copyWith(prefetchedData: cache),
     );
   }
 }
 
-class $$CategoriesTableTableFilterComposer
-    extends Composer<_$AppDatabase, $CategoriesTableTable> {
-  $$CategoriesTableTableFilterComposer({
+class $$CategoriesTableFilterComposer
+    extends Composer<_$AppDatabase, $CategoriesTable> {
+  $$CategoriesTableFilterComposer({
     required super.$db,
     required super.$table,
     super.joinBuilder,
@@ -6220,22 +6172,22 @@ class $$CategoriesTableTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
-  Expression<bool> itemsTableRefs(
-    Expression<bool> Function($$ItemsTableTableFilterComposer f) f,
+  Expression<bool> itemsRefs(
+    Expression<bool> Function($$ItemsTableFilterComposer f) f,
   ) {
-    final $$ItemsTableTableFilterComposer composer = $composerBuilder(
+    final $$ItemsTableFilterComposer composer = $composerBuilder(
       composer: this,
       getCurrentColumn: (t) => t.id,
-      referencedTable: $db.itemsTable,
+      referencedTable: $db.items,
       getReferencedColumn: (t) => t.categoryId,
       builder:
           (
             joinBuilder, {
             $addJoinBuilderToRootComposer,
             $removeJoinBuilderFromRootComposer,
-          }) => $$ItemsTableTableFilterComposer(
+          }) => $$ItemsTableFilterComposer(
             $db: $db,
-            $table: $db.itemsTable,
+            $table: $db.items,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -6246,9 +6198,9 @@ class $$CategoriesTableTableFilterComposer
   }
 }
 
-class $$CategoriesTableTableOrderingComposer
-    extends Composer<_$AppDatabase, $CategoriesTableTable> {
-  $$CategoriesTableTableOrderingComposer({
+class $$CategoriesTableOrderingComposer
+    extends Composer<_$AppDatabase, $CategoriesTable> {
+  $$CategoriesTableOrderingComposer({
     required super.$db,
     required super.$table,
     super.joinBuilder,
@@ -6276,9 +6228,9 @@ class $$CategoriesTableTableOrderingComposer
   );
 }
 
-class $$CategoriesTableTableAnnotationComposer
-    extends Composer<_$AppDatabase, $CategoriesTableTable> {
-  $$CategoriesTableTableAnnotationComposer({
+class $$CategoriesTableAnnotationComposer
+    extends Composer<_$AppDatabase, $CategoriesTable> {
+  $$CategoriesTableAnnotationComposer({
     required super.$db,
     required super.$table,
     super.joinBuilder,
@@ -6297,22 +6249,22 @@ class $$CategoriesTableTableAnnotationComposer
   GeneratedColumn<String> get updatedAt =>
       $composableBuilder(column: $table.updatedAt, builder: (column) => column);
 
-  Expression<T> itemsTableRefs<T extends Object>(
-    Expression<T> Function($$ItemsTableTableAnnotationComposer a) f,
+  Expression<T> itemsRefs<T extends Object>(
+    Expression<T> Function($$ItemsTableAnnotationComposer a) f,
   ) {
-    final $$ItemsTableTableAnnotationComposer composer = $composerBuilder(
+    final $$ItemsTableAnnotationComposer composer = $composerBuilder(
       composer: this,
       getCurrentColumn: (t) => t.id,
-      referencedTable: $db.itemsTable,
+      referencedTable: $db.items,
       getReferencedColumn: (t) => t.categoryId,
       builder:
           (
             joinBuilder, {
             $addJoinBuilderToRootComposer,
             $removeJoinBuilderFromRootComposer,
-          }) => $$ItemsTableTableAnnotationComposer(
+          }) => $$ItemsTableAnnotationComposer(
             $db: $db,
-            $table: $db.itemsTable,
+            $table: $db.items,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -6323,41 +6275,39 @@ class $$CategoriesTableTableAnnotationComposer
   }
 }
 
-class $$CategoriesTableTableTableManager
+class $$CategoriesTableTableManager
     extends
         RootTableManager<
           _$AppDatabase,
-          $CategoriesTableTable,
-          CategoriesTableData,
-          $$CategoriesTableTableFilterComposer,
-          $$CategoriesTableTableOrderingComposer,
-          $$CategoriesTableTableAnnotationComposer,
-          $$CategoriesTableTableCreateCompanionBuilder,
-          $$CategoriesTableTableUpdateCompanionBuilder,
-          (CategoriesTableData, $$CategoriesTableTableReferences),
-          CategoriesTableData,
-          PrefetchHooks Function({bool itemsTableRefs})
+          $CategoriesTable,
+          CategoryDrift,
+          $$CategoriesTableFilterComposer,
+          $$CategoriesTableOrderingComposer,
+          $$CategoriesTableAnnotationComposer,
+          $$CategoriesTableCreateCompanionBuilder,
+          $$CategoriesTableUpdateCompanionBuilder,
+          (CategoryDrift, $$CategoriesTableReferences),
+          CategoryDrift,
+          PrefetchHooks Function({bool itemsRefs})
         > {
-  $$CategoriesTableTableTableManager(
-    _$AppDatabase db,
-    $CategoriesTableTable table,
-  ) : super(
+  $$CategoriesTableTableManager(_$AppDatabase db, $CategoriesTable table)
+    : super(
         TableManagerState(
           db: db,
           table: table,
           createFilteringComposer: () =>
-              $$CategoriesTableTableFilterComposer($db: db, $table: table),
+              $$CategoriesTableFilterComposer($db: db, $table: table),
           createOrderingComposer: () =>
-              $$CategoriesTableTableOrderingComposer($db: db, $table: table),
+              $$CategoriesTableOrderingComposer($db: db, $table: table),
           createComputedFieldComposer: () =>
-              $$CategoriesTableTableAnnotationComposer($db: db, $table: table),
+              $$CategoriesTableAnnotationComposer($db: db, $table: table),
           updateCompanionCallback:
               ({
                 Value<int> id = const Value.absent(),
                 Value<String> name = const Value.absent(),
                 Value<String> createdAt = const Value.absent(),
                 Value<String> updatedAt = const Value.absent(),
-              }) => CategoriesTableCompanion(
+              }) => CategoriesCompanion(
                 id: id,
                 name: name,
                 createdAt: createdAt,
@@ -6369,7 +6319,7 @@ class $$CategoriesTableTableTableManager
                 required String name,
                 required String createdAt,
                 required String updatedAt,
-              }) => CategoriesTableCompanion.insert(
+              }) => CategoriesCompanion.insert(
                 id: id,
                 name: name,
                 createdAt: createdAt,
@@ -6379,32 +6329,28 @@ class $$CategoriesTableTableTableManager
               .map(
                 (e) => (
                   e.readTable(table),
-                  $$CategoriesTableTableReferences(db, table, e),
+                  $$CategoriesTableReferences(db, table, e),
                 ),
               )
               .toList(),
-          prefetchHooksCallback: ({itemsTableRefs = false}) {
+          prefetchHooksCallback: ({itemsRefs = false}) {
             return PrefetchHooks(
               db: db,
-              explicitlyWatchedTables: [if (itemsTableRefs) db.itemsTable],
+              explicitlyWatchedTables: [if (itemsRefs) db.items],
               addJoins: null,
               getPrefetchedDataCallback: (items) async {
                 return [
-                  if (itemsTableRefs)
+                  if (itemsRefs)
                     await $_getPrefetchedData<
-                      CategoriesTableData,
-                      $CategoriesTableTable,
-                      ItemsTableData
+                      CategoryDrift,
+                      $CategoriesTable,
+                      ItemDrift
                     >(
                       currentTable: table,
-                      referencedTable: $$CategoriesTableTableReferences
-                          ._itemsTableRefsTable(db),
+                      referencedTable: $$CategoriesTableReferences
+                          ._itemsRefsTable(db),
                       managerFromTypedResult: (p0) =>
-                          $$CategoriesTableTableReferences(
-                            db,
-                            table,
-                            p0,
-                          ).itemsTableRefs,
+                          $$CategoriesTableReferences(db, table, p0).itemsRefs,
                       referencedItemsForCurrentItem: (item, referencedItems) =>
                           referencedItems.where((e) => e.categoryId == item.id),
                       typedResults: items,
@@ -6417,22 +6363,22 @@ class $$CategoriesTableTableTableManager
       );
 }
 
-typedef $$CategoriesTableTableProcessedTableManager =
+typedef $$CategoriesTableProcessedTableManager =
     ProcessedTableManager<
       _$AppDatabase,
-      $CategoriesTableTable,
-      CategoriesTableData,
-      $$CategoriesTableTableFilterComposer,
-      $$CategoriesTableTableOrderingComposer,
-      $$CategoriesTableTableAnnotationComposer,
-      $$CategoriesTableTableCreateCompanionBuilder,
-      $$CategoriesTableTableUpdateCompanionBuilder,
-      (CategoriesTableData, $$CategoriesTableTableReferences),
-      CategoriesTableData,
-      PrefetchHooks Function({bool itemsTableRefs})
+      $CategoriesTable,
+      CategoryDrift,
+      $$CategoriesTableFilterComposer,
+      $$CategoriesTableOrderingComposer,
+      $$CategoriesTableAnnotationComposer,
+      $$CategoriesTableCreateCompanionBuilder,
+      $$CategoriesTableUpdateCompanionBuilder,
+      (CategoryDrift, $$CategoriesTableReferences),
+      CategoryDrift,
+      PrefetchHooks Function({bool itemsRefs})
     >;
-typedef $$ItemsTableTableCreateCompanionBuilder =
-    ItemsTableCompanion Function({
+typedef $$ItemsTableCreateCompanionBuilder =
+    ItemsCompanion Function({
       Value<int> id,
       required int categoryId,
       required String name,
@@ -6440,8 +6386,8 @@ typedef $$ItemsTableTableCreateCompanionBuilder =
       required String createdAt,
       required String updatedAt,
     });
-typedef $$ItemsTableTableUpdateCompanionBuilder =
-    ItemsTableCompanion Function({
+typedef $$ItemsTableUpdateCompanionBuilder =
+    ItemsCompanion Function({
       Value<int> id,
       Value<int> categoryId,
       Value<String> name,
@@ -6450,21 +6396,19 @@ typedef $$ItemsTableTableUpdateCompanionBuilder =
       Value<String> updatedAt,
     });
 
-final class $$ItemsTableTableReferences
-    extends BaseReferences<_$AppDatabase, $ItemsTableTable, ItemsTableData> {
-  $$ItemsTableTableReferences(super.$_db, super.$_table, super.$_typedResult);
+final class $$ItemsTableReferences
+    extends BaseReferences<_$AppDatabase, $ItemsTable, ItemDrift> {
+  $$ItemsTableReferences(super.$_db, super.$_table, super.$_typedResult);
 
-  static $CategoriesTableTable _categoryIdTable(_$AppDatabase db) =>
-      db.categoriesTable.createAlias(
-        $_aliasNameGenerator(db.itemsTable.categoryId, db.categoriesTable.id),
-      );
+  static $CategoriesTable _categoryIdTable(_$AppDatabase db) => db.categories
+      .createAlias($_aliasNameGenerator(db.items.categoryId, db.categories.id));
 
-  $$CategoriesTableTableProcessedTableManager get categoryId {
+  $$CategoriesTableProcessedTableManager get categoryId {
     final $_column = $_itemColumn<int>('category_id')!;
 
-    final manager = $$CategoriesTableTableTableManager(
+    final manager = $$CategoriesTableTableManager(
       $_db,
-      $_db.categoriesTable,
+      $_db.categories,
     ).filter((f) => f.id.sqlEquals($_column));
     final item = $_typedResult.readTableOrNull(_categoryIdTable($_db));
     if (item == null) return manager;
@@ -6473,33 +6417,27 @@ final class $$ItemsTableTableReferences
     );
   }
 
-  static MultiTypedResultKey<$OrderItemsTableTable, List<OrderItemsTableData>>
-  _orderItemsTableRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
-    db.orderItemsTable,
-    aliasName: $_aliasNameGenerator(
-      db.itemsTable.id,
-      db.orderItemsTable.itemId,
-    ),
+  static MultiTypedResultKey<$OrderItemsTable, List<OrderItemsDrift>>
+  _orderItemsRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
+    db.orderItems,
+    aliasName: $_aliasNameGenerator(db.items.id, db.orderItems.itemId),
   );
 
-  $$OrderItemsTableTableProcessedTableManager get orderItemsTableRefs {
-    final manager = $$OrderItemsTableTableTableManager(
+  $$OrderItemsTableProcessedTableManager get orderItemsRefs {
+    final manager = $$OrderItemsTableTableManager(
       $_db,
-      $_db.orderItemsTable,
+      $_db.orderItems,
     ).filter((f) => f.itemId.id.sqlEquals($_itemColumn<int>('id')!));
 
-    final cache = $_typedResult.readTableOrNull(
-      _orderItemsTableRefsTable($_db),
-    );
+    final cache = $_typedResult.readTableOrNull(_orderItemsRefsTable($_db));
     return ProcessedTableManager(
       manager.$state.copyWith(prefetchedData: cache),
     );
   }
 }
 
-class $$ItemsTableTableFilterComposer
-    extends Composer<_$AppDatabase, $ItemsTableTable> {
-  $$ItemsTableTableFilterComposer({
+class $$ItemsTableFilterComposer extends Composer<_$AppDatabase, $ItemsTable> {
+  $$ItemsTableFilterComposer({
     required super.$db,
     required super.$table,
     super.joinBuilder,
@@ -6531,20 +6469,20 @@ class $$ItemsTableTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
-  $$CategoriesTableTableFilterComposer get categoryId {
-    final $$CategoriesTableTableFilterComposer composer = $composerBuilder(
+  $$CategoriesTableFilterComposer get categoryId {
+    final $$CategoriesTableFilterComposer composer = $composerBuilder(
       composer: this,
       getCurrentColumn: (t) => t.categoryId,
-      referencedTable: $db.categoriesTable,
+      referencedTable: $db.categories,
       getReferencedColumn: (t) => t.id,
       builder:
           (
             joinBuilder, {
             $addJoinBuilderToRootComposer,
             $removeJoinBuilderFromRootComposer,
-          }) => $$CategoriesTableTableFilterComposer(
+          }) => $$CategoriesTableFilterComposer(
             $db: $db,
-            $table: $db.categoriesTable,
+            $table: $db.categories,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -6554,22 +6492,22 @@ class $$ItemsTableTableFilterComposer
     return composer;
   }
 
-  Expression<bool> orderItemsTableRefs(
-    Expression<bool> Function($$OrderItemsTableTableFilterComposer f) f,
+  Expression<bool> orderItemsRefs(
+    Expression<bool> Function($$OrderItemsTableFilterComposer f) f,
   ) {
-    final $$OrderItemsTableTableFilterComposer composer = $composerBuilder(
+    final $$OrderItemsTableFilterComposer composer = $composerBuilder(
       composer: this,
       getCurrentColumn: (t) => t.id,
-      referencedTable: $db.orderItemsTable,
+      referencedTable: $db.orderItems,
       getReferencedColumn: (t) => t.itemId,
       builder:
           (
             joinBuilder, {
             $addJoinBuilderToRootComposer,
             $removeJoinBuilderFromRootComposer,
-          }) => $$OrderItemsTableTableFilterComposer(
+          }) => $$OrderItemsTableFilterComposer(
             $db: $db,
-            $table: $db.orderItemsTable,
+            $table: $db.orderItems,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -6580,9 +6518,9 @@ class $$ItemsTableTableFilterComposer
   }
 }
 
-class $$ItemsTableTableOrderingComposer
-    extends Composer<_$AppDatabase, $ItemsTableTable> {
-  $$ItemsTableTableOrderingComposer({
+class $$ItemsTableOrderingComposer
+    extends Composer<_$AppDatabase, $ItemsTable> {
+  $$ItemsTableOrderingComposer({
     required super.$db,
     required super.$table,
     super.joinBuilder,
@@ -6614,20 +6552,20 @@ class $$ItemsTableTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
-  $$CategoriesTableTableOrderingComposer get categoryId {
-    final $$CategoriesTableTableOrderingComposer composer = $composerBuilder(
+  $$CategoriesTableOrderingComposer get categoryId {
+    final $$CategoriesTableOrderingComposer composer = $composerBuilder(
       composer: this,
       getCurrentColumn: (t) => t.categoryId,
-      referencedTable: $db.categoriesTable,
+      referencedTable: $db.categories,
       getReferencedColumn: (t) => t.id,
       builder:
           (
             joinBuilder, {
             $addJoinBuilderToRootComposer,
             $removeJoinBuilderFromRootComposer,
-          }) => $$CategoriesTableTableOrderingComposer(
+          }) => $$CategoriesTableOrderingComposer(
             $db: $db,
-            $table: $db.categoriesTable,
+            $table: $db.categories,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -6638,9 +6576,9 @@ class $$ItemsTableTableOrderingComposer
   }
 }
 
-class $$ItemsTableTableAnnotationComposer
-    extends Composer<_$AppDatabase, $ItemsTableTable> {
-  $$ItemsTableTableAnnotationComposer({
+class $$ItemsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $ItemsTable> {
+  $$ItemsTableAnnotationComposer({
     required super.$db,
     required super.$table,
     super.joinBuilder,
@@ -6662,20 +6600,20 @@ class $$ItemsTableTableAnnotationComposer
   GeneratedColumn<String> get updatedAt =>
       $composableBuilder(column: $table.updatedAt, builder: (column) => column);
 
-  $$CategoriesTableTableAnnotationComposer get categoryId {
-    final $$CategoriesTableTableAnnotationComposer composer = $composerBuilder(
+  $$CategoriesTableAnnotationComposer get categoryId {
+    final $$CategoriesTableAnnotationComposer composer = $composerBuilder(
       composer: this,
       getCurrentColumn: (t) => t.categoryId,
-      referencedTable: $db.categoriesTable,
+      referencedTable: $db.categories,
       getReferencedColumn: (t) => t.id,
       builder:
           (
             joinBuilder, {
             $addJoinBuilderToRootComposer,
             $removeJoinBuilderFromRootComposer,
-          }) => $$CategoriesTableTableAnnotationComposer(
+          }) => $$CategoriesTableAnnotationComposer(
             $db: $db,
-            $table: $db.categoriesTable,
+            $table: $db.categories,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -6685,22 +6623,22 @@ class $$ItemsTableTableAnnotationComposer
     return composer;
   }
 
-  Expression<T> orderItemsTableRefs<T extends Object>(
-    Expression<T> Function($$OrderItemsTableTableAnnotationComposer a) f,
+  Expression<T> orderItemsRefs<T extends Object>(
+    Expression<T> Function($$OrderItemsTableAnnotationComposer a) f,
   ) {
-    final $$OrderItemsTableTableAnnotationComposer composer = $composerBuilder(
+    final $$OrderItemsTableAnnotationComposer composer = $composerBuilder(
       composer: this,
       getCurrentColumn: (t) => t.id,
-      referencedTable: $db.orderItemsTable,
+      referencedTable: $db.orderItems,
       getReferencedColumn: (t) => t.itemId,
       builder:
           (
             joinBuilder, {
             $addJoinBuilderToRootComposer,
             $removeJoinBuilderFromRootComposer,
-          }) => $$OrderItemsTableTableAnnotationComposer(
+          }) => $$OrderItemsTableAnnotationComposer(
             $db: $db,
-            $table: $db.orderItemsTable,
+            $table: $db.orderItems,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -6711,32 +6649,32 @@ class $$ItemsTableTableAnnotationComposer
   }
 }
 
-class $$ItemsTableTableTableManager
+class $$ItemsTableTableManager
     extends
         RootTableManager<
           _$AppDatabase,
-          $ItemsTableTable,
-          ItemsTableData,
-          $$ItemsTableTableFilterComposer,
-          $$ItemsTableTableOrderingComposer,
-          $$ItemsTableTableAnnotationComposer,
-          $$ItemsTableTableCreateCompanionBuilder,
-          $$ItemsTableTableUpdateCompanionBuilder,
-          (ItemsTableData, $$ItemsTableTableReferences),
-          ItemsTableData,
-          PrefetchHooks Function({bool categoryId, bool orderItemsTableRefs})
+          $ItemsTable,
+          ItemDrift,
+          $$ItemsTableFilterComposer,
+          $$ItemsTableOrderingComposer,
+          $$ItemsTableAnnotationComposer,
+          $$ItemsTableCreateCompanionBuilder,
+          $$ItemsTableUpdateCompanionBuilder,
+          (ItemDrift, $$ItemsTableReferences),
+          ItemDrift,
+          PrefetchHooks Function({bool categoryId, bool orderItemsRefs})
         > {
-  $$ItemsTableTableTableManager(_$AppDatabase db, $ItemsTableTable table)
+  $$ItemsTableTableManager(_$AppDatabase db, $ItemsTable table)
     : super(
         TableManagerState(
           db: db,
           table: table,
           createFilteringComposer: () =>
-              $$ItemsTableTableFilterComposer($db: db, $table: table),
+              $$ItemsTableFilterComposer($db: db, $table: table),
           createOrderingComposer: () =>
-              $$ItemsTableTableOrderingComposer($db: db, $table: table),
+              $$ItemsTableOrderingComposer($db: db, $table: table),
           createComputedFieldComposer: () =>
-              $$ItemsTableTableAnnotationComposer($db: db, $table: table),
+              $$ItemsTableAnnotationComposer($db: db, $table: table),
           updateCompanionCallback:
               ({
                 Value<int> id = const Value.absent(),
@@ -6745,7 +6683,7 @@ class $$ItemsTableTableTableManager
                 Value<int> price = const Value.absent(),
                 Value<String> createdAt = const Value.absent(),
                 Value<String> updatedAt = const Value.absent(),
-              }) => ItemsTableCompanion(
+              }) => ItemsCompanion(
                 id: id,
                 categoryId: categoryId,
                 name: name,
@@ -6761,7 +6699,7 @@ class $$ItemsTableTableTableManager
                 required int price,
                 required String createdAt,
                 required String updatedAt,
-              }) => ItemsTableCompanion.insert(
+              }) => ItemsCompanion.insert(
                 id: id,
                 categoryId: categoryId,
                 name: name,
@@ -6771,19 +6709,15 @@ class $$ItemsTableTableTableManager
               ),
           withReferenceMapper: (p0) => p0
               .map(
-                (e) => (
-                  e.readTable(table),
-                  $$ItemsTableTableReferences(db, table, e),
-                ),
+                (e) =>
+                    (e.readTable(table), $$ItemsTableReferences(db, table, e)),
               )
               .toList(),
           prefetchHooksCallback:
-              ({categoryId = false, orderItemsTableRefs = false}) {
+              ({categoryId = false, orderItemsRefs = false}) {
                 return PrefetchHooks(
                   db: db,
-                  explicitlyWatchedTables: [
-                    if (orderItemsTableRefs) db.orderItemsTable,
-                  ],
+                  explicitlyWatchedTables: [if (orderItemsRefs) db.orderItems],
                   addJoins:
                       <
                         T extends TableManagerState<
@@ -6805,12 +6739,11 @@ class $$ItemsTableTableTableManager
                               state.withJoin(
                                     currentTable: table,
                                     currentColumn: table.categoryId,
-                                    referencedTable: $$ItemsTableTableReferences
+                                    referencedTable: $$ItemsTableReferences
                                         ._categoryIdTable(db),
-                                    referencedColumn:
-                                        $$ItemsTableTableReferences
-                                            ._categoryIdTable(db)
-                                            .id,
+                                    referencedColumn: $$ItemsTableReferences
+                                        ._categoryIdTable(db)
+                                        .id,
                                   )
                                   as T;
                         }
@@ -6819,21 +6752,21 @@ class $$ItemsTableTableTableManager
                       },
                   getPrefetchedDataCallback: (items) async {
                     return [
-                      if (orderItemsTableRefs)
+                      if (orderItemsRefs)
                         await $_getPrefetchedData<
-                          ItemsTableData,
-                          $ItemsTableTable,
-                          OrderItemsTableData
+                          ItemDrift,
+                          $ItemsTable,
+                          OrderItemsDrift
                         >(
                           currentTable: table,
-                          referencedTable: $$ItemsTableTableReferences
-                              ._orderItemsTableRefsTable(db),
+                          referencedTable: $$ItemsTableReferences
+                              ._orderItemsRefsTable(db),
                           managerFromTypedResult: (p0) =>
-                              $$ItemsTableTableReferences(
+                              $$ItemsTableReferences(
                                 db,
                                 table,
                                 p0,
-                              ).orderItemsTableRefs,
+                              ).orderItemsRefs,
                           referencedItemsForCurrentItem:
                               (item, referencedItems) => referencedItems.where(
                                 (e) => e.itemId == item.id,
@@ -6848,30 +6781,30 @@ class $$ItemsTableTableTableManager
       );
 }
 
-typedef $$ItemsTableTableProcessedTableManager =
+typedef $$ItemsTableProcessedTableManager =
     ProcessedTableManager<
       _$AppDatabase,
-      $ItemsTableTable,
-      ItemsTableData,
-      $$ItemsTableTableFilterComposer,
-      $$ItemsTableTableOrderingComposer,
-      $$ItemsTableTableAnnotationComposer,
-      $$ItemsTableTableCreateCompanionBuilder,
-      $$ItemsTableTableUpdateCompanionBuilder,
-      (ItemsTableData, $$ItemsTableTableReferences),
-      ItemsTableData,
-      PrefetchHooks Function({bool categoryId, bool orderItemsTableRefs})
+      $ItemsTable,
+      ItemDrift,
+      $$ItemsTableFilterComposer,
+      $$ItemsTableOrderingComposer,
+      $$ItemsTableAnnotationComposer,
+      $$ItemsTableCreateCompanionBuilder,
+      $$ItemsTableUpdateCompanionBuilder,
+      (ItemDrift, $$ItemsTableReferences),
+      ItemDrift,
+      PrefetchHooks Function({bool categoryId, bool orderItemsRefs})
     >;
-typedef $$ExpensesTableTableCreateCompanionBuilder =
-    ExpensesTableCompanion Function({
+typedef $$ExpensesTableCreateCompanionBuilder =
+    ExpensesCompanion Function({
       Value<int> id,
       required int shiftId,
       required int amount,
       required String reason,
       required String createdAt,
     });
-typedef $$ExpensesTableTableUpdateCompanionBuilder =
-    ExpensesTableCompanion Function({
+typedef $$ExpensesTableUpdateCompanionBuilder =
+    ExpensesCompanion Function({
       Value<int> id,
       Value<int> shiftId,
       Value<int> amount,
@@ -6879,26 +6812,20 @@ typedef $$ExpensesTableTableUpdateCompanionBuilder =
       Value<String> createdAt,
     });
 
-final class $$ExpensesTableTableReferences
-    extends
-        BaseReferences<_$AppDatabase, $ExpensesTableTable, ExpensesTableData> {
-  $$ExpensesTableTableReferences(
-    super.$_db,
-    super.$_table,
-    super.$_typedResult,
+final class $$ExpensesTableReferences
+    extends BaseReferences<_$AppDatabase, $ExpensesTable, ExpenseDrift> {
+  $$ExpensesTableReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static $ShiftsTable _shiftIdTable(_$AppDatabase db) => db.shifts.createAlias(
+    $_aliasNameGenerator(db.expenses.shiftId, db.shifts.id),
   );
 
-  static $ShiftsTableTable _shiftIdTable(_$AppDatabase db) =>
-      db.shiftsTable.createAlias(
-        $_aliasNameGenerator(db.expensesTable.shiftId, db.shiftsTable.id),
-      );
-
-  $$ShiftsTableTableProcessedTableManager get shiftId {
+  $$ShiftsTableProcessedTableManager get shiftId {
     final $_column = $_itemColumn<int>('shift_id')!;
 
-    final manager = $$ShiftsTableTableTableManager(
+    final manager = $$ShiftsTableTableManager(
       $_db,
-      $_db.shiftsTable,
+      $_db.shifts,
     ).filter((f) => f.id.sqlEquals($_column));
     final item = $_typedResult.readTableOrNull(_shiftIdTable($_db));
     if (item == null) return manager;
@@ -6908,9 +6835,9 @@ final class $$ExpensesTableTableReferences
   }
 }
 
-class $$ExpensesTableTableFilterComposer
-    extends Composer<_$AppDatabase, $ExpensesTableTable> {
-  $$ExpensesTableTableFilterComposer({
+class $$ExpensesTableFilterComposer
+    extends Composer<_$AppDatabase, $ExpensesTable> {
+  $$ExpensesTableFilterComposer({
     required super.$db,
     required super.$table,
     super.joinBuilder,
@@ -6937,20 +6864,20 @@ class $$ExpensesTableTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
-  $$ShiftsTableTableFilterComposer get shiftId {
-    final $$ShiftsTableTableFilterComposer composer = $composerBuilder(
+  $$ShiftsTableFilterComposer get shiftId {
+    final $$ShiftsTableFilterComposer composer = $composerBuilder(
       composer: this,
       getCurrentColumn: (t) => t.shiftId,
-      referencedTable: $db.shiftsTable,
+      referencedTable: $db.shifts,
       getReferencedColumn: (t) => t.id,
       builder:
           (
             joinBuilder, {
             $addJoinBuilderToRootComposer,
             $removeJoinBuilderFromRootComposer,
-          }) => $$ShiftsTableTableFilterComposer(
+          }) => $$ShiftsTableFilterComposer(
             $db: $db,
-            $table: $db.shiftsTable,
+            $table: $db.shifts,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -6961,9 +6888,9 @@ class $$ExpensesTableTableFilterComposer
   }
 }
 
-class $$ExpensesTableTableOrderingComposer
-    extends Composer<_$AppDatabase, $ExpensesTableTable> {
-  $$ExpensesTableTableOrderingComposer({
+class $$ExpensesTableOrderingComposer
+    extends Composer<_$AppDatabase, $ExpensesTable> {
+  $$ExpensesTableOrderingComposer({
     required super.$db,
     required super.$table,
     super.joinBuilder,
@@ -6990,20 +6917,20 @@ class $$ExpensesTableTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
-  $$ShiftsTableTableOrderingComposer get shiftId {
-    final $$ShiftsTableTableOrderingComposer composer = $composerBuilder(
+  $$ShiftsTableOrderingComposer get shiftId {
+    final $$ShiftsTableOrderingComposer composer = $composerBuilder(
       composer: this,
       getCurrentColumn: (t) => t.shiftId,
-      referencedTable: $db.shiftsTable,
+      referencedTable: $db.shifts,
       getReferencedColumn: (t) => t.id,
       builder:
           (
             joinBuilder, {
             $addJoinBuilderToRootComposer,
             $removeJoinBuilderFromRootComposer,
-          }) => $$ShiftsTableTableOrderingComposer(
+          }) => $$ShiftsTableOrderingComposer(
             $db: $db,
-            $table: $db.shiftsTable,
+            $table: $db.shifts,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -7014,9 +6941,9 @@ class $$ExpensesTableTableOrderingComposer
   }
 }
 
-class $$ExpensesTableTableAnnotationComposer
-    extends Composer<_$AppDatabase, $ExpensesTableTable> {
-  $$ExpensesTableTableAnnotationComposer({
+class $$ExpensesTableAnnotationComposer
+    extends Composer<_$AppDatabase, $ExpensesTable> {
+  $$ExpensesTableAnnotationComposer({
     required super.$db,
     required super.$table,
     super.joinBuilder,
@@ -7035,20 +6962,20 @@ class $$ExpensesTableTableAnnotationComposer
   GeneratedColumn<String> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
 
-  $$ShiftsTableTableAnnotationComposer get shiftId {
-    final $$ShiftsTableTableAnnotationComposer composer = $composerBuilder(
+  $$ShiftsTableAnnotationComposer get shiftId {
+    final $$ShiftsTableAnnotationComposer composer = $composerBuilder(
       composer: this,
       getCurrentColumn: (t) => t.shiftId,
-      referencedTable: $db.shiftsTable,
+      referencedTable: $db.shifts,
       getReferencedColumn: (t) => t.id,
       builder:
           (
             joinBuilder, {
             $addJoinBuilderToRootComposer,
             $removeJoinBuilderFromRootComposer,
-          }) => $$ShiftsTableTableAnnotationComposer(
+          }) => $$ShiftsTableAnnotationComposer(
             $db: $db,
-            $table: $db.shiftsTable,
+            $table: $db.shifts,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -7059,32 +6986,32 @@ class $$ExpensesTableTableAnnotationComposer
   }
 }
 
-class $$ExpensesTableTableTableManager
+class $$ExpensesTableTableManager
     extends
         RootTableManager<
           _$AppDatabase,
-          $ExpensesTableTable,
-          ExpensesTableData,
-          $$ExpensesTableTableFilterComposer,
-          $$ExpensesTableTableOrderingComposer,
-          $$ExpensesTableTableAnnotationComposer,
-          $$ExpensesTableTableCreateCompanionBuilder,
-          $$ExpensesTableTableUpdateCompanionBuilder,
-          (ExpensesTableData, $$ExpensesTableTableReferences),
-          ExpensesTableData,
+          $ExpensesTable,
+          ExpenseDrift,
+          $$ExpensesTableFilterComposer,
+          $$ExpensesTableOrderingComposer,
+          $$ExpensesTableAnnotationComposer,
+          $$ExpensesTableCreateCompanionBuilder,
+          $$ExpensesTableUpdateCompanionBuilder,
+          (ExpenseDrift, $$ExpensesTableReferences),
+          ExpenseDrift,
           PrefetchHooks Function({bool shiftId})
         > {
-  $$ExpensesTableTableTableManager(_$AppDatabase db, $ExpensesTableTable table)
+  $$ExpensesTableTableManager(_$AppDatabase db, $ExpensesTable table)
     : super(
         TableManagerState(
           db: db,
           table: table,
           createFilteringComposer: () =>
-              $$ExpensesTableTableFilterComposer($db: db, $table: table),
+              $$ExpensesTableFilterComposer($db: db, $table: table),
           createOrderingComposer: () =>
-              $$ExpensesTableTableOrderingComposer($db: db, $table: table),
+              $$ExpensesTableOrderingComposer($db: db, $table: table),
           createComputedFieldComposer: () =>
-              $$ExpensesTableTableAnnotationComposer($db: db, $table: table),
+              $$ExpensesTableAnnotationComposer($db: db, $table: table),
           updateCompanionCallback:
               ({
                 Value<int> id = const Value.absent(),
@@ -7092,7 +7019,7 @@ class $$ExpensesTableTableTableManager
                 Value<int> amount = const Value.absent(),
                 Value<String> reason = const Value.absent(),
                 Value<String> createdAt = const Value.absent(),
-              }) => ExpensesTableCompanion(
+              }) => ExpensesCompanion(
                 id: id,
                 shiftId: shiftId,
                 amount: amount,
@@ -7106,7 +7033,7 @@ class $$ExpensesTableTableTableManager
                 required int amount,
                 required String reason,
                 required String createdAt,
-              }) => ExpensesTableCompanion.insert(
+              }) => ExpensesCompanion.insert(
                 id: id,
                 shiftId: shiftId,
                 amount: amount,
@@ -7117,7 +7044,7 @@ class $$ExpensesTableTableTableManager
               .map(
                 (e) => (
                   e.readTable(table),
-                  $$ExpensesTableTableReferences(db, table, e),
+                  $$ExpensesTableReferences(db, table, e),
                 ),
               )
               .toList(),
@@ -7146,9 +7073,9 @@ class $$ExpensesTableTableTableManager
                           state.withJoin(
                                 currentTable: table,
                                 currentColumn: table.shiftId,
-                                referencedTable: $$ExpensesTableTableReferences
+                                referencedTable: $$ExpensesTableReferences
                                     ._shiftIdTable(db),
-                                referencedColumn: $$ExpensesTableTableReferences
+                                referencedColumn: $$ExpensesTableReferences
                                     ._shiftIdTable(db)
                                     .id,
                               )
@@ -7166,22 +7093,22 @@ class $$ExpensesTableTableTableManager
       );
 }
 
-typedef $$ExpensesTableTableProcessedTableManager =
+typedef $$ExpensesTableProcessedTableManager =
     ProcessedTableManager<
       _$AppDatabase,
-      $ExpensesTableTable,
-      ExpensesTableData,
-      $$ExpensesTableTableFilterComposer,
-      $$ExpensesTableTableOrderingComposer,
-      $$ExpensesTableTableAnnotationComposer,
-      $$ExpensesTableTableCreateCompanionBuilder,
-      $$ExpensesTableTableUpdateCompanionBuilder,
-      (ExpensesTableData, $$ExpensesTableTableReferences),
-      ExpensesTableData,
+      $ExpensesTable,
+      ExpenseDrift,
+      $$ExpensesTableFilterComposer,
+      $$ExpensesTableOrderingComposer,
+      $$ExpensesTableAnnotationComposer,
+      $$ExpensesTableCreateCompanionBuilder,
+      $$ExpensesTableUpdateCompanionBuilder,
+      (ExpenseDrift, $$ExpensesTableReferences),
+      ExpenseDrift,
       PrefetchHooks Function({bool shiftId})
     >;
-typedef $$OrdersTableTableCreateCompanionBuilder =
-    OrdersTableCompanion Function({
+typedef $$OrdersTableCreateCompanionBuilder =
+    OrdersCompanion Function({
       Value<int> id,
       required int shiftId,
       required String orderType,
@@ -7198,8 +7125,8 @@ typedef $$OrdersTableTableCreateCompanionBuilder =
       Value<String> customerAddress,
       required String createdAt,
     });
-typedef $$OrdersTableTableUpdateCompanionBuilder =
-    OrdersTableCompanion Function({
+typedef $$OrdersTableUpdateCompanionBuilder =
+    OrdersCompanion Function({
       Value<int> id,
       Value<int> shiftId,
       Value<String> orderType,
@@ -7217,21 +7144,20 @@ typedef $$OrdersTableTableUpdateCompanionBuilder =
       Value<String> createdAt,
     });
 
-final class $$OrdersTableTableReferences
-    extends BaseReferences<_$AppDatabase, $OrdersTableTable, OrdersTableData> {
-  $$OrdersTableTableReferences(super.$_db, super.$_table, super.$_typedResult);
+final class $$OrdersTableReferences
+    extends BaseReferences<_$AppDatabase, $OrdersTable, OrderDrift> {
+  $$OrdersTableReferences(super.$_db, super.$_table, super.$_typedResult);
 
-  static $ShiftsTableTable _shiftIdTable(_$AppDatabase db) =>
-      db.shiftsTable.createAlias(
-        $_aliasNameGenerator(db.ordersTable.shiftId, db.shiftsTable.id),
-      );
+  static $ShiftsTable _shiftIdTable(_$AppDatabase db) => db.shifts.createAlias(
+    $_aliasNameGenerator(db.orders.shiftId, db.shifts.id),
+  );
 
-  $$ShiftsTableTableProcessedTableManager get shiftId {
+  $$ShiftsTableProcessedTableManager get shiftId {
     final $_column = $_itemColumn<int>('shift_id')!;
 
-    final manager = $$ShiftsTableTableTableManager(
+    final manager = $$ShiftsTableTableManager(
       $_db,
-      $_db.shiftsTable,
+      $_db.shifts,
     ).filter((f) => f.id.sqlEquals($_column));
     final item = $_typedResult.readTableOrNull(_shiftIdTable($_db));
     if (item == null) return manager;
@@ -7240,33 +7166,28 @@ final class $$OrdersTableTableReferences
     );
   }
 
-  static MultiTypedResultKey<$OrderItemsTableTable, List<OrderItemsTableData>>
-  _orderItemsTableRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
-    db.orderItemsTable,
-    aliasName: $_aliasNameGenerator(
-      db.ordersTable.id,
-      db.orderItemsTable.orderId,
-    ),
+  static MultiTypedResultKey<$OrderItemsTable, List<OrderItemsDrift>>
+  _orderItemsRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
+    db.orderItems,
+    aliasName: $_aliasNameGenerator(db.orders.id, db.orderItems.orderId),
   );
 
-  $$OrderItemsTableTableProcessedTableManager get orderItemsTableRefs {
-    final manager = $$OrderItemsTableTableTableManager(
+  $$OrderItemsTableProcessedTableManager get orderItemsRefs {
+    final manager = $$OrderItemsTableTableManager(
       $_db,
-      $_db.orderItemsTable,
+      $_db.orderItems,
     ).filter((f) => f.orderId.id.sqlEquals($_itemColumn<int>('id')!));
 
-    final cache = $_typedResult.readTableOrNull(
-      _orderItemsTableRefsTable($_db),
-    );
+    final cache = $_typedResult.readTableOrNull(_orderItemsRefsTable($_db));
     return ProcessedTableManager(
       manager.$state.copyWith(prefetchedData: cache),
     );
   }
 }
 
-class $$OrdersTableTableFilterComposer
-    extends Composer<_$AppDatabase, $OrdersTableTable> {
-  $$OrdersTableTableFilterComposer({
+class $$OrdersTableFilterComposer
+    extends Composer<_$AppDatabase, $OrdersTable> {
+  $$OrdersTableFilterComposer({
     required super.$db,
     required super.$table,
     super.joinBuilder,
@@ -7343,20 +7264,20 @@ class $$OrdersTableTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
-  $$ShiftsTableTableFilterComposer get shiftId {
-    final $$ShiftsTableTableFilterComposer composer = $composerBuilder(
+  $$ShiftsTableFilterComposer get shiftId {
+    final $$ShiftsTableFilterComposer composer = $composerBuilder(
       composer: this,
       getCurrentColumn: (t) => t.shiftId,
-      referencedTable: $db.shiftsTable,
+      referencedTable: $db.shifts,
       getReferencedColumn: (t) => t.id,
       builder:
           (
             joinBuilder, {
             $addJoinBuilderToRootComposer,
             $removeJoinBuilderFromRootComposer,
-          }) => $$ShiftsTableTableFilterComposer(
+          }) => $$ShiftsTableFilterComposer(
             $db: $db,
-            $table: $db.shiftsTable,
+            $table: $db.shifts,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -7366,22 +7287,22 @@ class $$OrdersTableTableFilterComposer
     return composer;
   }
 
-  Expression<bool> orderItemsTableRefs(
-    Expression<bool> Function($$OrderItemsTableTableFilterComposer f) f,
+  Expression<bool> orderItemsRefs(
+    Expression<bool> Function($$OrderItemsTableFilterComposer f) f,
   ) {
-    final $$OrderItemsTableTableFilterComposer composer = $composerBuilder(
+    final $$OrderItemsTableFilterComposer composer = $composerBuilder(
       composer: this,
       getCurrentColumn: (t) => t.id,
-      referencedTable: $db.orderItemsTable,
+      referencedTable: $db.orderItems,
       getReferencedColumn: (t) => t.orderId,
       builder:
           (
             joinBuilder, {
             $addJoinBuilderToRootComposer,
             $removeJoinBuilderFromRootComposer,
-          }) => $$OrderItemsTableTableFilterComposer(
+          }) => $$OrderItemsTableFilterComposer(
             $db: $db,
-            $table: $db.orderItemsTable,
+            $table: $db.orderItems,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -7392,9 +7313,9 @@ class $$OrdersTableTableFilterComposer
   }
 }
 
-class $$OrdersTableTableOrderingComposer
-    extends Composer<_$AppDatabase, $OrdersTableTable> {
-  $$OrdersTableTableOrderingComposer({
+class $$OrdersTableOrderingComposer
+    extends Composer<_$AppDatabase, $OrdersTable> {
+  $$OrdersTableOrderingComposer({
     required super.$db,
     required super.$table,
     super.joinBuilder,
@@ -7471,20 +7392,20 @@ class $$OrdersTableTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
-  $$ShiftsTableTableOrderingComposer get shiftId {
-    final $$ShiftsTableTableOrderingComposer composer = $composerBuilder(
+  $$ShiftsTableOrderingComposer get shiftId {
+    final $$ShiftsTableOrderingComposer composer = $composerBuilder(
       composer: this,
       getCurrentColumn: (t) => t.shiftId,
-      referencedTable: $db.shiftsTable,
+      referencedTable: $db.shifts,
       getReferencedColumn: (t) => t.id,
       builder:
           (
             joinBuilder, {
             $addJoinBuilderToRootComposer,
             $removeJoinBuilderFromRootComposer,
-          }) => $$ShiftsTableTableOrderingComposer(
+          }) => $$ShiftsTableOrderingComposer(
             $db: $db,
-            $table: $db.shiftsTable,
+            $table: $db.shifts,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -7495,9 +7416,9 @@ class $$OrdersTableTableOrderingComposer
   }
 }
 
-class $$OrdersTableTableAnnotationComposer
-    extends Composer<_$AppDatabase, $OrdersTableTable> {
-  $$OrdersTableTableAnnotationComposer({
+class $$OrdersTableAnnotationComposer
+    extends Composer<_$AppDatabase, $OrdersTable> {
+  $$OrdersTableAnnotationComposer({
     required super.$db,
     required super.$table,
     super.joinBuilder,
@@ -7558,20 +7479,20 @@ class $$OrdersTableTableAnnotationComposer
   GeneratedColumn<String> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
 
-  $$ShiftsTableTableAnnotationComposer get shiftId {
-    final $$ShiftsTableTableAnnotationComposer composer = $composerBuilder(
+  $$ShiftsTableAnnotationComposer get shiftId {
+    final $$ShiftsTableAnnotationComposer composer = $composerBuilder(
       composer: this,
       getCurrentColumn: (t) => t.shiftId,
-      referencedTable: $db.shiftsTable,
+      referencedTable: $db.shifts,
       getReferencedColumn: (t) => t.id,
       builder:
           (
             joinBuilder, {
             $addJoinBuilderToRootComposer,
             $removeJoinBuilderFromRootComposer,
-          }) => $$ShiftsTableTableAnnotationComposer(
+          }) => $$ShiftsTableAnnotationComposer(
             $db: $db,
-            $table: $db.shiftsTable,
+            $table: $db.shifts,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -7581,22 +7502,22 @@ class $$OrdersTableTableAnnotationComposer
     return composer;
   }
 
-  Expression<T> orderItemsTableRefs<T extends Object>(
-    Expression<T> Function($$OrderItemsTableTableAnnotationComposer a) f,
+  Expression<T> orderItemsRefs<T extends Object>(
+    Expression<T> Function($$OrderItemsTableAnnotationComposer a) f,
   ) {
-    final $$OrderItemsTableTableAnnotationComposer composer = $composerBuilder(
+    final $$OrderItemsTableAnnotationComposer composer = $composerBuilder(
       composer: this,
       getCurrentColumn: (t) => t.id,
-      referencedTable: $db.orderItemsTable,
+      referencedTable: $db.orderItems,
       getReferencedColumn: (t) => t.orderId,
       builder:
           (
             joinBuilder, {
             $addJoinBuilderToRootComposer,
             $removeJoinBuilderFromRootComposer,
-          }) => $$OrderItemsTableTableAnnotationComposer(
+          }) => $$OrderItemsTableAnnotationComposer(
             $db: $db,
-            $table: $db.orderItemsTable,
+            $table: $db.orderItems,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -7607,32 +7528,32 @@ class $$OrdersTableTableAnnotationComposer
   }
 }
 
-class $$OrdersTableTableTableManager
+class $$OrdersTableTableManager
     extends
         RootTableManager<
           _$AppDatabase,
-          $OrdersTableTable,
-          OrdersTableData,
-          $$OrdersTableTableFilterComposer,
-          $$OrdersTableTableOrderingComposer,
-          $$OrdersTableTableAnnotationComposer,
-          $$OrdersTableTableCreateCompanionBuilder,
-          $$OrdersTableTableUpdateCompanionBuilder,
-          (OrdersTableData, $$OrdersTableTableReferences),
-          OrdersTableData,
-          PrefetchHooks Function({bool shiftId, bool orderItemsTableRefs})
+          $OrdersTable,
+          OrderDrift,
+          $$OrdersTableFilterComposer,
+          $$OrdersTableOrderingComposer,
+          $$OrdersTableAnnotationComposer,
+          $$OrdersTableCreateCompanionBuilder,
+          $$OrdersTableUpdateCompanionBuilder,
+          (OrderDrift, $$OrdersTableReferences),
+          OrderDrift,
+          PrefetchHooks Function({bool shiftId, bool orderItemsRefs})
         > {
-  $$OrdersTableTableTableManager(_$AppDatabase db, $OrdersTableTable table)
+  $$OrdersTableTableManager(_$AppDatabase db, $OrdersTable table)
     : super(
         TableManagerState(
           db: db,
           table: table,
           createFilteringComposer: () =>
-              $$OrdersTableTableFilterComposer($db: db, $table: table),
+              $$OrdersTableFilterComposer($db: db, $table: table),
           createOrderingComposer: () =>
-              $$OrdersTableTableOrderingComposer($db: db, $table: table),
+              $$OrdersTableOrderingComposer($db: db, $table: table),
           createComputedFieldComposer: () =>
-              $$OrdersTableTableAnnotationComposer($db: db, $table: table),
+              $$OrdersTableAnnotationComposer($db: db, $table: table),
           updateCompanionCallback:
               ({
                 Value<int> id = const Value.absent(),
@@ -7650,7 +7571,7 @@ class $$OrdersTableTableTableManager
                 Value<String> customerPhone = const Value.absent(),
                 Value<String> customerAddress = const Value.absent(),
                 Value<String> createdAt = const Value.absent(),
-              }) => OrdersTableCompanion(
+              }) => OrdersCompanion(
                 id: id,
                 shiftId: shiftId,
                 orderType: orderType,
@@ -7684,7 +7605,7 @@ class $$OrdersTableTableTableManager
                 Value<String> customerPhone = const Value.absent(),
                 Value<String> customerAddress = const Value.absent(),
                 required String createdAt,
-              }) => OrdersTableCompanion.insert(
+              }) => OrdersCompanion.insert(
                 id: id,
                 shiftId: shiftId,
                 orderType: orderType,
@@ -7703,100 +7624,87 @@ class $$OrdersTableTableTableManager
               ),
           withReferenceMapper: (p0) => p0
               .map(
-                (e) => (
-                  e.readTable(table),
-                  $$OrdersTableTableReferences(db, table, e),
-                ),
+                (e) =>
+                    (e.readTable(table), $$OrdersTableReferences(db, table, e)),
               )
               .toList(),
-          prefetchHooksCallback:
-              ({shiftId = false, orderItemsTableRefs = false}) {
-                return PrefetchHooks(
-                  db: db,
-                  explicitlyWatchedTables: [
-                    if (orderItemsTableRefs) db.orderItemsTable,
-                  ],
-                  addJoins:
-                      <
-                        T extends TableManagerState<
-                          dynamic,
-                          dynamic,
-                          dynamic,
-                          dynamic,
-                          dynamic,
-                          dynamic,
-                          dynamic,
-                          dynamic,
-                          dynamic,
-                          dynamic,
-                          dynamic
-                        >
-                      >(state) {
-                        if (shiftId) {
-                          state =
-                              state.withJoin(
-                                    currentTable: table,
-                                    currentColumn: table.shiftId,
-                                    referencedTable:
-                                        $$OrdersTableTableReferences
-                                            ._shiftIdTable(db),
-                                    referencedColumn:
-                                        $$OrdersTableTableReferences
-                                            ._shiftIdTable(db)
-                                            .id,
-                                  )
-                                  as T;
-                        }
+          prefetchHooksCallback: ({shiftId = false, orderItemsRefs = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [if (orderItemsRefs) db.orderItems],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (shiftId) {
+                      state =
+                          state.withJoin(
+                                currentTable: table,
+                                currentColumn: table.shiftId,
+                                referencedTable: $$OrdersTableReferences
+                                    ._shiftIdTable(db),
+                                referencedColumn: $$OrdersTableReferences
+                                    ._shiftIdTable(db)
+                                    .id,
+                              )
+                              as T;
+                    }
 
-                        return state;
-                      },
-                  getPrefetchedDataCallback: (items) async {
-                    return [
-                      if (orderItemsTableRefs)
-                        await $_getPrefetchedData<
-                          OrdersTableData,
-                          $OrdersTableTable,
-                          OrderItemsTableData
-                        >(
-                          currentTable: table,
-                          referencedTable: $$OrdersTableTableReferences
-                              ._orderItemsTableRefsTable(db),
-                          managerFromTypedResult: (p0) =>
-                              $$OrdersTableTableReferences(
-                                db,
-                                table,
-                                p0,
-                              ).orderItemsTableRefs,
-                          referencedItemsForCurrentItem:
-                              (item, referencedItems) => referencedItems.where(
-                                (e) => e.orderId == item.id,
-                              ),
-                          typedResults: items,
-                        ),
-                    ];
+                    return state;
                   },
-                );
+              getPrefetchedDataCallback: (items) async {
+                return [
+                  if (orderItemsRefs)
+                    await $_getPrefetchedData<
+                      OrderDrift,
+                      $OrdersTable,
+                      OrderItemsDrift
+                    >(
+                      currentTable: table,
+                      referencedTable: $$OrdersTableReferences
+                          ._orderItemsRefsTable(db),
+                      managerFromTypedResult: (p0) =>
+                          $$OrdersTableReferences(db, table, p0).orderItemsRefs,
+                      referencedItemsForCurrentItem: (item, referencedItems) =>
+                          referencedItems.where((e) => e.orderId == item.id),
+                      typedResults: items,
+                    ),
+                ];
               },
+            );
+          },
         ),
       );
 }
 
-typedef $$OrdersTableTableProcessedTableManager =
+typedef $$OrdersTableProcessedTableManager =
     ProcessedTableManager<
       _$AppDatabase,
-      $OrdersTableTable,
-      OrdersTableData,
-      $$OrdersTableTableFilterComposer,
-      $$OrdersTableTableOrderingComposer,
-      $$OrdersTableTableAnnotationComposer,
-      $$OrdersTableTableCreateCompanionBuilder,
-      $$OrdersTableTableUpdateCompanionBuilder,
-      (OrdersTableData, $$OrdersTableTableReferences),
-      OrdersTableData,
-      PrefetchHooks Function({bool shiftId, bool orderItemsTableRefs})
+      $OrdersTable,
+      OrderDrift,
+      $$OrdersTableFilterComposer,
+      $$OrdersTableOrderingComposer,
+      $$OrdersTableAnnotationComposer,
+      $$OrdersTableCreateCompanionBuilder,
+      $$OrdersTableUpdateCompanionBuilder,
+      (OrderDrift, $$OrdersTableReferences),
+      OrderDrift,
+      PrefetchHooks Function({bool shiftId, bool orderItemsRefs})
     >;
-typedef $$OrderItemsTableTableCreateCompanionBuilder =
-    OrderItemsTableCompanion Function({
+typedef $$OrderItemsTableCreateCompanionBuilder =
+    OrderItemsCompanion Function({
       Value<int> id,
       required int orderId,
       required int itemId,
@@ -7804,8 +7712,8 @@ typedef $$OrderItemsTableTableCreateCompanionBuilder =
       required int unitPrice,
       Value<String?> notes,
     });
-typedef $$OrderItemsTableTableUpdateCompanionBuilder =
-    OrderItemsTableCompanion Function({
+typedef $$OrderItemsTableUpdateCompanionBuilder =
+    OrderItemsCompanion Function({
       Value<int> id,
       Value<int> orderId,
       Value<int> itemId,
@@ -7814,30 +7722,20 @@ typedef $$OrderItemsTableTableUpdateCompanionBuilder =
       Value<String?> notes,
     });
 
-final class $$OrderItemsTableTableReferences
-    extends
-        BaseReferences<
-          _$AppDatabase,
-          $OrderItemsTableTable,
-          OrderItemsTableData
-        > {
-  $$OrderItemsTableTableReferences(
-    super.$_db,
-    super.$_table,
-    super.$_typedResult,
+final class $$OrderItemsTableReferences
+    extends BaseReferences<_$AppDatabase, $OrderItemsTable, OrderItemsDrift> {
+  $$OrderItemsTableReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static $OrdersTable _orderIdTable(_$AppDatabase db) => db.orders.createAlias(
+    $_aliasNameGenerator(db.orderItems.orderId, db.orders.id),
   );
 
-  static $OrdersTableTable _orderIdTable(_$AppDatabase db) =>
-      db.ordersTable.createAlias(
-        $_aliasNameGenerator(db.orderItemsTable.orderId, db.ordersTable.id),
-      );
-
-  $$OrdersTableTableProcessedTableManager get orderId {
+  $$OrdersTableProcessedTableManager get orderId {
     final $_column = $_itemColumn<int>('order_id')!;
 
-    final manager = $$OrdersTableTableTableManager(
+    final manager = $$OrdersTableTableManager(
       $_db,
-      $_db.ordersTable,
+      $_db.orders,
     ).filter((f) => f.id.sqlEquals($_column));
     final item = $_typedResult.readTableOrNull(_orderIdTable($_db));
     if (item == null) return manager;
@@ -7846,17 +7744,16 @@ final class $$OrderItemsTableTableReferences
     );
   }
 
-  static $ItemsTableTable _itemIdTable(_$AppDatabase db) =>
-      db.itemsTable.createAlias(
-        $_aliasNameGenerator(db.orderItemsTable.itemId, db.itemsTable.id),
-      );
+  static $ItemsTable _itemIdTable(_$AppDatabase db) => db.items.createAlias(
+    $_aliasNameGenerator(db.orderItems.itemId, db.items.id),
+  );
 
-  $$ItemsTableTableProcessedTableManager get itemId {
+  $$ItemsTableProcessedTableManager get itemId {
     final $_column = $_itemColumn<int>('item_id')!;
 
-    final manager = $$ItemsTableTableTableManager(
+    final manager = $$ItemsTableTableManager(
       $_db,
-      $_db.itemsTable,
+      $_db.items,
     ).filter((f) => f.id.sqlEquals($_column));
     final item = $_typedResult.readTableOrNull(_itemIdTable($_db));
     if (item == null) return manager;
@@ -7866,9 +7763,9 @@ final class $$OrderItemsTableTableReferences
   }
 }
 
-class $$OrderItemsTableTableFilterComposer
-    extends Composer<_$AppDatabase, $OrderItemsTableTable> {
-  $$OrderItemsTableTableFilterComposer({
+class $$OrderItemsTableFilterComposer
+    extends Composer<_$AppDatabase, $OrderItemsTable> {
+  $$OrderItemsTableFilterComposer({
     required super.$db,
     required super.$table,
     super.joinBuilder,
@@ -7895,20 +7792,20 @@ class $$OrderItemsTableTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
-  $$OrdersTableTableFilterComposer get orderId {
-    final $$OrdersTableTableFilterComposer composer = $composerBuilder(
+  $$OrdersTableFilterComposer get orderId {
+    final $$OrdersTableFilterComposer composer = $composerBuilder(
       composer: this,
       getCurrentColumn: (t) => t.orderId,
-      referencedTable: $db.ordersTable,
+      referencedTable: $db.orders,
       getReferencedColumn: (t) => t.id,
       builder:
           (
             joinBuilder, {
             $addJoinBuilderToRootComposer,
             $removeJoinBuilderFromRootComposer,
-          }) => $$OrdersTableTableFilterComposer(
+          }) => $$OrdersTableFilterComposer(
             $db: $db,
-            $table: $db.ordersTable,
+            $table: $db.orders,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -7918,20 +7815,20 @@ class $$OrderItemsTableTableFilterComposer
     return composer;
   }
 
-  $$ItemsTableTableFilterComposer get itemId {
-    final $$ItemsTableTableFilterComposer composer = $composerBuilder(
+  $$ItemsTableFilterComposer get itemId {
+    final $$ItemsTableFilterComposer composer = $composerBuilder(
       composer: this,
       getCurrentColumn: (t) => t.itemId,
-      referencedTable: $db.itemsTable,
+      referencedTable: $db.items,
       getReferencedColumn: (t) => t.id,
       builder:
           (
             joinBuilder, {
             $addJoinBuilderToRootComposer,
             $removeJoinBuilderFromRootComposer,
-          }) => $$ItemsTableTableFilterComposer(
+          }) => $$ItemsTableFilterComposer(
             $db: $db,
-            $table: $db.itemsTable,
+            $table: $db.items,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -7942,9 +7839,9 @@ class $$OrderItemsTableTableFilterComposer
   }
 }
 
-class $$OrderItemsTableTableOrderingComposer
-    extends Composer<_$AppDatabase, $OrderItemsTableTable> {
-  $$OrderItemsTableTableOrderingComposer({
+class $$OrderItemsTableOrderingComposer
+    extends Composer<_$AppDatabase, $OrderItemsTable> {
+  $$OrderItemsTableOrderingComposer({
     required super.$db,
     required super.$table,
     super.joinBuilder,
@@ -7971,20 +7868,20 @@ class $$OrderItemsTableTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
-  $$OrdersTableTableOrderingComposer get orderId {
-    final $$OrdersTableTableOrderingComposer composer = $composerBuilder(
+  $$OrdersTableOrderingComposer get orderId {
+    final $$OrdersTableOrderingComposer composer = $composerBuilder(
       composer: this,
       getCurrentColumn: (t) => t.orderId,
-      referencedTable: $db.ordersTable,
+      referencedTable: $db.orders,
       getReferencedColumn: (t) => t.id,
       builder:
           (
             joinBuilder, {
             $addJoinBuilderToRootComposer,
             $removeJoinBuilderFromRootComposer,
-          }) => $$OrdersTableTableOrderingComposer(
+          }) => $$OrdersTableOrderingComposer(
             $db: $db,
-            $table: $db.ordersTable,
+            $table: $db.orders,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -7994,20 +7891,20 @@ class $$OrderItemsTableTableOrderingComposer
     return composer;
   }
 
-  $$ItemsTableTableOrderingComposer get itemId {
-    final $$ItemsTableTableOrderingComposer composer = $composerBuilder(
+  $$ItemsTableOrderingComposer get itemId {
+    final $$ItemsTableOrderingComposer composer = $composerBuilder(
       composer: this,
       getCurrentColumn: (t) => t.itemId,
-      referencedTable: $db.itemsTable,
+      referencedTable: $db.items,
       getReferencedColumn: (t) => t.id,
       builder:
           (
             joinBuilder, {
             $addJoinBuilderToRootComposer,
             $removeJoinBuilderFromRootComposer,
-          }) => $$ItemsTableTableOrderingComposer(
+          }) => $$ItemsTableOrderingComposer(
             $db: $db,
-            $table: $db.itemsTable,
+            $table: $db.items,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -8018,9 +7915,9 @@ class $$OrderItemsTableTableOrderingComposer
   }
 }
 
-class $$OrderItemsTableTableAnnotationComposer
-    extends Composer<_$AppDatabase, $OrderItemsTableTable> {
-  $$OrderItemsTableTableAnnotationComposer({
+class $$OrderItemsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $OrderItemsTable> {
+  $$OrderItemsTableAnnotationComposer({
     required super.$db,
     required super.$table,
     super.joinBuilder,
@@ -8039,20 +7936,20 @@ class $$OrderItemsTableTableAnnotationComposer
   GeneratedColumn<String> get notes =>
       $composableBuilder(column: $table.notes, builder: (column) => column);
 
-  $$OrdersTableTableAnnotationComposer get orderId {
-    final $$OrdersTableTableAnnotationComposer composer = $composerBuilder(
+  $$OrdersTableAnnotationComposer get orderId {
+    final $$OrdersTableAnnotationComposer composer = $composerBuilder(
       composer: this,
       getCurrentColumn: (t) => t.orderId,
-      referencedTable: $db.ordersTable,
+      referencedTable: $db.orders,
       getReferencedColumn: (t) => t.id,
       builder:
           (
             joinBuilder, {
             $addJoinBuilderToRootComposer,
             $removeJoinBuilderFromRootComposer,
-          }) => $$OrdersTableTableAnnotationComposer(
+          }) => $$OrdersTableAnnotationComposer(
             $db: $db,
-            $table: $db.ordersTable,
+            $table: $db.orders,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -8062,20 +7959,20 @@ class $$OrderItemsTableTableAnnotationComposer
     return composer;
   }
 
-  $$ItemsTableTableAnnotationComposer get itemId {
-    final $$ItemsTableTableAnnotationComposer composer = $composerBuilder(
+  $$ItemsTableAnnotationComposer get itemId {
+    final $$ItemsTableAnnotationComposer composer = $composerBuilder(
       composer: this,
       getCurrentColumn: (t) => t.itemId,
-      referencedTable: $db.itemsTable,
+      referencedTable: $db.items,
       getReferencedColumn: (t) => t.id,
       builder:
           (
             joinBuilder, {
             $addJoinBuilderToRootComposer,
             $removeJoinBuilderFromRootComposer,
-          }) => $$ItemsTableTableAnnotationComposer(
+          }) => $$ItemsTableAnnotationComposer(
             $db: $db,
-            $table: $db.itemsTable,
+            $table: $db.items,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -8086,34 +7983,32 @@ class $$OrderItemsTableTableAnnotationComposer
   }
 }
 
-class $$OrderItemsTableTableTableManager
+class $$OrderItemsTableTableManager
     extends
         RootTableManager<
           _$AppDatabase,
-          $OrderItemsTableTable,
-          OrderItemsTableData,
-          $$OrderItemsTableTableFilterComposer,
-          $$OrderItemsTableTableOrderingComposer,
-          $$OrderItemsTableTableAnnotationComposer,
-          $$OrderItemsTableTableCreateCompanionBuilder,
-          $$OrderItemsTableTableUpdateCompanionBuilder,
-          (OrderItemsTableData, $$OrderItemsTableTableReferences),
-          OrderItemsTableData,
+          $OrderItemsTable,
+          OrderItemsDrift,
+          $$OrderItemsTableFilterComposer,
+          $$OrderItemsTableOrderingComposer,
+          $$OrderItemsTableAnnotationComposer,
+          $$OrderItemsTableCreateCompanionBuilder,
+          $$OrderItemsTableUpdateCompanionBuilder,
+          (OrderItemsDrift, $$OrderItemsTableReferences),
+          OrderItemsDrift,
           PrefetchHooks Function({bool orderId, bool itemId})
         > {
-  $$OrderItemsTableTableTableManager(
-    _$AppDatabase db,
-    $OrderItemsTableTable table,
-  ) : super(
+  $$OrderItemsTableTableManager(_$AppDatabase db, $OrderItemsTable table)
+    : super(
         TableManagerState(
           db: db,
           table: table,
           createFilteringComposer: () =>
-              $$OrderItemsTableTableFilterComposer($db: db, $table: table),
+              $$OrderItemsTableFilterComposer($db: db, $table: table),
           createOrderingComposer: () =>
-              $$OrderItemsTableTableOrderingComposer($db: db, $table: table),
+              $$OrderItemsTableOrderingComposer($db: db, $table: table),
           createComputedFieldComposer: () =>
-              $$OrderItemsTableTableAnnotationComposer($db: db, $table: table),
+              $$OrderItemsTableAnnotationComposer($db: db, $table: table),
           updateCompanionCallback:
               ({
                 Value<int> id = const Value.absent(),
@@ -8122,7 +8017,7 @@ class $$OrderItemsTableTableTableManager
                 Value<int> quantity = const Value.absent(),
                 Value<int> unitPrice = const Value.absent(),
                 Value<String?> notes = const Value.absent(),
-              }) => OrderItemsTableCompanion(
+              }) => OrderItemsCompanion(
                 id: id,
                 orderId: orderId,
                 itemId: itemId,
@@ -8138,7 +8033,7 @@ class $$OrderItemsTableTableTableManager
                 required int quantity,
                 required int unitPrice,
                 Value<String?> notes = const Value.absent(),
-              }) => OrderItemsTableCompanion.insert(
+              }) => OrderItemsCompanion.insert(
                 id: id,
                 orderId: orderId,
                 itemId: itemId,
@@ -8150,7 +8045,7 @@ class $$OrderItemsTableTableTableManager
               .map(
                 (e) => (
                   e.readTable(table),
-                  $$OrderItemsTableTableReferences(db, table, e),
+                  $$OrderItemsTableReferences(db, table, e),
                 ),
               )
               .toList(),
@@ -8179,13 +8074,11 @@ class $$OrderItemsTableTableTableManager
                           state.withJoin(
                                 currentTable: table,
                                 currentColumn: table.orderId,
-                                referencedTable:
-                                    $$OrderItemsTableTableReferences
-                                        ._orderIdTable(db),
-                                referencedColumn:
-                                    $$OrderItemsTableTableReferences
-                                        ._orderIdTable(db)
-                                        .id,
+                                referencedTable: $$OrderItemsTableReferences
+                                    ._orderIdTable(db),
+                                referencedColumn: $$OrderItemsTableReferences
+                                    ._orderIdTable(db)
+                                    .id,
                               )
                               as T;
                     }
@@ -8194,13 +8087,11 @@ class $$OrderItemsTableTableTableManager
                           state.withJoin(
                                 currentTable: table,
                                 currentColumn: table.itemId,
-                                referencedTable:
-                                    $$OrderItemsTableTableReferences
-                                        ._itemIdTable(db),
-                                referencedColumn:
-                                    $$OrderItemsTableTableReferences
-                                        ._itemIdTable(db)
-                                        .id,
+                                referencedTable: $$OrderItemsTableReferences
+                                    ._itemIdTable(db),
+                                referencedColumn: $$OrderItemsTableReferences
+                                    ._itemIdTable(db)
+                                    .id,
                               )
                               as T;
                     }
@@ -8216,40 +8107,40 @@ class $$OrderItemsTableTableTableManager
       );
 }
 
-typedef $$OrderItemsTableTableProcessedTableManager =
+typedef $$OrderItemsTableProcessedTableManager =
     ProcessedTableManager<
       _$AppDatabase,
-      $OrderItemsTableTable,
-      OrderItemsTableData,
-      $$OrderItemsTableTableFilterComposer,
-      $$OrderItemsTableTableOrderingComposer,
-      $$OrderItemsTableTableAnnotationComposer,
-      $$OrderItemsTableTableCreateCompanionBuilder,
-      $$OrderItemsTableTableUpdateCompanionBuilder,
-      (OrderItemsTableData, $$OrderItemsTableTableReferences),
-      OrderItemsTableData,
+      $OrderItemsTable,
+      OrderItemsDrift,
+      $$OrderItemsTableFilterComposer,
+      $$OrderItemsTableOrderingComposer,
+      $$OrderItemsTableAnnotationComposer,
+      $$OrderItemsTableCreateCompanionBuilder,
+      $$OrderItemsTableUpdateCompanionBuilder,
+      (OrderItemsDrift, $$OrderItemsTableReferences),
+      OrderItemsDrift,
       PrefetchHooks Function({bool orderId, bool itemId})
     >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
   $AppDatabaseManager(this._db);
-  $$LicenseTableTableTableManager get licenseTable =>
-      $$LicenseTableTableTableManager(_db, _db.licenseTable);
-  $$SettingsTableTableTableManager get settingsTable =>
-      $$SettingsTableTableTableManager(_db, _db.settingsTable);
-  $$UsersTableTableTableManager get usersTable =>
-      $$UsersTableTableTableManager(_db, _db.usersTable);
-  $$ShiftsTableTableTableManager get shiftsTable =>
-      $$ShiftsTableTableTableManager(_db, _db.shiftsTable);
-  $$CategoriesTableTableTableManager get categoriesTable =>
-      $$CategoriesTableTableTableManager(_db, _db.categoriesTable);
-  $$ItemsTableTableTableManager get itemsTable =>
-      $$ItemsTableTableTableManager(_db, _db.itemsTable);
-  $$ExpensesTableTableTableManager get expensesTable =>
-      $$ExpensesTableTableTableManager(_db, _db.expensesTable);
-  $$OrdersTableTableTableManager get ordersTable =>
-      $$OrdersTableTableTableManager(_db, _db.ordersTable);
-  $$OrderItemsTableTableTableManager get orderItemsTable =>
-      $$OrderItemsTableTableTableManager(_db, _db.orderItemsTable);
+  $$LicenseTableTableManager get license =>
+      $$LicenseTableTableManager(_db, _db.license);
+  $$SettingsTableTableManager get settings =>
+      $$SettingsTableTableManager(_db, _db.settings);
+  $$UsersTableTableManager get users =>
+      $$UsersTableTableManager(_db, _db.users);
+  $$ShiftsTableTableManager get shifts =>
+      $$ShiftsTableTableManager(_db, _db.shifts);
+  $$CategoriesTableTableManager get categories =>
+      $$CategoriesTableTableManager(_db, _db.categories);
+  $$ItemsTableTableManager get items =>
+      $$ItemsTableTableManager(_db, _db.items);
+  $$ExpensesTableTableManager get expenses =>
+      $$ExpensesTableTableManager(_db, _db.expenses);
+  $$OrdersTableTableManager get orders =>
+      $$OrdersTableTableManager(_db, _db.orders);
+  $$OrderItemsTableTableManager get orderItems =>
+      $$OrderItemsTableTableManager(_db, _db.orderItems);
 }

@@ -1,3 +1,4 @@
+import 'package:ahgzly_pos/core/database/drift/app_database.dart';
 import 'package:ahgzly_pos/features/shift/domain/usecases/check_active_shift_usecase.dart';
 import 'package:ahgzly_pos/features/shift/domain/usecases/open_shift_usecase.dart';
 import 'package:get_it/get_it.dart';
@@ -119,6 +120,7 @@ Future<void> init() async {
 // ==========================================
 void _initCore() {
   sl.registerLazySingleton<DatabaseHelper>(() => DatabaseHelper());
+  sl.registerLazySingleton<AppDatabase>(() => AppDatabase());
   sl.registerLazySingleton<PrinterService>(() => PrinterService());
   sl.registerLazySingleton<FlutterSecureStorage>(
     () => const FlutterSecureStorage(),
@@ -162,7 +164,7 @@ void _initLicense() {
 // ==========================================
 void _initAuth() {
   sl.registerLazySingleton<AuthLocalDataSource>(
-    () => AuthLocalDataSourceImpl(databaseHelper: sl(), secureStorage: sl()),
+    () => AuthLocalDataSourceImpl(appDatabase: sl(), secureStorage: sl()),
   );
   sl.registerLazySingleton<AuthRepository>(
     () => AuthRepositoryImpl(localDataSource: sl()),
@@ -307,7 +309,7 @@ void _initExpenses() {
 void _initUsers() {
   // Data sources
   sl.registerLazySingleton<UsersLocalDataSource>(
-    () => UsersLocalDataSourceImpl(databaseHelper: sl()), // نمرر الـ Impl هنا!
+    () => UsersLocalDataSourceImpl(appDatabase: sl()), // نمرر الـ Impl هنا!
   );
 
   // Repositories

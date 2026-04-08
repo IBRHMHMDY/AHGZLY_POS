@@ -1,6 +1,9 @@
+// مسار الملف: lib/features/users/data/datasources/users_local_data_source.dart
+
 import 'package:ahgzly_pos/core/common/models/user_model.dart';
-import 'package:ahgzly_pos/core/database/database_helper.dart';
+import 'package:ahgzly_pos/core/database/drift/app_database.dart'; // استيراد Drift
 import 'package:ahgzly_pos/core/error/exceptions.dart';
+import 'package:drift/drift.dart'; // استيراد مكتبة drift لاستخدام Value
 
 abstract class UsersLocalDataSource {
   Future<List<UserModel>> getUsers();
@@ -9,22 +12,34 @@ abstract class UsersLocalDataSource {
 }
 
 class UsersLocalDataSourceImpl implements UsersLocalDataSource {
-  final DatabaseHelper databaseHelper;
+  final AppDatabase appDatabase; // Refactored: استخدام AppDatabase
 
-  UsersLocalDataSourceImpl({required this.databaseHelper});
+  UsersLocalDataSourceImpl({required this.appDatabase});
+
+  // Mapper داخلي 
+  Map<String, dynamic> _driftUserToMap(UserDrift driftUser) {
+    return {
+      'id': driftUser.id,
+      'name': driftUser.name,
+      'pin_hash': driftUser.pinHash,
+      'salt': driftUser.salt,
+      'role': driftUser.role,
+      'is_active': driftUser.isActive ? 1 : 0,
+      'failed_attempts': driftUser.failedAttempts,
+      'lockout_until': driftUser.lockoutUntil,
+    };
+  }
 
   @override
   Future<List<UserModel>> getUsers() async {
     try {
-      final db = await databaseHelper.database;
-      // لا نجلب المدير الأساسي لكي لا يحذفه أحد بالخطأ (id = 1)
-      final List<Map<String, dynamic>> maps = await db.query(
-        'users',
-        where: 'id != ?',
-        whereArgs: [1],
-        orderBy: 'id DESC',
-      );
-      return maps.map((map) => UserModel.fromMap(map)).toList();
+      // Refactored: استعلام Drift بدلاً من db.query
+      final driftUsers = await (appDatabase.select(appDatabase.users)
+            ..where((t) => t.id.isNotValue(1)) // لا نجلب المدير الأساسي
+            ..orderBy([(t) => OrderingTerm(expression: t.id, mode: OrderingMode.desc)]))
+          .get();
+
+      return driftUsers.map((user) => UserModel.fromMap(_driftUserToMap(user))).toList();
     } catch (e) {
       throw LocalDatabaseException('فشل في جلب المستخدمين: $e');
     }
@@ -33,15 +48,17 @@ class UsersLocalDataSourceImpl implements UsersLocalDataSource {
   @override
   Future<void> addUser(String name, String role, String pinHash, String salt) async {
     try {
-      final db = await databaseHelper.database;
-      await db.insert('users', {
-        'name': name,
-        'role': role,
-        'pin_hash': pinHash,
-        'salt': salt,
-        'is_active': 1,
-        'failed_attempts': 0,
-      });
+      // Refactored: إدخال البيانات باستخدام Drift Companions
+      await appDatabase.into(appDatabase.users).insert(
+            UsersCompanion.insert(
+              name: name,
+              role: role,
+              pinHash: pinHash,
+              salt: salt,
+              isActive: const Value(true), // القيمة الافتراضية
+              failedAttempts: const Value(0),
+            ),
+          );
     } catch (e) {
       throw LocalDatabaseException('فشل في إضافة المستخدم: $e');
     }
@@ -50,12 +67,13 @@ class UsersLocalDataSourceImpl implements UsersLocalDataSource {
   @override
   Future<void> toggleUserStatus(int id, bool isActive) async {
     try {
-      final db = await databaseHelper.database;
-      await db.update(
-        'users',
-        {'is_active': isActive ? 1 : 0},
-        where: 'id = ?',
-        whereArgs: [id],
+      // Refactored: تحديث حالة المستخدم باستخدام Drift
+      await (appDatabase.update(appDatabase.users)
+            ..where((t) => t.id.equals(id)))
+          .write(
+        UsersCompanion(
+          isActive: Value(isActive),
+        ),
       );
     } catch (e) {
       throw LocalDatabaseException('فشل في تحديث حالة المستخدم: $e');

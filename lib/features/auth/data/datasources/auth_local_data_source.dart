@@ -1,5 +1,7 @@
+// مسار الملف: lib/features/auth/data/datasources/auth_local_data_source.dart
+
 import 'package:ahgzly_pos/core/common/models/user_model.dart';
-import 'package:ahgzly_pos/core/database/database_helper.dart';
+import 'package:ahgzly_pos/core/database/drift/app_database.dart'; 
 import 'package:ahgzly_pos/core/error/exceptions.dart'; 
 import 'package:ahgzly_pos/core/utils/hash_util.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -10,13 +12,27 @@ abstract class AuthLocalDataSource {
 }
 
 class AuthLocalDataSourceImpl implements AuthLocalDataSource {
-  final DatabaseHelper databaseHelper;
+  final AppDatabase appDatabase; 
   final FlutterSecureStorage secureStorage;
 
   static const int maxFailedAttempts = 3;
   static const int lockoutMinutes = 5;
 
-  AuthLocalDataSourceImpl({required this.databaseHelper, required this.secureStorage});
+  AuthLocalDataSourceImpl({required this.appDatabase, required this.secureStorage});
+
+  // تم التصحيح: استخدام UserDrift المُولد من Drift لتجنب أي تعارض
+  Map<String, dynamic> _driftUserToMap(UserDrift driftUser) {
+    return {
+      'id': driftUser.id,
+      'name': driftUser.name,
+      'pin_hash': driftUser.pinHash,
+      'salt': driftUser.salt,
+      'role': driftUser.role,
+      'is_active': driftUser.isActive ? 1 : 0,
+      'failed_attempts': driftUser.failedAttempts,
+      'lockout_until': driftUser.lockoutUntil,
+    };
+  }
 
   @override
   Future<UserModel> loginWithPin(String pin) async {
@@ -27,29 +43,27 @@ class AuthLocalDataSourceImpl implements AuthLocalDataSource {
         final remainingMins = lockoutUntil.difference(DateTime.now()).inMinutes;
         throw AuthException('تم حظر الجهاز مؤقتاً لحمايتك. يرجى المحاولة بعد $remainingMins دقيقة.');
       } else {
-        // Lockout expired, clear it
         await secureStorage.delete(key: 'device_lockout_until');
         await secureStorage.write(key: 'device_failed_attempts', value: '0');
       }
     }
 
-    final db = await databaseHelper.database;
-    final List<Map<String, dynamic>> users = await db.query('users', where: 'is_active = 1');
+    // الاستعلام سيعيد قائمة من UserDrift بفضل الـ DataClassName
+    final users = await (appDatabase.select(appDatabase.users)
+          ..where((t) => t.isActive.equals(true)))
+        .get();
 
-    for (var userMap in users) {
-      final salt = userMap['salt'] as String?;
-      final pinHash = userMap['pin_hash'] as String?;
+    for (var driftUser in users) {
+      final salt = driftUser.salt;
+      final pinHash = driftUser.pinHash;
 
-      if (salt != null && pinHash != null) {
-        if (HashUtil.verifyPin(pin, salt, pinHash)) {
-          // Success: Reset failed attempts
-          await secureStorage.write(key: 'device_failed_attempts', value: '0');
-          return UserModel.fromMap(userMap); 
-        }
+      if (HashUtil.verifyPin(pin, salt, pinHash)) {
+        await secureStorage.write(key: 'device_failed_attempts', value: '0');
+        // إرسال كائن Drift بأمان إلى الـ Mapper
+        return UserModel.fromMap(_driftUserToMap(driftUser)); 
       }
     }
 
-   
     String? attemptsStr = await secureStorage.read(key: 'device_failed_attempts');
     int failedAttempts = int.tryParse(attemptsStr ?? '0') ?? 0;
     failedAttempts++;
