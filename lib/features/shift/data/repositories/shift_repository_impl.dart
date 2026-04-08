@@ -43,8 +43,7 @@ class ShiftRepositoryImpl implements ShiftRepository {
     } on CacheException catch (e) {
       return Left(CacheFailure(e.message));
     } catch (e) {
-      // [Refactoring Specialist]: تمرير الخطأ التقني الحقيقي للواجهة بدلاً من إخفائه لمعرفة الخلل بالضبط
-      return Left(CacheFailure('سبب الفشل: ${e.toString()}'));
+      return const Left(CacheFailure('فشل في إغلاق الوردية.'));
     }
   }
 }
