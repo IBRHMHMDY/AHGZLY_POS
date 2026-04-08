@@ -36,11 +36,15 @@ dependencies:
   device_info_plus: ^12.3.0
   crypto: ^3.0.7
   flutter_secure_storage: ^10.0.0
+  drift: ^2.32.1
+  sqlite3_flutter_libs: ^0.6.0+eol
+  
   
 dev_dependencies:
   flutter_test:
     sdk: flutter
-
+  drift_dev: ^2.32.1
+  build_runner: ^2.13.1
   flutter_lints: ^6.0.0
 
 flutter:
