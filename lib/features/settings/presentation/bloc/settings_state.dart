@@ -3,6 +3,7 @@ import 'package:ahgzly_pos/features/settings/domain/entities/app_settings.dart';
 
 abstract class SettingsState extends Equatable {
   const SettingsState();
+  
   @override
   List<Object> get props => [];
 }
@@ -13,21 +14,30 @@ class SettingsLoading extends SettingsState {}
 
 class SettingsLoaded extends SettingsState {
   final AppSettings settings;
-  const SettingsLoaded(this.settings);
+  
+  // Refactored: Changed to Named Parameter
+  const SettingsLoaded({required this.settings});
+  
   @override
   List<Object> get props => [settings];
 }
 
 class SettingsSavedSuccess extends SettingsState {
-  final AppSettings settings;
-  const SettingsSavedSuccess(this.settings);
+  final String message;
+  
+  // Refactored: Changed to accept a String message instead of AppSettings object
+  const SettingsSavedSuccess({required this.message});
+  
   @override
-  List<Object> get props => [settings];
+  List<Object> get props => [message];
 }
 
 class SettingsError extends SettingsState {
   final String message;
-  const SettingsError(this.message);
+  
+  // Refactored: Changed to Named Parameter
+  const SettingsError({required this.message});
+  
   @override
   List<Object> get props => [message];
 }
