@@ -9,12 +9,13 @@ class OrdersRepositoryImpl implements OrdersRepository {
   OrdersRepositoryImpl({required this.localDataSource});
 
   @override
-  Future<Either<Failure, List<OrderHistory>>> getOrdersHistory({required bool isAdmin, required int? shiftId}) async{
+  Future<Either<Failure, List<OrderHistory>>> getOrdersHistory({required bool isAdmin, required int? shiftId}) async {
     try {
-      final orders = await localDataSource.getOrdersHistory(isAdmin: isAdmin,shiftId: shiftId);
+      final orders = await localDataSource.getOrdersHistory(isAdmin: isAdmin, shiftId: shiftId);
       return Right(orders);
-    } catch (e) {
-      return Left(DatabaseFailure('فشل في جلب سجل الطلبات: ${e.toString()}'));
+    } catch (_) {
+      // Refactored: User-friendly message
+      return const Left(DatabaseFailure('فشل في جلب سجل الطلبات. يرجى التأكد من مساحة التخزين.'));
     }
   }
 
@@ -23,8 +24,9 @@ class OrdersRepositoryImpl implements OrdersRepository {
     try {
       await localDataSource.refundOrder(orderId);
       return const Right(null);
-    } catch (e) {
-      return Left(DatabaseFailure('فشل استرجاع الطلب: ${e.toString()}'));
+    } catch (_) {
+      // Refactored: User-friendly message
+      return const Left(DatabaseFailure('فشل استرجاع الطلب. يرجى المحاولة مرة أخرى.'));
     }
   }
 }
