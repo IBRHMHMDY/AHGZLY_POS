@@ -1,11 +1,13 @@
 import 'package:dartz/dartz.dart';
 import '../../../../core/error/failures.dart';
+import '../../../../core/usecases/usecase.dart'; // ⬅️ إضافة هامة
 import '../../../../core/services/security/crypto_service.dart';
 import '../../../../core/services/security/device_security_service.dart';
 import '../../../../core/services/security/time_guard_service.dart';
 import '../repositories/license_repository.dart';
 
-class CheckLicenseStatusUseCase {
+// Refactored: Implement UseCase Interface
+class CheckLicenseStatusUseCase implements UseCase<bool, NoParams> {
   final LicenseRepository repository;
   final CryptoService cryptoService;
   final DeviceSecurityService deviceSecurityService;
@@ -18,7 +20,8 @@ class CheckLicenseStatusUseCase {
     required this.timeGuardService,
   });
 
-  Future<Either<Failure, bool>> execute() async {
+  @override
+  Future<Either<Failure, bool>> call(NoParams params) async {
     final isTampered = await timeGuardService.isTimeTampered();
     if (isTampered) {
       return const Left(SecurityFailure('تم اكتشاف تلاعب في وقت النظام. تم إيقاف الترخيص أمنياً.'));
