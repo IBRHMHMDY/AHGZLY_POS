@@ -1,10 +1,10 @@
+import 'package:ahgzly_pos/core/usecases/usecase.dart'; // ⬅️ إضافة هامة لاستخدام NoParams
 import 'package:ahgzly_pos/features/shift/domain/usecases/check_active_shift_usecase.dart';
 import 'package:ahgzly_pos/features/shift/domain/usecases/close_shift_usecase.dart';
 import 'package:ahgzly_pos/features/shift/domain/usecases/open_shift_usecase.dart';
 import 'package:ahgzly_pos/features/shift/presentation/bloc/shift_event.dart';
 import 'package:ahgzly_pos/features/shift/presentation/bloc/shift_state.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-
 
 class ShiftBloc extends Bloc<ShiftEvent, ShiftState> {
   final CheckActiveShiftUseCase checkActiveShiftUseCase;
@@ -19,7 +19,9 @@ class ShiftBloc extends Bloc<ShiftEvent, ShiftState> {
     
     on<CheckActiveShiftEvent>((event, emit) async {
       emit(ShiftLoading());
-      final result = await checkActiveShiftUseCase.execute();
+      // Refactored: استدعاء UseCase باستخدام NoParams بدلاً من execute
+      final result = await checkActiveShiftUseCase(NoParams());
+      
       result.fold(
         (failure) => emit(ShiftError(message: failure.message)),
         (shift) {
@@ -34,10 +36,12 @@ class ShiftBloc extends Bloc<ShiftEvent, ShiftState> {
 
     on<OpenShiftSubmittedEvent>((event, emit) async {
       emit(ShiftLoading());
-      final result = await openShiftUseCase.execute(
+      // Refactored: تمرير OpenShiftParams بدلاً من المتغيرات المتناثرة
+      final result = await openShiftUseCase(OpenShiftParams(
         startingCash: event.startingCash, 
-        cashierId: event.cashierId
-      );
+        userId: event.cashierId, // تم تمرير cashierId إلى userId
+      ));
+      
       result.fold(
         (failure) => emit(ShiftError(message: failure.message)),
         (shift) => emit(ShiftOpenedSuccess(shift: shift)),
@@ -46,10 +50,12 @@ class ShiftBloc extends Bloc<ShiftEvent, ShiftState> {
 
     on<CloseShiftSubmittedEvent>((event, emit) async {
       emit(ShiftLoading());
-      final result = await closeShiftUseCase.execute(
+      // Refactored: تمرير CloseShiftParams
+      final result = await closeShiftUseCase(CloseShiftParams(
         shiftId: event.shiftId, 
-        actualCash: event.actualCash
-      );
+        actualCash: event.actualCash,
+      ));
+      
       result.fold(
         (failure) => emit(ShiftError(message: failure.message)),
         (closedShift) => emit(ShiftClosedSuccess(closedShift: closedShift)),

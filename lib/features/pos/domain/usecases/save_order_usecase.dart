@@ -1,4 +1,5 @@
 import 'package:ahgzly_pos/core/error/failures.dart';
+import 'package:ahgzly_pos/core/usecases/usecase.dart';
 import 'package:ahgzly_pos/features/pos/domain/entities/order.dart';
 import 'package:ahgzly_pos/features/pos/domain/repositories/pos_repository.dart';
 import 'package:ahgzly_pos/features/shift/domain/usecases/check_active_shift_usecase.dart';
@@ -15,7 +16,7 @@ class SaveOrderUseCase {
 
   Future<Either<Failure, int>> call(Order order) async {
     // 1. استخدام הـ UseCase الخاص بالوردية واستدعاء دالة execute()
-    final shiftResult = await checkActiveShiftUseCase.execute();
+    final shiftResult = await checkActiveShiftUseCase(NoParams());
     
     return shiftResult.fold(
       (failure) => Left(failure),
