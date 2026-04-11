@@ -1,6 +1,6 @@
 import 'package:ahgzly_pos/core/common/entities/user.dart';
 import 'package:dartz/dartz.dart';
-import '../../../../core/error/exceptions.dart'; // تم الاستيراد
+import '../../../../core/error/exceptions.dart'; 
 import '../../../../core/error/failures.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../datasources/auth_local_data_source.dart';
@@ -16,11 +16,10 @@ class AuthRepositoryImpl implements AuthRepository {
       final user = await localDataSource.loginWithPin(pin);
       return Right(user);
     } on AuthException catch (e) {
-      // هنا نلتقط رسالتنا الصافية التي كتبناها بالعربية ونمررها للـ UI
       return Left(AuthFailure(e.message));
     } catch (e) {
-      // أي خطأ آخر برمجي غير متوقع
-      return Left(const CacheFailure('حدث خطأ غير متوقع. يرجى المحاولة مرة أخرى.'));
+      // Refactored: Use AuthFailure instead of CacheFailure for unknown auth errors
+      return Left(AuthFailure('حدث خطأ غير متوقع أثناء تسجيل الدخول.'));
     }
   }
 
@@ -30,7 +29,8 @@ class AuthRepositoryImpl implements AuthRepository {
       await localDataSource.logout();
       return const Right(null);
     } catch (e) {
-      return Left(const CacheFailure('فشل تسجيل الخروج. يرجى المحاولة لاحقاً.'));
+      // Refactored: Ensure consistent failure usage
+      return Left(AuthFailure('فشل تسجيل الخروج. يرجى المحاولة لاحقاً.'));
     }
   }
 }
