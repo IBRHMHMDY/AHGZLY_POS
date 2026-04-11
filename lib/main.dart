@@ -6,11 +6,8 @@ import 'package:ahgzly_pos/core/init/app_initializer.dart';
 import 'package:ahgzly_pos/core/providers/app_providers.dart';
 
 void main() async {
-  // 1. تهيئة بيئة التطبيق (نوافذ، قاعدة بيانات، وغيرها)
   await AppInitializer.initialize();
-  // 2. تهيئة حقن التبعيات
   await di.init();
-  // 3. تشغيل التطبيق
   runApp(AhgzlyPOS());
 }
 

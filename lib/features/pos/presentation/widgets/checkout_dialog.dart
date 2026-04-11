@@ -29,9 +29,7 @@ class _CheckoutDialogState extends State<CheckoutDialog> {
   @override
   void initState() {
     super.initState();
-    _paidController = TextEditingController(
-      text: MoneyFormatter.format(widget.totalAmount),
-    );
+    _paidController = TextEditingController(text: MoneyFormatter.format(widget.totalAmount));
     _nameController = TextEditingController();
     _phoneController = TextEditingController();
     _addressController = TextEditingController();
@@ -40,7 +38,7 @@ class _CheckoutDialogState extends State<CheckoutDialog> {
 
   void _calculateChange() {
     final paidDouble = double.tryParse(_paidController.text) ?? 0.0;
-    final paidCents = MoneyFormatter.toCents(paidDouble); // تحويل لقروش
+    final paidCents = MoneyFormatter.toCents(paidDouble);
     setState(() {
       _change = paidCents - widget.totalAmount;
     });
@@ -58,10 +56,7 @@ class _CheckoutDialogState extends State<CheckoutDialog> {
 
   void _submit() {
     if (_formKey.currentState!.validate()) {
-      if (_selectedMethod == 'كاش' && _change < 0) {
-        // منع الدفع إذا كان المبلغ المدفوع أقل من المطلوب
-        return;
-      }
+      if (_selectedMethod == 'كاش' && _change < 0) return; // منع الدفع إذا كان المبلغ ناقصاً
 
       setState(() => _isProcessing = true);
 
@@ -81,259 +76,355 @@ class _CheckoutDialogState extends State<CheckoutDialog> {
     return Directionality(
       textDirection: TextDirection.rtl,
       child: AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Row(
-          children: [
-            Icon(Icons.point_of_sale, color: Colors.teal.shade700, size: 28),
-            const SizedBox(width: 8),
-            const Text(
-              'إتمام عملية الدفع',
-              style: TextStyle(fontWeight: FontWeight.bold),
-            ),
-          ],
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)), // حواف أنعم
+        titlePadding: const EdgeInsets.all(0),
+        title: _DialogHeader(onClose: () => Navigator.pop(context)),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
         content: SizedBox(
-          width: 500, // تثبيت العرض للشاشات الكبيرة
+          width: 500, // تثبيت العرض لشاشات الـ POS
           child: SingleChildScrollView(
             child: Form(
               key: _formKey,
               child: Column(
                 mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Container(
-                    padding: const EdgeInsets.all(20),
-                    decoration: BoxDecoration(
-                      color: Colors.teal.shade50,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.teal.shade200, width: 2),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text(
-                          'الإجمالي المطلوب:',
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        Text(
-                          '${MoneyFormatter.format(widget.totalAmount)} ج.م',
-                          style: TextStyle(
-                            fontSize: 26,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.teal.shade800,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
+                  // 🪄 1. ملخص المبلغ الإجمالي المطلوب
+                  _TotalAmountDisplay(totalAmount: widget.totalAmount),
                   const SizedBox(height: 24),
 
+                  // 🪄 2. بيانات الدليفري (تظهر فقط إذا كان الطلب دليفري)
                   if (isDelivery) ...[
-                    const Align(
-                      alignment: Alignment.centerRight,
-                      child: Text(
-                        'بيانات العميل (التوصيل)',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                          color: Colors.orange,
-                        ),
-                      ),
-                    ),
-                    const Divider(),
-                    TextFormField(
-                      controller: _nameController,
-                      decoration: InputDecoration(
-                        labelText: 'اسم العميل',
-                        prefixIcon: const Icon(Icons.person),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    TextFormField(
-                      controller: _phoneController,
-                      keyboardType: TextInputType.phone,
-                      decoration: InputDecoration(
-                        labelText: 'رقم الهاتف *',
-                        prefixIcon: const Icon(Icons.phone),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                      ),
-                      validator: (val) => (val == null || val.trim().isEmpty)
-                          ? 'مطلوب للتوصيل'
-                          : null,
-                    ),
-                    const SizedBox(height: 12),
-                    TextFormField(
-                      controller: _addressController,
-                      maxLines: 2,
-                      decoration: InputDecoration(
-                        labelText: 'العنوان بالتفصيل *',
-                        prefixIcon: const Icon(Icons.location_on),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                      ),
-                      validator: (val) => (val == null || val.trim().isEmpty)
-                          ? 'مطلوب للتوصيل'
-                          : null,
+                    _DeliveryDetailsForm(
+                      nameController: _nameController,
+                      phoneController: _phoneController,
+                      addressController: _addressController,
                     ),
                     const SizedBox(height: 24),
                   ],
 
-                  DropdownButtonFormField<String>(
-                    value: _selectedMethod,
-                    decoration: InputDecoration(
-                      labelText: 'طريقة الدفع',
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      prefixIcon: const Icon(Icons.payment),
-                    ),
-                    items: ['كاش', 'فيزا', 'InstaPay']
-                        .map(
-                          (m) => DropdownMenuItem(
-                            value: m,
-                            child: Text(
-                              m,
-                              style: const TextStyle(fontSize: 18),
-                            ),
-                          ),
-                        )
-                        .toList(),
-                    onChanged: (val) {
-                      if (val != null) {
-                        setState(() {
-                          _selectedMethod = val;
-                          if (val != 'كاش') {
-                            _paidController.text = MoneyFormatter.format(
-                              widget.totalAmount,
-                            );
-                          }
-                        });
-                      }
+                  // 🪄 3. اختيار طريقة الدفع
+                  _PaymentMethodSelector(
+                    selectedMethod: _selectedMethod,
+                    onMethodChanged: (val) {
+                      setState(() {
+                        _selectedMethod = val;
+                        if (val != 'كاش') {
+                          _paidController.text = MoneyFormatter.format(widget.totalAmount);
+                        }
+                      });
                     },
                   ),
                   const SizedBox(height: 20),
 
-                  if (_selectedMethod == 'كاش') ...[
-                    TextFormField(
-                      controller: _paidController,
-                      keyboardType: const TextInputType.numberWithOptions(
-                        decimal: true,
-                      ),
-                      style: const TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                      ),
-                      decoration: InputDecoration(
-                        labelText: 'المبلغ المستلم من العميل',
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        prefixIcon: const Icon(
-                          Icons.money,
-                          color: Colors.green,
-                        ),
-                      ),
-                      validator: (val) {
-                        if (val == null || val.isEmpty) return 'أدخل المبلغ';
-                        final amountDouble = double.tryParse(val);
-                        if (amountDouble == null) return 'رقم غير صحيح';
-                        if (MoneyFormatter.toCents(amountDouble) < widget.totalAmount) return 'المبلغ أقل من الفاتورة';
-                        return null;
-                      },
+                  // 🪄 4. تفاصيل دفع الكاش (الباقي والمدفوع)
+                  if (_selectedMethod == 'كاش')
+                    _CashPaymentSection(
+                      paidController: _paidController,
+                      totalAmount: widget.totalAmount,
+                      change: _change,
                     ),
-                    const SizedBox(height: 20),
-                    Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: _change >= 0
-                            ? Colors.green.shade50
-                            : Colors.red.shade50,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: _change >= 0
-                              ? Colors.green.shade200
-                              : Colors.red.shade200,
-                        ),
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          const Text(
-                            'الباقي للعميل:',
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          Text(
-                            '${_change >= 0 ? MoneyFormatter.format(_change) : "0.00"} ج.م',
-                            style: TextStyle(
-                              fontSize: 24,
-                              fontWeight: FontWeight.bold,
-                              color: _change >= 0
-                                  ? Colors.green.shade700
-                                  : Colors.red,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
                 ],
               ),
             ),
           ),
         ),
-        actionsPadding: const EdgeInsets.symmetric(
-          horizontal: 16,
-          vertical: 16,
-        ),
+        actionsPadding: const EdgeInsets.all(24),
         actions: [
-          TextButton(
-            onPressed: _isProcessing ? null : () => Navigator.pop(context),
-            child: const Text(
-              'إلغاء',
-              style: TextStyle(color: Colors.red, fontSize: 18),
-            ),
-          ),
-          ElevatedButton.icon(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.teal,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-            ),
-            icon: _isProcessing
-                ? const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(
-                      color: Colors.white,
-                      strokeWidth: 2,
-                    ),
-                  )
-                : const Icon(Icons.print),
-            label: const Text(
-              'تأكيد وطباعة',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            onPressed:
-                (_isProcessing || (_selectedMethod == 'كاش' && _change < 0))
-                ? null
-                : _submit,
+          _DialogActions(
+            isProcessing: _isProcessing,
+            canSubmit: !(_selectedMethod == 'كاش' && _change < 0),
+            onSubmit: _submit,
+            onCancel: () => Navigator.pop(context),
           ),
         ],
       ),
+    );
+  }
+}
+
+// ==========================================
+// 🪄 المكونات الفرعية (Sub-Widgets) المستخرجة للترتيب
+// ==========================================
+
+class _DialogHeader extends StatelessWidget {
+  final VoidCallback onClose;
+  const _DialogHeader({required this.onClose});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+      decoration: BoxDecoration(
+        color: Colors.teal.shade50,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(color: Colors.teal.shade100, shape: BoxShape.circle),
+                child: Icon(Icons.point_of_sale_rounded, color: Colors.teal.shade800, size: 24),
+              ),
+              const SizedBox(width: 12),
+              const Text('إتمام عملية الدفع', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
+            ],
+          ),
+          IconButton(
+            icon: const Icon(Icons.close, color: Colors.redAccent),
+            onPressed: onClose,
+            tooltip: 'إلغاء',
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _TotalAmountDisplay extends StatelessWidget {
+  final int totalAmount;
+  const _TotalAmountDisplay({required this.totalAmount});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(colors: [Colors.teal.shade600, Colors.teal.shade800]),
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [BoxShadow(color: Colors.teal.withOpacity(0.3), blurRadius: 8, offset: const Offset(0, 4))],
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          const Text('الإجمالي المطلوب:', style: TextStyle(fontSize: 18, color: Colors.white70, fontWeight: FontWeight.w600)),
+          Text('${MoneyFormatter.format(totalAmount)} ج.م', style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.white)),
+        ],
+      ),
+    );
+  }
+}
+
+class _DeliveryDetailsForm extends StatelessWidget {
+  final TextEditingController nameController;
+  final TextEditingController phoneController;
+  final TextEditingController addressController;
+
+  const _DeliveryDetailsForm({
+    required this.nameController,
+    required this.phoneController,
+    required this.addressController,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(color: Colors.orange.shade50, borderRadius: BorderRadius.circular(12), border: Border.all(color: Colors.orange.shade200)),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.delivery_dining, color: Colors.orange.shade700),
+              const SizedBox(width: 8),
+              Text('بيانات التوصيل', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.orange.shade900)),
+            ],
+          ),
+          const Divider(height: 24),
+          TextFormField(
+            controller: nameController,
+            decoration: _inputStyle('اسم العميل', Icons.person_outline),
+          ),
+          const SizedBox(height: 12),
+          TextFormField(
+            controller: phoneController,
+            keyboardType: TextInputType.phone,
+            decoration: _inputStyle('رقم الهاتف *', Icons.phone_outlined),
+            validator: (val) => (val == null || val.trim().isEmpty) ? 'هذا الحقل مطلوب للتوصيل' : null,
+          ),
+          const SizedBox(height: 12),
+          TextFormField(
+            controller: addressController,
+            maxLines: 2,
+            decoration: _inputStyle('العنوان بالتفصيل *', Icons.location_on_outlined),
+            validator: (val) => (val == null || val.trim().isEmpty) ? 'هذا الحقل مطلوب للتوصيل' : null,
+          ),
+        ],
+      ),
+    );
+  }
+
+  InputDecoration _inputStyle(String label, IconData icon) {
+    return InputDecoration(
+      labelText: label,
+      prefixIcon: Icon(icon, color: Colors.grey.shade600),
+      filled: true,
+      fillColor: Colors.white,
+      border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: Colors.grey.shade300)),
+      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: Colors.grey.shade300)),
+      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Colors.teal, width: 2)),
+    );
+  }
+}
+
+class _PaymentMethodSelector extends StatelessWidget {
+  final String selectedMethod;
+  final ValueChanged<String> onMethodChanged;
+
+  const _PaymentMethodSelector({required this.selectedMethod, required this.onMethodChanged});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text('طريقة الدفع', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.black87)),
+        const SizedBox(height: 8),
+        Row(
+          children: ['كاش', 'فيزا', 'InstaPay'].map((method) {
+            final isSelected = selectedMethod == method;
+            return Expanded(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                child: InkWell(
+                  onTap: () => onMethodChanged(method),
+                  borderRadius: BorderRadius.circular(12),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    decoration: BoxDecoration(
+                      color: isSelected ? Colors.teal : Colors.grey.shade100,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: isSelected ? Colors.teal : Colors.grey.shade300),
+                      boxShadow: isSelected ? [BoxShadow(color: Colors.teal.withOpacity(0.3), blurRadius: 6, offset: const Offset(0, 3))] : [],
+                    ),
+                    alignment: Alignment.center,
+                    child: Text(
+                      method,
+                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: isSelected ? Colors.white : Colors.black87),
+                    ),
+                  ),
+                ),
+              ),
+            );
+          }).toList(),
+        ),
+      ],
+    );
+  }
+}
+
+class _CashPaymentSection extends StatelessWidget {
+  final TextEditingController paidController;
+  final int totalAmount;
+  final int change;
+
+  const _CashPaymentSection({
+    required this.paidController,
+    required this.totalAmount,
+    required this.change,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        TextFormField(
+          controller: paidController,
+          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.teal),
+          decoration: InputDecoration(
+            labelText: 'المبلغ المستلم من العميل',
+            labelStyle: const TextStyle(fontSize: 16),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+            focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Colors.teal, width: 2)),
+            prefixIcon: Container(
+              margin: const EdgeInsets.only(left: 8),
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(color: Colors.teal.shade50, borderRadius: const BorderRadius.horizontal(right: Radius.circular(10))),
+              child: const Icon(Icons.money_rounded, color: Colors.teal),
+            ),
+          ),
+          validator: (val) {
+            if (val == null || val.isEmpty) return 'يرجى إدخال المبلغ المستلم';
+            final amountDouble = double.tryParse(val);
+            if (amountDouble == null) return 'رقم غير صحيح';
+            if (MoneyFormatter.toCents(amountDouble) < totalAmount) return 'المبلغ المدفوع أقل من الفاتورة';
+            return null;
+          },
+        ),
+        const SizedBox(height: 16),
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: change >= 0 ? Colors.green.shade50 : Colors.red.shade50,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: change >= 0 ? Colors.green.shade300 : Colors.red.shade300, width: 2),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text('الباقي للعميل:', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: change >= 0 ? Colors.green.shade800 : Colors.red.shade800)),
+              Text(
+                '${change >= 0 ? MoneyFormatter.format(change) : "0.00"} ج.م',
+                style: TextStyle(fontSize: 26, fontWeight: FontWeight.w900, color: change >= 0 ? Colors.green.shade700 : Colors.red.shade700),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _DialogActions extends StatelessWidget {
+  final bool isProcessing;
+  final bool canSubmit;
+  final VoidCallback onSubmit;
+  final VoidCallback onCancel;
+
+  const _DialogActions({
+    required this.isProcessing,
+    required this.canSubmit,
+    required this.onSubmit,
+    required this.onCancel,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(
+          flex: 1,
+          child: TextButton(
+            onPressed: isProcessing ? null : onCancel,
+            style: TextButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 16), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
+            child: const Text('إلغاء', style: TextStyle(color: Colors.grey, fontSize: 18, fontWeight: FontWeight.bold)),
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          flex: 2,
+          child: ElevatedButton.icon(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.teal,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              elevation: 4,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+            icon: isProcessing ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 3)) : const Icon(Icons.check_circle_outline, size: 28),
+            label: Text(
+              isProcessing ? 'جاري المعالجة...' : 'تأكيد ودفع',
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            onPressed: isProcessing || !canSubmit ? null : onSubmit,
+          ),
+        ),
+      ],
     );
   }
 }

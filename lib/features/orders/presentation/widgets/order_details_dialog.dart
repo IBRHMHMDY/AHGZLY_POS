@@ -1,9 +1,9 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:ahgzly_pos/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:ahgzly_pos/features/auth/presentation/bloc/auth_state.dart';
 import 'package:ahgzly_pos/features/shift/presentation/bloc/shift_bloc.dart';
 import 'package:ahgzly_pos/features/shift/presentation/bloc/shift_state.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:ahgzly_pos/core/di/dependency_injection.dart';
 import 'package:ahgzly_pos/core/services/printer_service.dart';
 import 'package:ahgzly_pos/core/usecases/usecase.dart';
@@ -23,209 +23,216 @@ class OrderDetailsDialog extends StatelessWidget {
   Widget build(BuildContext context) {
     final isRefunded = order.status == 'مرتجع';
 
-    return AlertDialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      title: Row(
-        children: [
-          Icon(
-            Icons.receipt_long,
-            color: isRefunded ? Colors.red : Colors.teal,
+    return Directionality(
+      textDirection: TextDirection.rtl,
+      child: AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        titlePadding: EdgeInsets.zero,
+        title: _DialogHeader(orderId: order.id, isRefunded: isRefunded),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+        content: SizedBox(
+          width: 500,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // 🪄 1. ملخص الإجمالي
+              _OrderSummary(total: order.total, isRefunded: isRefunded),
+              const SizedBox(height: 16),
+              
+              // 🪄 2. قائمة الأصناف
+              Flexible(child: _OrderItemsList(items: order.items)),
+            ],
           ),
-          const SizedBox(width: 8),
+        ),
+        actionsPadding: const EdgeInsets.all(24),
+        actions: [
+          _DialogActions(order: order, isRefunded: isRefunded),
+        ],
+      ),
+    );
+  }
+}
+
+// ==========================================
+// 🪄 المكونات الفرعية (Sub-Widgets)
+// ==========================================
+
+class _DialogHeader extends StatelessWidget {
+  final int orderId;
+  final bool isRefunded;
+
+  const _DialogHeader({required this.orderId, required this.isRefunded});
+
+  @override
+  Widget build(BuildContext context) {
+    final color = isRefunded ? Colors.red : Colors.teal;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+      decoration: BoxDecoration(
+        color: isRefunded ? Colors.red.shade50 : Colors.teal.shade50,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(color: isRefunded ? Colors.red.shade100 : Colors.teal.shade100, shape: BoxShape.circle),
+            child: Icon(Icons.receipt_long, color: color.shade800, size: 28),
+          ),
+          const SizedBox(width: 12),
+          Text('تفاصيل الطلب #$orderId', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20, color: color.shade900)),
+        ],
+      ),
+    );
+  }
+}
+
+class _OrderSummary extends StatelessWidget {
+  final int total;
+  final bool isRefunded;
+
+  const _OrderSummary({required this.total, required this.isRefunded});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: isRefunded ? Colors.red.shade50 : Colors.teal.shade50,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: isRefunded ? Colors.red.shade200 : Colors.teal.shade200),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text('إجمالي الطلب:', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: isRefunded ? Colors.red.shade900 : Colors.teal.shade900)),
           Text(
-            'تفاصيل الطلب #${order.id}',
-            style: const TextStyle(fontWeight: FontWeight.bold),
+            '${MoneyFormatter.format(total)} ج.م',
+            style: TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.w900,
+              color: isRefunded ? Colors.red : Colors.teal,
+              decoration: isRefunded ? TextDecoration.lineThrough : null,
+            ),
           ),
         ],
       ),
-      content: SizedBox(
-        width: 500,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: isRefunded ? Colors.red.shade50 : Colors.teal.shade50,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    'إجمالي الطلب:',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                  Text(
-                    '${MoneyFormatter.format(order.total)} ج.م',
-                    style: TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
-                      color: isRefunded ? Colors.red : Colors.teal,
-                      decoration: isRefunded
-                          ? TextDecoration.lineThrough
-                          : null,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 16),
-            Flexible(
-              child: ListView.separated(
-                shrinkWrap: true,
-                itemCount: order.items.length,
-                separatorBuilder: (_, _) => const Divider(),
-                itemBuilder: (ctx, index) {
-                  final item = order.items[index];
-                  return ListTile(
-                    title: Text(
-                      item.itemName,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                      ),
-                    ),
-                    subtitle: Text(
-                      'الكمية: ${item.quantity}',
-                      style: TextStyle(color: Colors.grey.shade700),
-                    ),
-                    trailing: Text(
-                      '${MoneyFormatter.format(item.unitPrice * item.quantity)} ج.م',
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                      ),
-                    ),
-                  );
-                },
-              ),
-            ),
-          ],
+    );
+  }
+}
+
+class _OrderItemsList extends StatelessWidget {
+  final List<dynamic> items; // يفضل استخدام النوع الصحيح بدلاً من dynamic لاحقاً
+
+  const _OrderItemsList({required this.items});
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView.separated(
+      shrinkWrap: true,
+      itemCount: items.length,
+      separatorBuilder: (_, _) => const Divider(height: 1),
+      itemBuilder: (ctx, index) {
+        final item = items[index];
+        return ListTile(
+          contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          title: Text(item.itemName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+          subtitle: Text('الكمية: ${item.quantity}', style: TextStyle(color: Colors.grey.shade700, fontWeight: FontWeight.w600)),
+          trailing: Text(
+            '${MoneyFormatter.format(item.unitPrice * item.quantity)} ج.م',
+            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.black87),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _DialogActions extends StatelessWidget {
+  final OrderHistory order;
+  final bool isRefunded;
+
+  const _DialogActions({required this.order, required this.isRefunded});
+
+  Future<void> _handleReprint() async {
+    final settingsResult = await sl<GetSettingsUseCase>().call(NoParams());
+    String rName = 'مـطـعـم احـجـزلـي';
+    String tNum = '123-456-789';
+    String pName = 'EPSON Printer';
+
+    settingsResult.fold(
+      (failure) => debugPrint('Failed to get settings: ${failure.message}'), 
+      (settings) {
+        rName = settings.restaurantName;
+        tNum = settings.taxNumber;
+        pName = settings.printerName;
+      }
+    );
+
+    final printerService = sl<PrinterService>();
+    await printerService.printReceiptUsb(
+      receiptWidget: CustomerHistoryReceiptWidget(order: order, restaurantName: rName, taxNumber: tNum),
+      printerName: pName,
+    );
+  }
+
+  void _handleRefund(BuildContext context) {
+    Navigator.pop(context);
+    final authState = context.read<AuthBloc>().state;
+    final shiftState = context.read<ShiftBloc>().state;
+
+    final bool isAdmin = (authState is AuthAuthenticated) && authState.user.isAdmin;
+    final int? shiftId = (shiftState is ActiveShiftLoaded) ? shiftState.shift.id : null;
+    
+    context.read<OrdersBloc>().add(RefundOrderEvent(isAdmin: isAdmin, shiftId: shiftId, orderId: order.id));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          style: TextButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12)),
+          child: const Text('إغلاق', style: TextStyle(fontSize: 16, color: Colors.grey, fontWeight: FontWeight.bold)),
         ),
-      ),
-      actionsPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      actions: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Row(
+        const Spacer(),
+        if (!isRefunded)
+          OutlinedButton.icon(
+            style: OutlinedButton.styleFrom(
+              foregroundColor: Colors.red,
+              side: const BorderSide(color: Colors.red),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+            onPressed: () => _handleRefund(context),
+            icon: const Icon(Icons.refresh),
+            label: const Text('استرجاع الفاتورة', style: TextStyle(fontWeight: FontWeight.bold)),
+          )
+        else
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(color: Colors.red.shade50, borderRadius: BorderRadius.circular(12), border: Border.all(color: Colors.red.shade200)),
+            child: const Row(
               children: [
-                if (!isRefunded)
-                  OutlinedButton.icon(
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: Colors.red,
-                      side: const BorderSide(color: Colors.red),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                    onPressed: () {
-                      Navigator.pop(context);
-                      final authState = context.read<AuthBloc>().state;
-                      final shiftState = context.read<ShiftBloc>().state;
-
-                      final bool isAdmin =
-                          (authState is AuthAuthenticated) &&
-                          authState.user.isAdmin;
-                      final int? shiftId = (shiftState is ActiveShiftLoaded)
-                          ? shiftState.shift.id
-                          : null;
-                      context.read<OrdersBloc>().add(
-                        RefundOrderEvent(
-                          isAdmin: isAdmin,
-                          shiftId: shiftId,
-                          orderId: order.id,
-                        ),
-                      );
-                    },
-                    icon: const Icon(Icons.refresh),
-                    label: const Text(
-                      'استرجاع (Refund)',
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                  )
-                else
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 8,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.red.shade100,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: const Text(
-                      'تم استرجاع الطلب',
-                      style: TextStyle(
-                        color: Colors.red,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-
-                const SizedBox(width: 12),
-
-                ElevatedButton.icon(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue.shade50,
-                    foregroundColor: Colors.blue.shade700,
-                    elevation: 0,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  onPressed: () async {
-                    // Fetch settings from Domain Layer
-                    final settingsResult = await sl<GetSettingsUseCase>().call(
-                      NoParams(),
-                    );
-                    
-                    // Default values in case of failure
-                    String rName = 'مـطـعـم احـجـزلـي';
-                    String tNum = '123-456-789';
-                    String pName = 'EPSON Printer'; // Added default printer name
-
-                    // Safely extract values if settings were successfully fetched
-                    settingsResult.fold(
-                      (failure) {
-                         // Log error or show a snackbar (Error Handling)
-                         debugPrint('Failed to get settings: ${failure.message}');
-                      }, 
-                      (settings) {
-                        rName = settings.restaurantName;
-                        tNum = settings.taxNumber;
-                        pName = settings.printerName; // Extracted printer name
-                      }
-                    );
-
-                    // Execute Print with the extracted parameters
-                    final printerService = sl<PrinterService>();
-                    await printerService.printReceiptUsb(
-                      receiptWidget: CustomerHistoryReceiptWidget(
-                        order: order,
-                        restaurantName: rName,
-                        taxNumber: tNum,
-                      ),
-                      printerName: pName, // Passed the required missing parameter
-                    );
-                  },
-                  icon: const Icon(Icons.print),
-                  label: const Text(
-                    'إعادة طباعة',
-                    style: TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                ),
+                Icon(Icons.info_outline, color: Colors.red, size: 20),
+                SizedBox(width: 8),
+                Text('تم استرجاع الطلب', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
               ],
             ),
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text(
-                'إغلاق',
-                style: TextStyle(fontSize: 16, color: Colors.grey),
-              ),
-            ),
-          ],
+          ),
+        const SizedBox(width: 12),
+        ElevatedButton.icon(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.teal,
+            foregroundColor: Colors.white,
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            elevation: 2,
+          ),
+          onPressed: _handleReprint,
+          icon: const Icon(Icons.print),
+          label: const Text('إعادة طباعة', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
         ),
       ],
     );
