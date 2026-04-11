@@ -1,7 +1,11 @@
-import 'package:flutter/foundation.dart';
+import 'package:equatable/equatable.dart';
 
-@immutable
-abstract class LicenseState {}
+abstract class LicenseState extends Equatable {
+  const LicenseState();
+  
+  @override
+  List<Object> get props => [];
+}
 
 class LicenseInitial extends LicenseState {}
 
@@ -9,15 +13,20 @@ class LicenseLoading extends LicenseState {}
 
 class LicenseValidState extends LicenseState {}
 
-// تم دمج حالات الانتهاء والتلاعب في حالة واحدة للرفض مع تمرير السبب
 class LicenseInvalidState extends LicenseState {
   final String message;
-  LicenseInvalidState({required this.message});
+  const LicenseInvalidState({required this.message});
+  
+  @override
+  List<Object> get props => [message];
 }
 
 class LicenseActivationSuccessState extends LicenseState {}
 
 class LicenseErrorState extends LicenseState {
   final String message;
-  LicenseErrorState({required this.message});
+  const LicenseErrorState({required this.message});
+  
+  @override
+  List<Object> get props => [message];
 }

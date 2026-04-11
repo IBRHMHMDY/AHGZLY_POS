@@ -17,7 +17,7 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
     super.initState();
-    // بدء عملية فحص سلامة النظام والترخيص فور فتح التطبيق
+    // 🛡️ بدء عملية فحص سلامة النظام والترخيص فور فتح التطبيق
     context.read<LicenseBloc>().add(CheckLicenseEvent());
   }
 
@@ -34,17 +34,23 @@ class _SplashScreenState extends State<SplashScreen> {
         }
       },
       child: Scaffold(
+        backgroundColor: Colors.white,
         body: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.point_of_sale, size: 100, color: Colors.blueAccent),
+              // Refactored: توحيد الألوان مع شاشة LockScreen لبناء هوية بصرية متماسكة
+              Icon(Icons.point_of_sale, size: 100, color: Colors.teal.shade700),
               const SizedBox(height: 24),
-              const CircularProgressIndicator(),
+              const CircularProgressIndicator(color: Colors.teal),
               const SizedBox(height: 16),
+              // Refactored: تعريب النص ليتوافق مع نظام الـ POS الخاص بنا
               Text(
-                'Verifying System Integrity...',
-                style: Theme.of(context).textTheme.titleMedium,
+                'جاري التحقق من سلامة النظام...',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.grey.shade700,
+                ),
               ),
             ],
           ),

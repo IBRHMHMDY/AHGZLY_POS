@@ -20,11 +20,13 @@ class OrdersBloc extends Bloc<OrdersEvent, OrdersState> {
     });
 
     on<RefundOrderEvent>((event, emit) async {
-      emit(OrdersLoading()); // تحميل مؤقت
-      final failureOrSuccess = await refundOrderUseCase(event.orderId);
+      emit(OrdersLoading()); 
+      // Refactored: تمرير الكائن RefundOrderParams
+      final failureOrSuccess = await refundOrderUseCase(RefundOrderParams(orderId: event.orderId));
+      
       failureOrSuccess.fold(
         (failure) => emit(OrdersError(failure.message)),
-        (_) => add(LoadOrdersEvent(isAdmin: event.isAdmin, shiftId: event.shiftId)), // إعادة تحميل السجل بعد نجاح الاسترجاع
+        (_) => add(LoadOrdersEvent(isAdmin: event.isAdmin, shiftId: event.shiftId)), 
       );
     });
   }

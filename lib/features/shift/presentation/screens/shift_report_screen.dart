@@ -59,9 +59,13 @@ class _ShiftReportScreenState extends State<ShiftReportScreen> {
 
     final settingsResult = await sl<GetSettingsUseCase>().call(NoParams());
     String restaurantName = 'مطعم احجزلي';
+    String printerName = 'EPSON Printer'; // ✅ إضافة المتغير
     settingsResult.fold(
       (failure) {},
-      (settings) => restaurantName = settings.restaurantName,
+      (settings) {
+        restaurantName = settings.restaurantName;
+        printerName = settings.printerName; // ✅ استخراج اسم الطابعة
+      },
     );
 
     final authState = context.read<AuthBloc>().state;
@@ -72,8 +76,9 @@ class _ShiftReportScreenState extends State<ShiftReportScreen> {
         shift: shift,
         restaurantName: restaurantName,
         cashierName: cashierName,
-        isXReport: true, // ⬅️ التعديل هنا: نخبر الفاتورة أن هذا مجرد استعلام (X-Report)
+        isXReport: true, 
       ),
+      printerName: printerName, // ✅ تمرير الطابعة
     );
 
     if (mounted) {
@@ -93,9 +98,13 @@ class _ShiftReportScreenState extends State<ShiftReportScreen> {
   void _processClosePrintAndExit(Shift shift) async {
     final settingsResult = await sl<GetSettingsUseCase>().call(NoParams());
     String restaurantName = 'مطعم احجزلي';
+    String printerName = 'EPSON Printer'; // ✅ إضافة المتغير
     settingsResult.fold(
       (failure) {},
-      (settings) => restaurantName = settings.restaurantName,
+      (settings) {
+        restaurantName = settings.restaurantName;
+        printerName = settings.printerName; // ✅ استخراج اسم الطابعة
+      },
     );
 
     final authState = context.read<AuthBloc>().state;
@@ -107,6 +116,7 @@ class _ShiftReportScreenState extends State<ShiftReportScreen> {
         restaurantName: restaurantName,
         cashierName: cashierName,
       ),
+      printerName: printerName, // ✅ تمرير الطابعة
     );
 
     if (mounted) {

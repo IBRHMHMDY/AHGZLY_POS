@@ -5,7 +5,6 @@ import 'package:ahgzly_pos/core/error/failures.dart';
 import 'package:ahgzly_pos/features/expenses/domain/entities/expense.dart';
 import 'package:ahgzly_pos/features/expenses/data/models/expense_model.dart';
 
-
 class ExpensesRepositoryImpl implements ExpensesRepository {
   final ExpensesLocalDataSource localDataSource;
   ExpensesRepositoryImpl({required this.localDataSource});
@@ -15,19 +14,18 @@ class ExpensesRepositoryImpl implements ExpensesRepository {
     try {
       final expenses = await localDataSource.getExpenses(isAdmin: isAdmin, shiftId: shiftId);
       return Right(expenses);
-    } catch (e) {
-      return Left(DatabaseFailure('فشل في جلب المصروفات'));
+    } catch (_) {
+      return const Left(DatabaseFailure('فشل في جلب قائمة المصروفات.'));
     }
   }
 
   @override
   Future<Either<Failure, void>> addExpense(Expense expense) async {
     try {
-      // يجب أن تتأكد أن ExpenseModel يحتوي على حقل shiftId
       await localDataSource.addExpense(ExpenseModel.fromEntity(expense));
       return const Right(null);
-    } catch (e) {
-      return Left(DatabaseFailure('فشل في إضافة المصروف'));
+    } catch (_) {
+      return const Left(DatabaseFailure('فشل في حفظ المصروف. يرجى التأكد من مساحة التخزين.'));
     }
   }
 
@@ -36,8 +34,8 @@ class ExpensesRepositoryImpl implements ExpensesRepository {
     try {
       await localDataSource.deleteExpense(id);
       return const Right(null);
-    } catch (e) {
-      return Left(DatabaseFailure('فشل في حذف المصروف'));
+    } catch (_) {
+      return const Left(DatabaseFailure('فشل في حذف المصروف.'));
     }
   }
 }

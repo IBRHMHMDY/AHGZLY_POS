@@ -5,7 +5,6 @@ import 'package:ahgzly_pos/features/pos/data/datasources/pos_local_data_source.d
 import 'package:ahgzly_pos/features/pos/data/models/order_model.dart';
 import 'package:dartz/dartz.dart' hide Order;
 
-
 class PosRepositoryImpl implements PosRepository {
   final PosLocalDataSource localDataSource;
 
@@ -17,8 +16,9 @@ class PosRepositoryImpl implements PosRepository {
       final orderModel = OrderModel.fromEntity(order);
       final orderId = await localDataSource.saveOrder(orderModel);
       return Right(orderId);
-    } catch (e) {
-      return Left(DatabaseFailure('فشل في حفظ الطلب: ${e.toString()}'));
+    } catch (_) {
+      // Refactored: إخفاء رسائل النظام الفنية عن المستخدم وإرجاع رسالة مفهومة
+      return const Left(DatabaseFailure('فشل في حفظ الطلب. يرجى المحاولة مرة أخرى.'));
     }
   }
 }

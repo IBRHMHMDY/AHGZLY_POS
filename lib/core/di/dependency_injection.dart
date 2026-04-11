@@ -118,7 +118,7 @@ Future<void> init() async {
 // Core & Security
 // ==========================================
 void _initCore() {
-  sl.registerLazySingleton<AppDatabase>(() => AppDatabase());
+  sl.registerLazySingleton<AppDatabase>(() => AppDatabase(openConnection('pos_sys_drift.db')));
   sl.registerLazySingleton<PrinterService>(() => PrinterService());
   sl.registerLazySingleton<FlutterSecureStorage>(
     () => const FlutterSecureStorage(),

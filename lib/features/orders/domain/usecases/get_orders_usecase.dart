@@ -3,11 +3,17 @@ import 'package:ahgzly_pos/core/usecases/usecase.dart';
 import 'package:ahgzly_pos/features/orders/domain/entities/order_history.dart';
 import 'package:ahgzly_pos/features/orders/domain/repositories/orders_repository.dart';
 import 'package:dartz/dartz.dart';
+import 'package:equatable/equatable.dart';
 
-class OrdersParams {
+// Refactored: جعل الـ Params ترث من Equatable لتوافق المعايير
+class OrdersParams extends Equatable {
   final bool isAdmin;
   final int? shiftId;
-  OrdersParams({required this.isAdmin, required this.shiftId});
+  
+  const OrdersParams({required this.isAdmin, required this.shiftId});
+
+  @override
+  List<Object?> get props => [isAdmin, shiftId];
 }
 
 class GetOrdersUseCase implements UseCase<List<OrderHistory>, OrdersParams> {

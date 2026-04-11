@@ -1,7 +1,4 @@
 import 'dart:typed_data';
-import 'package:ahgzly_pos/core/di/dependency_injection.dart';
-import 'package:ahgzly_pos/core/usecases/usecase.dart';
-import 'package:ahgzly_pos/features/settings/domain/usecases/get_settings_usecase.dart';
 import 'package:flutter/material.dart';
 import 'package:screenshot/screenshot.dart';
 import 'package:pdf/pdf.dart';
@@ -11,14 +8,14 @@ import 'package:printing/printing.dart';
 class PrinterService {
   final ScreenshotController _screenshotController = ScreenshotController();
 
-  /// دالة الطباعة المخصصة لطابعات الـ USB عبر نظام Windows
-  // lib/core/services/printer_service.dart
-
+  /// Prints a receipt via USB. 
+  /// [printerName] is now passed as a parameter to avoid tight coupling with the Service Locator (DI).
   Future<bool> printReceiptUsb({
     required Widget receiptWidget,
+    required String printerName, // Refactored: Injected parameter instead of calling UseCase inside
   }) async {
     try {
-      // 1. التقاط الصورة مع إعطاء وقت كافٍ لرسم النصوص (300ms) لتجنب الشاشات البيضاء
+      // 1. Capture image with sufficient delay to render text
       final Uint8List capturedImage = await _screenshotController.captureFromWidget(
         receiptWidget,
         pixelRatio: 2.0, 
@@ -28,18 +25,14 @@ class PrinterService {
       final pdf = pw.Document();
       final image = pw.MemoryImage(capturedImage);
 
-      // 2. 🪄 الإصلاح الجوهري: حساب طول الفاتورة الفعلي لمنع الطابعة من تجاهل الأمر
-      // عرض ورق 80mm يساوي تقريباً 226.77 نقطة (Points)
+      // 2. Calculate dynamic receipt height based on standard 80mm width
       final double printWidth = PdfPageFormat.roll80.width;
       final double imgWidth = image.width!.toDouble();
       final double imgHeight = image.height!.toDouble();
-      
-      // حساب الطول المتناسب مع العرض
       final double printHeight = (imgHeight / imgWidth) * printWidth;
 
       pdf.addPage(
         pw.Page(
-          // إنشاء مقاس ورق دقيق يطابق طول الفاتورة بدلاً من الطول اللانهائي
           pageFormat: PdfPageFormat(printWidth, printHeight, marginAll: 0),
           build: (pw.Context context) {
             return pw.FullPage(
@@ -50,33 +43,26 @@ class PrinterService {
         ),
       );
 
-      // 3. جلب اسم الطابعة
-      final settingsResult = await sl<GetSettingsUseCase>().call(NoParams());
-      String savedPrinterName = '';
-      settingsResult.fold(
-        (failure) => null,
-        (settings) => savedPrinterName = settings.printerName,
-      );
-
-      // 4. مطابقة الطابعة
+      // 3. Match the printer name provided by the presentation/domain layer
       final printers = await Printing.listPrinters();
       Printer? targetPrinter;
       for (var p in printers) {
-        if (p.name.trim().toLowerCase() == savedPrinterName.trim().toLowerCase()) {
+        if (p.name.trim().toLowerCase() == printerName.trim().toLowerCase()) {
           targetPrinter = p;
           break;
         }
       }
 
-      // 5. أمر الطباعة
+      // 4. Execute print command
       if (targetPrinter != null) {
         await Printing.directPrintPdf(
           printer: targetPrinter,
           onLayout: (PdfPageFormat format) async => pdf.save(),
         );
       } else {
+        // Fallback to standard dialog if printer is not found
         await Printing.layoutPdf(
-          name: 'Z-Report',
+          name: 'Receipt',
           onLayout: (PdfPageFormat format) async => pdf.save(),
         );
       }

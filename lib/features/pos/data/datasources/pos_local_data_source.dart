@@ -22,11 +22,11 @@ class PosLocalDataSourceImpl implements PosLocalDataSource {
         
         // 1. التحقق من الوردية
         if (order.shiftId == null || order.shiftId == 0) {
-            throw CacheException(message: 'لا يمكن إتمام البيع: لا توجد وردية نشطة محددة.');
+            throw CacheException('لا يمكن إتمام البيع: لا توجد وردية نشطة محددة.');
         }
 
         if (order.items.isEmpty) {
-          throw CacheException(message: 'لا يمكن حفظ فاتورة فارغة.');
+          throw CacheException('لا يمكن حفظ فاتورة فارغة.');
         }
 
         // 2. إدخال الفاتورة
@@ -69,7 +69,7 @@ class PosLocalDataSourceImpl implements PosLocalDataSource {
             .getSingleOrNull();
 
         if (shift == null) {
-           throw CacheException(message: 'الوردية الحالية غير نشطة أو تم إغلاقها.');
+           throw CacheException('الوردية الحالية غير نشطة أو تم إغلاقها.');
         }
 
         final paymentMethod = order.paymentMethod.toLowerCase();
@@ -98,7 +98,7 @@ class PosLocalDataSourceImpl implements PosLocalDataSource {
       if (e is CacheException) {
         rethrow;
       }
-      throw CacheException(message: 'حدث خطأ غير متوقع أثناء حفظ الفاتورة: ${e.toString()}');
+      throw CacheException('حدث خطأ غير متوقع أثناء حفظ الفاتورة: ${e.toString()}');
     }
   }
 }

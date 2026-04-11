@@ -1,5 +1,3 @@
-// مسار الملف: lib/core/database/drift/app_database.dart
-
 import 'dart:io';
 import 'package:ahgzly_pos/core/utils/hash_util.dart';
 import 'package:drift/drift.dart';
@@ -8,31 +6,27 @@ import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
 import 'tables.dart';
 
-part 'app_database.g.dart'; // هذا الملف سيتم توليده تلقائياً
+part 'app_database.g.dart'; 
 
 @DriftDatabase(tables: [
-  License,
-  Settings,
-  Users,
-  Shifts,
-  Categories,
-  Items,
-  Expenses,
-  Orders,
-  OrderItems,
+  License, Settings, Users, Shifts, Categories, 
+  Items, Expenses, Orders, OrderItems,
 ])
 class AppDatabase extends _$AppDatabase {
-  AppDatabase() : super(_openConnection());
+  
+  // Refactored: Accept QueryExecutor to allow dependency injection (e.g., In-Memory DB for testing)
+  AppDatabase(super.e);
 
   @override
-  int get schemaVersion => 14; // نفس رقم الإصدار القديم لضمان التوافق
+  int get schemaVersion => 14; 
 
   @override
   MigrationStrategy get migration {
     return MigrationStrategy(
       onCreate: (Migrator m) async {
         await m.createAll();
-        // إدخال البيانات الافتراضية للترخيص والإعدادات بعد إنشاء الجداول
+        
+        // Insert default initial data
         await into(license).insert(
           LicenseCompanion.insert(
             isActivated: const Value(false),
@@ -78,17 +72,18 @@ class AppDatabase extends _$AppDatabase {
         );
       },
       beforeOpen: (details) async {
-        // تفعيل Foreign Keys لضمان تكامل العلاقات
+        // Enable Foreign Keys for relational integrity
         await customStatement('PRAGMA foreign_keys = ON');
       },
     );
   }
 }
 
-LazyDatabase _openConnection() {
+// Refactored: Extracted helper function to be used in dependency injection setup (e.g., dependency_injection.dart)
+LazyDatabase openConnection(String dbName) {
   return LazyDatabase(() async {
     final dbFolder = await getApplicationDocumentsDirectory();
-    final file = File(p.join(dbFolder.path, 'pos_sys_drift.db')); // اسم جديد مبدئياً لتجنب التعارض أثناء التطوير
+    final file = File(p.join(dbFolder.path, dbName)); 
     return NativeDatabase.createInBackground(file);
   });
 }

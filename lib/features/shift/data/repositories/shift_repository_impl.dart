@@ -1,10 +1,9 @@
 import 'package:ahgzly_pos/core/error/exceptions.dart';
 import 'package:ahgzly_pos/core/error/failures.dart';
+import 'package:dartz/dartz.dart';
 import 'package:ahgzly_pos/features/shift/data/datasources/shift_local_data_source.dart';
 import 'package:ahgzly_pos/features/shift/domain/entities/shift.dart';
 import 'package:ahgzly_pos/features/shift/domain/repositories/shift_repository.dart';
-import 'package:dartz/dartz.dart';
-
 
 class ShiftRepositoryImpl implements ShiftRepository {
   final ShiftLocalDataSource localDataSource;
@@ -16,22 +15,19 @@ class ShiftRepositoryImpl implements ShiftRepository {
     try {
       final shift = await localDataSource.getActiveShift();
       return Right(shift);
-    } on CacheException catch (e) {
-      return Left(CacheFailure(e.message));
-    } catch (e) {
-      return const Left(CacheFailure('حدث خطأ أثناء جلب حالة الوردية.'));
+    } on LocalDatabaseException catch (_) {
+      // Refactored: User-friendly error message
+      return const Left(DatabaseFailure('حدث خطأ أثناء التحقق من الوردية النشطة. يرجى المحاولة لاحقاً.'));
     }
   }
 
   @override
-  Future<Either<Failure, Shift>> openShift({required int startingCash, required int cashierId}) async {
+  Future<Either<Failure, Shift>> openShift({required int userId, required int startingCash}) async {
     try {
-      final shift = await localDataSource.openShift(startingCash: startingCash, cashierId: cashierId);
+      final shift = await localDataSource.openShift(cashierId: userId,startingCash: startingCash);
       return Right(shift);
-    } on CacheException catch (e) {
-      return Left(CacheFailure(e.message));
-    } catch (e) {
-      return const Left(CacheFailure('فشل في فتح الوردية.'));
+    } on LocalDatabaseException catch (_) {
+      return const Left(DatabaseFailure('فشل في فتح الوردية. تأكد من مساحة التخزين الخاصة بالجهاز.'));
     }
   }
 
@@ -40,10 +36,8 @@ class ShiftRepositoryImpl implements ShiftRepository {
     try {
       final shift = await localDataSource.closeShift(shiftId: shiftId, actualCash: actualCash);
       return Right(shift);
-    } on CacheException catch (e) {
-      return Left(CacheFailure(e.message));
-    } catch (e) {
-      return const Left(CacheFailure('فشل في إغلاق الوردية.'));
+    } on LocalDatabaseException catch (_) {
+      return const Left(DatabaseFailure('فشل في إغلاق الوردية. يرجى مراجعة الحسابات وتكرار المحاولة.'));
     }
   }
 }

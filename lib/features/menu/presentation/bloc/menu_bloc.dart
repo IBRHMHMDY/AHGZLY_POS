@@ -39,7 +39,7 @@ class MenuBloc extends Bloc<MenuEvent, MenuState> {
 
     on<AddCategoryEvent>((event, emit) async {
       emit(MenuLoading());
-      final failureOrSuccess = await addCategory(event.category);
+      final failureOrSuccess = await addCategory(AddCategoryParams(category: event.category));
       failureOrSuccess.fold(
         (failure) => emit(MenuError(failure.message)),
         (id) => emit(const MenuOperationSuccess('تمت إضافة الفئة بنجاح')),
@@ -48,7 +48,7 @@ class MenuBloc extends Bloc<MenuEvent, MenuState> {
 
     on<UpdateCategoryEvent>((event, emit) async {
       emit(MenuLoading());
-      final failureOrSuccess = await updateCategory(event.category);
+      final failureOrSuccess = await updateCategory(UpdateCategoryParams(category: event.category));
       failureOrSuccess.fold(
         (failure) => emit(MenuError(failure.message)),
         (_) => emit(const MenuOperationSuccess('تم تحديث الفئة بنجاح')),
@@ -57,7 +57,7 @@ class MenuBloc extends Bloc<MenuEvent, MenuState> {
 
     on<DeleteCategoryEvent>((event, emit) async {
       emit(MenuLoading());
-      final failureOrSuccess = await deleteCategory(event.id);
+      final failureOrSuccess = await deleteCategory(DeleteCategoryParams(id: event.id));
       failureOrSuccess.fold(
         (failure) => emit(MenuError(failure.message)),
         (_) => emit(const MenuOperationSuccess('تم حذف الفئة بنجاح')),
@@ -67,7 +67,7 @@ class MenuBloc extends Bloc<MenuEvent, MenuState> {
     // Items
     on<FetchItemsEvent>((event, emit) async {
       emit(MenuLoading());
-      final failureOrItems = await getItems(event.categoryId);
+      final failureOrItems = await getItems(GetItemsParams(categoryId: event.categoryId));
       failureOrItems.fold(
         (failure) => emit(MenuError(failure.message)),
         (items) => emit(ItemsLoaded(items)),
@@ -76,7 +76,7 @@ class MenuBloc extends Bloc<MenuEvent, MenuState> {
 
     on<AddItemEvent>((event, emit) async {
       emit(MenuLoading());
-      final failureOrSuccess = await addItem(event.item);
+      final failureOrSuccess = await addItem(AddItemParams(item: event.item));
       failureOrSuccess.fold(
         (failure) => emit(MenuError(failure.message)),
         (id) => emit(const MenuOperationSuccess('تمت إضافة الصنف بنجاح')),
@@ -85,7 +85,7 @@ class MenuBloc extends Bloc<MenuEvent, MenuState> {
 
     on<UpdateItemEvent>((event, emit) async {
       emit(MenuLoading());
-      final failureOrSuccess = await updateItem(event.item);
+      final failureOrSuccess = await updateItem(UpdateItemParams(item: event.item));
       failureOrSuccess.fold(
         (failure) => emit(MenuError(failure.message)),
         (_) => emit(const MenuOperationSuccess('تم تحديث الصنف بنجاح')),
@@ -94,7 +94,7 @@ class MenuBloc extends Bloc<MenuEvent, MenuState> {
 
     on<DeleteItemEvent>((event, emit) async {
       emit(MenuLoading());
-      final failureOrSuccess = await deleteItem(event.id);
+      final failureOrSuccess = await deleteItem(DeleteItemParams(id: event.id));
       failureOrSuccess.fold(
         (failure) => emit(MenuError(failure.message)),
         (_) => emit(const MenuOperationSuccess('تم حذف الصنف بنجاح')),

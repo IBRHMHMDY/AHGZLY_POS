@@ -3,7 +3,6 @@ import 'package:ahgzly_pos/features/license/data/datasources/license_local_data_
 import 'package:ahgzly_pos/features/license/domain/repositories/license_repository.dart';
 import 'package:dartz/dartz.dart';
 
-
 class LicenseRepositoryImpl implements LicenseRepository {
   final LicenseLocalDataSource localDataSource;
 
@@ -14,8 +13,9 @@ class LicenseRepositoryImpl implements LicenseRepository {
     try {
       final licenseToken = await localDataSource.getSavedLicense();
       return Right(licenseToken);
-    } catch (e) {
-      return Left(CacheFailure('Failed to read secure storage: ${e.toString()}'));
+    } catch (_) {
+      // Refactored: Arabic user-friendly error
+      return const Left(CacheFailure('فشل في قراءة بيانات الترخيص من الذاكرة الآمنة.'));
     }
   }
 
@@ -24,8 +24,8 @@ class LicenseRepositoryImpl implements LicenseRepository {
     try {
       await localDataSource.saveLicense(secureLicenseKey);
       return const Right(null);
-    } catch (e) {
-      return Left(CacheFailure('Failed to save secure license: ${e.toString()}'));
+    } catch (_) {
+      return const Left(CacheFailure('فشل في حفظ بيانات الترخيص.'));
     }
   }
 }
