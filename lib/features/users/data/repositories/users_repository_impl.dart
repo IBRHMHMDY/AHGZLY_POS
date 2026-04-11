@@ -16,8 +16,9 @@ class UsersRepositoryImpl implements UsersRepository {
     try {
       final users = await localDataSource.getUsers();
       return Right(users);
-    } on LocalDatabaseException catch (e) {
-      return Left(DatabaseFailure(e.toString()));
+    } on LocalDatabaseException catch (_) {
+      // Refactored: Prevent raw exception details from reaching the UI
+      return const Left(DatabaseFailure('حدث خطأ أثناء جلب قائمة المستخدمين. يرجى المحاولة لاحقاً.'));
     }
   }
 
@@ -28,17 +29,14 @@ class UsersRepositoryImpl implements UsersRepository {
     required String pin,
   }) async {
     try {
-      // 1. توليد Salt فريد لهذا المستخدم
       final salt = HashUtil.generateSalt();
-      
-      // 2. تشفير الـ PIN المكتوب مع الـ Salt باستخدام HashUtil
       final pinHash = HashUtil.generatePinHash(pin, salt);
       
-      // 3. حفظ البيانات المشفرة في قاعدة البيانات (الـ PIN الأصلي لا يُحفظ أبداً)
       await localDataSource.addUser(name, role, pinHash, salt);
       return const Right(null);
-    } on LocalDatabaseException catch (e) {
-      return Left(DatabaseFailure(e.toString()));
+    } on LocalDatabaseException catch (_) {
+      // Refactored: Clear Arabic error message
+      return const Left(DatabaseFailure('فشل في حفظ بيانات المستخدم. قد يكون هناك مشكلة في مساحة التخزين.'));
     }
   }
 
@@ -47,8 +45,8 @@ class UsersRepositoryImpl implements UsersRepository {
     try {
       await localDataSource.toggleUserStatus(id, isActive);
       return const Right(null);
-    } on LocalDatabaseException catch (e) {
-      return Left(DatabaseFailure(e.toString()));
+    } on LocalDatabaseException catch (_) {
+      return const Left(DatabaseFailure('فشل في تحديث حالة المستخدم. تأكد من اتصال قاعدة البيانات.'));
     }
   }
 }
