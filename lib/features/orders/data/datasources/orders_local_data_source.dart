@@ -82,7 +82,7 @@ class OrdersLocalDataSourceImpl implements OrdersLocalDataSource {
       
       return orders;
     } catch (e) {
-      throw CacheException(message: 'فشل في جلب سجل الطلبات: $e');
+      throw CacheException('فشل في جلب سجل الطلبات: $e');
     }
   }
 
@@ -96,11 +96,11 @@ class OrdersLocalDataSourceImpl implements OrdersLocalDataSource {
             .getSingleOrNull();
         
         if (order == null) {
-          throw CacheException(message: 'لم يتم العثور على الفاتورة.');
+          throw CacheException('لم يتم العثور على الفاتورة.');
         }
 
         if (order.status == 'مرتجع') {
-          throw CacheException(message: 'هذه الفاتورة مسترجعة بالفعل.');
+          throw CacheException('هذه الفاتورة مسترجعة بالفعل.');
         }
 
         // 2. تحديث حالة الفاتورة إلى مرتجع
@@ -115,7 +115,7 @@ class OrdersLocalDataSourceImpl implements OrdersLocalDataSource {
             .getSingleOrNull();
 
         if (shift == null) {
-          throw CacheException(message: 'لا يمكن استرجاع الفاتورة: الوردية الخاصة بها مغلقة أو غير نشطة.');
+          throw CacheException('لا يمكن استرجاع الفاتورة: الوردية الخاصة بها مغلقة أو غير نشطة.');
         }
 
         final total = order.total;
@@ -141,7 +141,7 @@ class OrdersLocalDataSourceImpl implements OrdersLocalDataSource {
       });
     } catch (e) {
       if (e is CacheException) rethrow;
-      throw CacheException(message: 'حدث خطأ أثناء إتمام عملية المرتجع: ${e.toString()}');
+      throw CacheException('حدث خطأ أثناء إتمام عملية المرتجع: ${e.toString()}');
     }
   }
 }

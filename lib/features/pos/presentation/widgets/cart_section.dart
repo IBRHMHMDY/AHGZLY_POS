@@ -1,6 +1,8 @@
+import 'package:ahgzly_pos/core/usecases/usecase.dart';
 import 'package:ahgzly_pos/core/utils/money_formatter.dart';
 import 'package:ahgzly_pos/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:ahgzly_pos/features/auth/presentation/bloc/auth_state.dart';
+import 'package:ahgzly_pos/features/settings/domain/usecases/get_settings_usecase.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:ahgzly_pos/core/di/dependency_injection.dart';
@@ -25,6 +27,12 @@ class _CartSectionState extends State<CartSection> {
   void _handleAutoPrint(BuildContext context, int orderId, PosUpdated orderState, String mode) async {
     final authState = context.read<AuthBloc>().state;
     final String currentCashierName = (authState is AuthAuthenticated) ? authState.user.name : 'غير معروف';
+    
+    // Fetch Settings to extract printer name
+    final settingsResult = await sl<GetSettingsUseCase>().call(NoParams());
+    String pName = 'EPSON Printer';
+    settingsResult.fold((l) => null, (r) => pName = r.printerName);
+
     final printerService = sl<PrinterService>();
     bool customerSuccess = true;
     bool kitchenSuccess = true;
@@ -39,12 +47,14 @@ class _CartSectionState extends State<CartSection> {
           cashierName: currentCashierName,
           customerName: _lastCustomerData?['name'] ?? '', customerPhone: _lastCustomerData?['phone'] ?? '', customerAddress: _lastCustomerData?['address'] ?? '',
         ),
+        printerName: pName, // ✅ تمرير اسم الطابعة هنا
       );
     }
 
     if (mode == 'kitchen' || mode == 'both') {
       kitchenSuccess = await printerService.printReceiptUsb(
         receiptWidget: KitchenReceiptWidget(orderId: orderId, orderType: orderState.orderType, items: orderState.cartItems),
+        printerName: pName, // ✅ تمرير اسم الطابعة هنا
       );
     }
 
@@ -74,6 +84,11 @@ class _CartSectionState extends State<CartSection> {
             icon: const Icon(Icons.person),
             label: const Text('فاتورة العميل'),
             onPressed: () async {
+              // Fetch settings on demand
+              final settingsResult = await sl<GetSettingsUseCase>().call(NoParams());
+              String pName = 'EPSON Printer';
+              settingsResult.fold((l) => null, (r) => pName = r.printerName);
+
               await sl<PrinterService>().printReceiptUsb(
                 receiptWidget: CustomerReceiptWidget(
                   orderId: orderId, orderType: previousState.orderType, items: previousState.cartItems,
@@ -83,6 +98,7 @@ class _CartSectionState extends State<CartSection> {
                   customerName: _lastCustomerData?['name'] ?? '', customerPhone: _lastCustomerData?['phone'] ?? '', customerAddress: _lastCustomerData?['address'] ?? '',
                   cashierName: currentCashierName,
                 ),
+                printerName: pName, // ✅ تمرير اسم الطابعة هنا
               );
             },
           ),
@@ -91,7 +107,15 @@ class _CartSectionState extends State<CartSection> {
             icon: const Icon(Icons.kitchen),
             label: const Text('بون المطبخ'),
             onPressed: () async {
-              await sl<PrinterService>().printReceiptUsb(receiptWidget: KitchenReceiptWidget(orderId: orderId, orderType: previousState.orderType, items: previousState.cartItems));
+              // Fetch settings on demand
+              final settingsResult = await sl<GetSettingsUseCase>().call(NoParams());
+              String pName = 'EPSON Printer';
+              settingsResult.fold((l) => null, (r) => pName = r.printerName);
+
+              await sl<PrinterService>().printReceiptUsb(
+                receiptWidget: KitchenReceiptWidget(orderId: orderId, orderType: previousState.orderType, items: previousState.cartItems),
+                printerName: pName, // ✅ تمرير اسم الطابعة هنا
+              );
             },
           ),
         ],

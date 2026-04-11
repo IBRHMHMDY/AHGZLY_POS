@@ -46,7 +46,7 @@ class ExpensesLocalDataSourceImpl implements ExpensesLocalDataSource {
       
       return driftExpenses.map((e) => ExpenseModel.fromMap(_driftExpenseToMap(e))).toList();
     } catch (e) {
-      throw CacheException(message: 'فشل في جلب المصروفات: $e');
+      throw CacheException( 'فشل في جلب المصروفات: $e');
     }
   }
 
@@ -61,7 +61,7 @@ class ExpensesLocalDataSourceImpl implements ExpensesLocalDataSource {
             .getSingleOrNull();
 
         if (shift == null) {
-          throw CacheException(message: 'لا يمكن إضافة مصروف: لا توجد وردية نشطة.');
+          throw CacheException( 'لا يمكن إضافة مصروف: لا توجد وردية نشطة.');
         }
 
         // 2. إدخال المصروف الجديد
@@ -84,7 +84,7 @@ class ExpensesLocalDataSourceImpl implements ExpensesLocalDataSource {
       });
     } catch (e) {
       if (e is CacheException) rethrow;
-      throw CacheException(message: 'حدث خطأ أثناء حفظ المصروف: ${e.toString()}');
+      throw CacheException( 'حدث خطأ أثناء حفظ المصروف: ${e.toString()}');
     }
   }
 
@@ -98,7 +98,7 @@ class ExpensesLocalDataSourceImpl implements ExpensesLocalDataSource {
             .getSingleOrNull();
 
         if (expense == null) {
-          throw CacheException(message: 'لم يتم العثور على المصروف.');
+          throw CacheException( 'لم يتم العثور على المصروف.');
         }
 
         // 2. جلب الوردية الخاصة بهذا المصروف
@@ -122,7 +122,7 @@ class ExpensesLocalDataSourceImpl implements ExpensesLocalDataSource {
       });
     } catch (e) {
       if (e is CacheException) rethrow;
-      throw CacheException(message: 'حدث خطأ أثناء حذف المصروف: ${e.toString()}');
+      throw CacheException( 'حدث خطأ أثناء حذف المصروف: ${e.toString()}');
     }
   }
 }

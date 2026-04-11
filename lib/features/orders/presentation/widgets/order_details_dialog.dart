@@ -176,16 +176,30 @@ class OrderDetailsDialog extends StatelessWidget {
                     ),
                   ),
                   onPressed: () async {
+                    // Fetch settings from Domain Layer
                     final settingsResult = await sl<GetSettingsUseCase>().call(
                       NoParams(),
                     );
+                    
+                    // Default values in case of failure
                     String rName = 'مـطـعـم احـجـزلـي';
                     String tNum = '123-456-789';
-                    settingsResult.fold((l) => null, (r) {
-                      rName = r.restaurantName;
-                      tNum = r.taxNumber;
-                    });
+                    String pName = 'EPSON Printer'; // Added default printer name
 
+                    // Safely extract values if settings were successfully fetched
+                    settingsResult.fold(
+                      (failure) {
+                         // Log error or show a snackbar (Error Handling)
+                         debugPrint('Failed to get settings: ${failure.message}');
+                      }, 
+                      (settings) {
+                        rName = settings.restaurantName;
+                        tNum = settings.taxNumber;
+                        pName = settings.printerName; // Extracted printer name
+                      }
+                    );
+
+                    // Execute Print with the extracted parameters
                     final printerService = sl<PrinterService>();
                     await printerService.printReceiptUsb(
                       receiptWidget: CustomerHistoryReceiptWidget(
@@ -193,6 +207,7 @@ class OrderDetailsDialog extends StatelessWidget {
                         restaurantName: rName,
                         taxNumber: tNum,
                       ),
+                      printerName: pName, // Passed the required missing parameter
                     );
                   },
                   icon: const Icon(Icons.print),

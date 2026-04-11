@@ -26,12 +26,15 @@ class SecurityFailure extends Failure {
   const SecurityFailure(super.message);
 }
 
-// تمت إضافة هذا الكلاس ليتوافق مع نظام الـ Auth الذي بنيناه
 class AuthFailure extends Failure {
   const AuthFailure(super.message);
 }
 
 class ValidationFailure extends Failure {
   const ValidationFailure(super.message);
-  
+}
+
+// تمت إضافة PrinterFailure لمعالجة أخطاء الطباعة وتمريرها للـ UI
+class PrinterFailure extends Failure {
+  const PrinterFailure(super.message);
 }

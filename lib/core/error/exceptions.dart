@@ -1,21 +1,25 @@
-// lib/core/error/exceptions.dart
-
-class AuthException implements Exception {
+/// Base Exception for the application to allow catching general app exceptions if needed
+abstract class AppException implements Exception {
   final String message;
-  AuthException(this.message);
+  AppException(this.message);
 }
 
-class SecurityException implements Exception {
-  final String message;
-  SecurityException(this.message);
+class AuthException extends AppException {
+  AuthException(super.message);
 }
 
-class CacheException implements Exception {
-  final String message;
-  CacheException({required this.message});
+class SecurityException extends AppException {
+  SecurityException(super.message);
 }
 
-class LocalDatabaseException implements Exception {
-  final String message;
-  LocalDatabaseException(this.message);
+class CacheException extends AppException {
+  CacheException(super.message);
+}
+
+class LocalDatabaseException extends AppException {
+  LocalDatabaseException(super.message);
+}
+
+class PrinterException extends AppException {
+  PrinterException(super.message);
 }
