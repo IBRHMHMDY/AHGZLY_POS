@@ -533,7 +533,13 @@ class ZReportReceiptWidget extends StatelessWidget {
             _buildRow('مبيعات الفيزا:', shift.totalVisa),
             _buildRow('مبيعات إنستاباي:', shift.totalInstapay),
             const Divider(color: Colors.black, thickness: 1),
-            _buildRow('عدد طلبات المرتجع:', shift.refundedOrdersCount),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text('عدد طلبات المرتجع:', style: TextStyle(fontSize: 16, color: Colors.black)),
+                Text('${shift.totalOrders}', style: const TextStyle(fontSize: 16, color: Colors.black)),
+              ],
+            ),
             _buildRow('إجمالي المرتجعات:', shift.totalRefunds),
             const Divider(color: Colors.black, thickness: 1),
             _buildRow('إجمالي المصروفات:', shift.totalExpenses),
@@ -595,6 +601,7 @@ class ZReportReceiptWidget extends StatelessWidget {
             const SizedBox(height: 20),
             Text('طُبع في: ${dateFormat.format(DateTime.now())}', style: const TextStyle(fontSize: 14, color: Colors.black)),
             const SizedBox(height: 10),
+            Text('مع تحيات Ibrahim Hamdy', style: TextStyle(fontSize: 12, color: Colors.black)),
           ],
         ),
       ),
