@@ -16,7 +16,6 @@ class AhgzlyPOS extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // تم تغليف MaterialApp بـ AppProviders
     return AppProviders(
       child: MaterialApp.router(
         title: 'احجزلي - نقطة بيع',

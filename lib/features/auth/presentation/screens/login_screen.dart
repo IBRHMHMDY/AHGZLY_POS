@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -6,12 +7,9 @@ import '../bloc/auth_bloc.dart';
 import '../bloc/auth_event.dart';
 import '../bloc/auth_state.dart';
 
-// استيراد ملفات الوردية للتحقق منها بعد تسجيل الدخول
 import '../../../shift/presentation/bloc/shift_bloc.dart';
 import '../../../shift/presentation/bloc/shift_event.dart';
 import '../../../shift/presentation/bloc/shift_state.dart';
-
-import 'dart:io';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -26,17 +24,13 @@ class _LoginScreenState extends State<LoginScreen> {
 
   void _onKeypadPressed(String value) {
     if (_pin.length < _maxPinLength) {
-      setState(() {
-        _pin += value;
-      });
+      setState(() => _pin += value);
     }
   }
 
   void _onDeletePressed() {
     if (_pin.isNotEmpty) {
-      setState(() {
-        _pin = _pin.substring(0, _pin.length - 1);
-      });
+      setState(() => _pin = _pin.substring(0, _pin.length - 1));
     }
   }
 
@@ -46,38 +40,30 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
-  // دالة إظهار رسالة التأكيد قبل الإغلاق لمنع الخروج بالخطأ
   void _showExitConfirmation() {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: const Row(
           children: [
-            Icon(Icons.warning_amber_rounded, color: Colors.red, size: 28),
-            SizedBox(width: 8),
-            Text('تأكيد الإغلاق', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
+            Icon(Icons.power_settings_new_rounded, color: Colors.red, size: 28),
+            SizedBox(width: 12),
+            Text('تأكيد إغلاق النظام', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
           ],
         ),
-        content: const Text(
-          'هل أنت متأكد من أنك تريد إغلاق نظام نقطة البيع (POS) بالكامل؟',
-          style: TextStyle(fontSize: 16),
-        ),
+        content: const Text('هل أنت متأكد من أنك تريد إغلاق نظام نقطة البيع (POS) بالكامل؟', style: TextStyle(fontSize: 16)),
+        actionsPadding: const EdgeInsets.all(20),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('تراجع', style: TextStyle(fontSize: 16)),
+            child: const Text('تراجع', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.grey)),
           ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            ),
-            onPressed: () {
-              // إغلاق البرنامج بالكامل بقوة
-              exit(0);
-            },
-            child: const Text('تأكيد وإغلاق', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+          ElevatedButton.icon(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
+            icon: const Icon(Icons.exit_to_app),
+            label: const Text('تأكيد وإغلاق', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+            onPressed: () => exit(0),
           ),
         ],
       ),
@@ -86,150 +72,194 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.grey[100],
-      floatingActionButtonLocation: FloatingActionButtonLocation.startFloat,
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: _showExitConfirmation, // استدعاء دالة التأكيد
-        backgroundColor: Colors.red.shade700,
-        foregroundColor: Colors.white,
-        elevation: 8, // لزيادة البروز (Shadow)
-        icon: const Icon(Icons.power_settings_new, size: 28),
-        label: const Text(
-          'إغلاق النظام',
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+    return Directionality(
+      textDirection: TextDirection.rtl,
+      child: Scaffold(
+        backgroundColor: Colors.teal.shade50, // 🪄 خلفية متناسقة مع الهوية
+        floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
+        floatingActionButton: FloatingActionButton.extended(
+          onPressed: _showExitConfirmation,
+          backgroundColor: Colors.red.shade700,
+          foregroundColor: Colors.white,
+          elevation: 4,
+          icon: const Icon(Icons.power_settings_new, size: 24),
+          label: const Text('إغلاق النظام', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
         ),
-      ),
-      // تم تغيير BlocConsumer إلى MultiBlocListener لمراقبة الدخول والوردية معاً
-      body: MultiBlocListener(
-        listeners: [
-          BlocListener<AuthBloc, AuthState>(
-            listener: (context, state) {
-              if (state is AuthAuthenticated) {
-                // 1. الدخول ناجح -> لا تذهب للمبيعات! اطلب فحص الوردية أولاً
-                context.read<ShiftBloc>().add(CheckActiveShiftEvent());
-              } else if (state is AuthError) {
-                setState(() { _pin = ''; });
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text(state.message), backgroundColor: Colors.red),
-                );
-              }
-            },
-          ),
-          BlocListener<ShiftBloc, ShiftState>(
-            listener: (context, state) {
-              if (state is ActiveShiftLoaded) {
-                // 2. توجد وردية مفتوحة مسبقاً -> ادخل لبرنامج المبيعات مباشرة
-                context.go(AppRouter.posPath);
-              } else if (state is NoActiveShiftState) {
-                // 3. لا توجد وردية نشطة -> وجه الكاشير إجبارياً لشاشة فتح الدرج
-                final authState = context.read<AuthBloc>().state;
-                if (authState is AuthAuthenticated) {
-                  context.go(AppRouter.openShiftPath, extra: authState.user.id);
+        body: MultiBlocListener(
+          listeners: [
+            BlocListener<AuthBloc, AuthState>(
+              listener: (context, state) {
+                if (state is AuthAuthenticated) {
+                  context.read<ShiftBloc>().add(CheckActiveShiftEvent());
+                } else if (state is AuthError) {
+                  setState(() => _pin = '');
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(state.message), backgroundColor: Colors.red));
                 }
-              } else if (state is ShiftError) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text(state.message), backgroundColor: Colors.red),
-                );
-              }
+              },
+            ),
+            BlocListener<ShiftBloc, ShiftState>(
+              listener: (context, state) {
+                if (state is ActiveShiftLoaded) {
+                  context.go(AppRouter.posPath);
+                } else if (state is NoActiveShiftState) {
+                  final authState = context.read<AuthBloc>().state;
+                  if (authState is AuthAuthenticated) {
+                    context.go(AppRouter.openShiftPath, extra: authState.user.id);
+                  }
+                } else if (state is ShiftError) {
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(state.message), backgroundColor: Colors.red));
+                }
+              },
+            ),
+          ],
+          child: BlocBuilder<AuthBloc, AuthState>(
+            builder: (context, state) {
+              final isLoading = (state is AuthLoading || context.read<ShiftBloc>().state is ShiftLoading);
+
+              return Center(
+                child: Container(
+                  width: 420,
+                  padding: const EdgeInsets.all(40),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(24),
+                    boxShadow: [BoxShadow(color: Colors.teal.withOpacity(0.1), blurRadius: 30, offset: const Offset(0, 10))],
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // 🪄 1. الهيدر (شعار تسجيل الدخول)
+                      Container(
+                        padding: const EdgeInsets.all(20),
+                        decoration: BoxDecoration(color: Colors.teal.shade50, shape: BoxShape.circle),
+                        child: const Icon(Icons.lock_person_rounded, size: 70, color: Colors.teal),
+                      ),
+                      const SizedBox(height: 24),
+                      const Text('تسجيل الدخول', style: TextStyle(fontSize: 26, fontWeight: FontWeight.w900, color: Colors.black87)),
+                      const SizedBox(height: 8),
+                      const Text('يرجى إدخال الرمز السري (PIN) للمتابعة', style: TextStyle(fontSize: 16, color: Colors.grey)),
+                      const SizedBox(height: 32),
+                      
+                      // 🪄 2. نقاط الـ PIN المستخرجة
+                      _PinDots(pinLength: _pin.length, maxLength: _maxPinLength),
+                      const SizedBox(height: 40),
+
+                      // 🪄 3. لوحة المفاتيح المستخرجة (Numpad)
+                      _Numpad(
+                        onNumberPressed: _onKeypadPressed,
+                        onDeletePressed: _onDeletePressed,
+                        onSubmitPressed: _onSubmit,
+                        isLoading: isLoading,
+                      ),
+                    ],
+                  ),
+                ),
+              );
             },
           ),
-        ],
-        child: BlocBuilder<AuthBloc, AuthState>(
-          builder: (context, state) {
-            return Center(
-              child: Container(
-                width: 400,
-                padding: const EdgeInsets.all(32),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 20, spreadRadius: 5),
-                  ],
-                ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(Icons.lock_person, size: 64, color: Colors.blueAccent),
-                    const SizedBox(height: 16),
-                    const Text(
-                      'Enter PIN',
-                      style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(height: 32),
-                    
-                    // حقل عرض الـ PIN (نقاط مخفية)
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: List.generate(_maxPinLength, (index) {
-                        return Container(
-                          margin: const EdgeInsets.symmetric(horizontal: 8),
-                          width: 20,
-                          height: 20,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: index < _pin.length ? Colors.blueAccent : Colors.grey[300],
-                          ),
-                        );
-                      }),
-                    ),
-                    const SizedBox(height: 40),
-
-                    // لوحة الأرقام (Numpad)
-                    GridView.count(
-                      shrinkWrap: true,
-                      crossAxisCount: 3,
-                      childAspectRatio: 1.5,
-                      mainAxisSpacing: 16,
-                      crossAxisSpacing: 16,
-                      physics: const NeverScrollableScrollPhysics(),
-                      children: [
-                        _buildNumpadButton('1'), _buildNumpadButton('2'), _buildNumpadButton('3'),
-                        _buildNumpadButton('4'), _buildNumpadButton('5'), _buildNumpadButton('6'),
-                        _buildNumpadButton('7'), _buildNumpadButton('8'), _buildNumpadButton('9'),
-                        _buildIconButton(Icons.backspace_outlined, _onDeletePressed, Colors.redAccent),
-                        _buildNumpadButton('0'),
-                        _buildIconButton(Icons.check, _onSubmit, Colors.green),
-                      ],
-                    ),
-                    
-                    const SizedBox(height: 24),
-                    if (state is AuthLoading || context.read<ShiftBloc>().state is ShiftLoading)
-                      const CircularProgressIndicator(),
-                  ],
-                ),
-              ),
-            );
-          },
         ),
       ),
     );
   }
+}
 
-  Widget _buildNumpadButton(String number) {
-    return ElevatedButton(
-      onPressed: () => _onKeypadPressed(number),
-      style: ElevatedButton.styleFrom(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        backgroundColor: Colors.grey[50],
-        foregroundColor: Colors.black87,
-        elevation: 1,
-      ),
-      child: Text(number, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+// ==========================================
+// 🪄 المكونات الفرعية (Sub-Widgets) المستخرجة
+// ==========================================
+
+class _PinDots extends StatelessWidget {
+  final int pinLength;
+  final int maxLength;
+
+  const _PinDots({required this.pinLength, required this.maxLength});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: List.generate(maxLength, (index) {
+        final isFilled = index < pinLength;
+        return AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          margin: const EdgeInsets.symmetric(horizontal: 8),
+          width: isFilled ? 24 : 20,
+          height: isFilled ? 24 : 20,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: isFilled ? Colors.teal : Colors.grey.shade300,
+            border: isFilled ? null : Border.all(color: Colors.grey.shade400, width: 2),
+          ),
+        );
+      }),
+    );
+  }
+}
+
+class _Numpad extends StatelessWidget {
+  final ValueChanged<String> onNumberPressed;
+  final VoidCallback onDeletePressed;
+  final VoidCallback onSubmitPressed;
+  final bool isLoading;
+
+  const _Numpad({
+    required this.onNumberPressed,
+    required this.onDeletePressed,
+    required this.onSubmitPressed,
+    required this.isLoading,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GridView.count(
+      shrinkWrap: true,
+      crossAxisCount: 3,
+      childAspectRatio: 1.4,
+      mainAxisSpacing: 16,
+      crossAxisSpacing: 16,
+      physics: const NeverScrollableScrollPhysics(),
+      children: [
+        _buildNumberBtn('1'), _buildNumberBtn('2'), _buildNumberBtn('3'),
+        _buildNumberBtn('4'), _buildNumberBtn('5'), _buildNumberBtn('6'),
+        _buildNumberBtn('7'), _buildNumberBtn('8'), _buildNumberBtn('9'),
+        _buildActionBtn(Icons.backspace_rounded, onDeletePressed, Colors.redAccent.shade100, Colors.red),
+        _buildNumberBtn('0'),
+        isLoading 
+            ? _buildLoadingBtn() 
+            : _buildActionBtn(Icons.login_rounded, onSubmitPressed, Colors.teal.shade100, Colors.teal.shade800),
+      ],
     );
   }
 
-  Widget _buildIconButton(IconData icon, VoidCallback onPressed, Color color) {
+  Widget _buildNumberBtn(String number) {
     return ElevatedButton(
-      onPressed: onPressed,
+      onPressed: isLoading ? null : () => onNumberPressed(number),
       style: ElevatedButton.styleFrom(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        backgroundColor: color.withOpacity(0.1),
-        foregroundColor: color,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        backgroundColor: Colors.grey.shade100,
+        foregroundColor: Colors.teal.shade900,
         elevation: 0,
       ),
-      child: Icon(icon, size: 28),
+      child: Text(number, style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold)),
+    );
+  }
+
+  Widget _buildActionBtn(IconData icon, VoidCallback onPressed, Color bgColor, Color iconColor) {
+    return ElevatedButton(
+      onPressed: isLoading ? null : onPressed,
+      style: ElevatedButton.styleFrom(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        backgroundColor: bgColor,
+        foregroundColor: iconColor,
+        elevation: 0,
+      ),
+      child: Icon(icon, size: 32),
+    );
+  }
+
+  Widget _buildLoadingBtn() {
+    return Container(
+      decoration: BoxDecoration(color: Colors.teal.shade50, borderRadius: BorderRadius.circular(16)),
+      child: const Center(child: CircularProgressIndicator(color: Colors.teal)),
     );
   }
 }
