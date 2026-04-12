@@ -22,7 +22,7 @@ class SettingsScreen extends StatefulWidget {
 
 class _SettingsScreenState extends State<SettingsScreen> {
   final _formKey = GlobalKey<FormState>();
-  final BackupService _backupService = BackupService();
+  final BackupService _backupService = sl<BackupService>();
 
   List<Printer> _printers = [];
   bool _isLoadingPrinters = false;

@@ -1,4 +1,6 @@
 import 'package:ahgzly_pos/core/utils/money_formatter.dart';
+import 'package:ahgzly_pos/features/settings/presentation/bloc/settings_bloc.dart';
+import 'package:ahgzly_pos/features/settings/presentation/bloc/settings_state.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -50,44 +52,29 @@ class _ShiftReportScreenState extends State<ShiftReportScreen> {
   }
 
   void _printReportOnly(Shift shift) async {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('جاري طباعة ملخص المبيعات (X-Report)...'),
-        backgroundColor: Colors.teal,
-      ),
-    );
+    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('جاري طباعة ملخص المبيعات (X-Report)...'), backgroundColor: Colors.teal));
 
-    final settingsResult = await sl<GetSettingsUseCase>().call(NoParams());
-    String restaurantName = 'مطعم احجزلي';
-    String printerName = 'EPSON Printer';
-    settingsResult.fold((failure) {}, (settings) {
-      restaurantName = settings.restaurantName;
-      printerName = settings.printerName;
-    });
+    String rName = 'مطعم احجزلي';
+    String pName = 'EPSON Printer';
+
+    // 🪄 استخراج البيانات من الـ Bloc State
+    final settingsState = context.read<SettingsBloc>().state;
+    if (settingsState is SettingsLoaded) {
+      rName = settingsState.settings.restaurantName;
+      pName = settingsState.settings.printerName;
+    }
 
     final authState = context.read<AuthBloc>().state;
-    final cashierName = (authState is AuthAuthenticated)
-        ? authState.user.name
-        : 'غير معروف';
+    final cashierName = (authState is AuthAuthenticated) ? authState.user.name : 'غير معروف';
 
     final success = await sl<PrinterService>().printReceiptUsb(
-      receiptWidget: ZReportReceiptWidget(
-        shift: shift,
-        restaurantName: restaurantName,
-        cashierName: cashierName,
-        isXReport: true,
-      ),
-      printerName: printerName,
+      receiptWidget: ZReportReceiptWidget(shift: shift, restaurantName: rName, cashierName: cashierName, isXReport: true),
+      printerName: pName,
     );
 
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            success ? 'تمت الطباعة بنجاح!' : 'فشل الطباعة، يرجى فحص الطابعة',
-          ),
-          backgroundColor: success ? Colors.green : Colors.red,
-        ),
+        SnackBar(content: Text(success ? 'تمت الطباعة بنجاح!' : 'فشل الطباعة، يرجى فحص الطابعة'), backgroundColor: success ? Colors.green : Colors.red),
       );
     }
   }

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:screenshot/screenshot.dart';
@@ -8,42 +9,11 @@ import 'package:printing/printing.dart';
 class PrinterService {
   final ScreenshotController _screenshotController = ScreenshotController();
 
-  /// Prints a receipt via USB. 
-  /// [printerName] is now passed as a parameter to avoid tight coupling with the Service Locator (DI).
   Future<bool> printReceiptUsb({
     required Widget receiptWidget,
-    required String printerName, // Refactored: Injected parameter instead of calling UseCase inside
+    required String printerName, 
   }) async {
     try {
-      // 1. Capture image with sufficient delay to render text
-      final Uint8List capturedImage = await _screenshotController.captureFromWidget(
-        receiptWidget,
-        pixelRatio: 2.0, 
-        delay: const Duration(milliseconds: 300), 
-      );
-
-      final pdf = pw.Document();
-      final image = pw.MemoryImage(capturedImage);
-
-      // 2. Calculate dynamic receipt height based on standard 80mm width
-      final double printWidth = PdfPageFormat.roll80.width;
-      final double imgWidth = image.width!.toDouble();
-      final double imgHeight = image.height!.toDouble();
-      final double printHeight = (imgHeight / imgWidth) * printWidth;
-
-      pdf.addPage(
-        pw.Page(
-          pageFormat: PdfPageFormat(printWidth, printHeight, marginAll: 0),
-          build: (pw.Context context) {
-            return pw.FullPage(
-              ignoreMargins: true,
-              child: pw.Image(image, fit: pw.BoxFit.fill),
-            );
-          },
-        ),
-      );
-
-      // 3. Match the printer name provided by the presentation/domain layer
       final printers = await Printing.listPrinters();
       Printer? targetPrinter;
       for (var p in printers) {
@@ -53,22 +23,47 @@ class PrinterService {
         }
       }
 
-      // 4. Execute print command
-      if (targetPrinter != null) {
-        await Printing.directPrintPdf(
+      if (targetPrinter == null || !targetPrinter.isAvailable) {
+        debugPrint('Print Error: Printer [$printerName] not found or offline.');
+        return false;
+      }
+
+      final Uint8List capturedImage = await _screenshotController.captureFromWidget(
+        receiptWidget,
+        pixelRatio: 2.0, 
+        delay: const Duration(milliseconds: 300), 
+      );
+
+      final pdf = pw.Document();
+      final image = pw.MemoryImage(capturedImage);
+      final double printWidth = PdfPageFormat.roll80.width;
+      final double printHeight = (image.height!.toDouble() / image.width!.toDouble()) * printWidth;
+
+      pdf.addPage(
+        pw.Page(
+          pageFormat: PdfPageFormat(printWidth, printHeight, marginAll: 0),
+          build: (pw.Context context) => pw.FullPage(ignoreMargins: true, child: pw.Image(image, fit: pw.BoxFit.fill)),
+        ),
+      );
+
+      // 🪄 الحل الجذري لمشكلة FutureOr:
+      // تغليف دالة الطباعة بـ Future<bool>.value لضمان دعم دالة timeout
+      final bool printResult = await Future<bool>.value(
+        Printing.directPrintPdf(
           printer: targetPrinter,
           onLayout: (PdfPageFormat format) async => pdf.save(),
-        );
-      } else {
-        // Fallback to standard dialog if printer is not found
-        await Printing.layoutPdf(
-          name: 'Receipt',
-          onLayout: (PdfPageFormat format) async => pdf.save(),
-        );
-      }
-      return true;
+        )
+      ).timeout(
+        const Duration(seconds: 15),
+        onTimeout: () {
+          debugPrint('Print Error: Spooler Timeout.');
+          return false; // نعتبر الطباعة فاشلة إذا طالت المدة
+        },
+      );
+
+      return printResult;
     } catch (e) {
-      debugPrint('USB Print Error: $e');
+      debugPrint('USB Print Exception: $e');
       return false;
     }
   }
