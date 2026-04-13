@@ -1,3 +1,4 @@
+import 'package:ahgzly_pos/core/common/enums/enums_data.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:ahgzly_pos/features/auth/presentation/bloc/auth_bloc.dart';
@@ -21,7 +22,7 @@ class OrderDetailsDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isRefunded = order.status == 'مرتجع';
+    final isRefunded = order.status == OrderStatus.refunded;
 
     return Directionality(
       textDirection: TextDirection.rtl,

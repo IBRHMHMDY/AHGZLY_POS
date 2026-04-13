@@ -1,4 +1,7 @@
+import 'package:ahgzly_pos/core/common/enums/enums_data.dart';
 import 'package:ahgzly_pos/core/extensions/order_status.dart';
+import 'package:ahgzly_pos/core/extensions/order_type.dart';
+import 'package:ahgzly_pos/core/extensions/payment_method.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:ahgzly_pos/features/auth/presentation/bloc/auth_bloc.dart';
@@ -125,6 +128,11 @@ class _OrderCard extends StatelessWidget {
 
   const _OrderCard({required this.order});
 
+  // [Refactor] دالة بسيطة لتنسيق التاريخ بدون الحاجة لمكتبات خارجية
+  String _formatDate(DateTime date) {
+    return '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')} ${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
+  }
+
   @override
   Widget build(BuildContext context) {
     final date = order.createdAt;
@@ -152,15 +160,18 @@ class _OrderCard extends StatelessWidget {
             children: [
               Icon(Icons.access_time, size: 16, color: Colors.grey.shade600),
               const SizedBox(width: 4),
-              Text(date.toIso8601String(), style: TextStyle(color: Colors.grey.shade700)),
+              // [Refactor] استخدام التاريخ المنسق
+              Text(_formatDate(date), style: TextStyle(color: Colors.grey.shade700)),
               const SizedBox(width: 12),
               Icon(Icons.shopping_bag_outlined, size: 16, color: Colors.grey.shade600),
               const SizedBox(width: 4),
-              Text(order.orderType.arabicName, style: TextStyle(color: Colors.grey.shade700)),
+              // [Refactor] استخدام toDisplayName
+              Text(order.orderType.toDisplayName(), style: TextStyle(color: Colors.grey.shade700)),
               const SizedBox(width: 12),
               Icon(isRefunded ? Icons.cancel_outlined : Icons.payment, size: 16, color: isRefunded ? Colors.red : Colors.grey.shade600),
               const SizedBox(width: 4),
-              Text(isRefunded ? OrderStatus.refunded.arabicName : order.paymentMethod.arabicName, style: TextStyle(color: isRefunded ? Colors.red : Colors.grey.shade700, fontWeight: isRefunded ? FontWeight.bold : FontWeight.normal)),
+              // [Refactor] استخدام toDisplayName
+              Text(isRefunded ? OrderStatus.refunded.toDisplayName() : order.paymentMethod.toDisplayName(), style: TextStyle(color: isRefunded ? Colors.red : Colors.grey.shade700, fontWeight: isRefunded ? FontWeight.bold : FontWeight.normal)),
             ],
           ),
         ),

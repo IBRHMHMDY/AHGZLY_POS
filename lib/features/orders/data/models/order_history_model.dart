@@ -1,9 +1,5 @@
-// مسار الملف: lib/features/orders/data/models/order_history_model.dart
-
 import 'package:ahgzly_pos/features/orders/domain/entities/order_history_entity.dart';
-import 'package:ahgzly_pos/core/extensions/order_type.dart';
-import 'package:ahgzly_pos/core/extensions/payment_method.dart';
-import 'package:ahgzly_pos/core/extensions/order_status.dart';
+import 'package:ahgzly_pos/core/database/app_database.dart'; // للوصول إلى OrderData
 
 class OrderHistoryModel extends OrderHistoryEntity {
   const OrderHistoryModel({
@@ -18,20 +14,17 @@ class OrderHistoryModel extends OrderHistoryEntity {
     required super.items,
   });
 
-  factory OrderHistoryModel.fromMap(
-    Map<String, dynamic> map,
-    List<OrderItemHistoryModel> items,
-  ) {
+  // [Refactor]: دالة Factory تقرأ البيانات مباشرة من Drift بفضل الـ TypeConverters
+  factory OrderHistoryModel.fromDrift(OrderData order, List<OrderItemHistoryModel> items) {
     return OrderHistoryModel(
-      id: map['id'] as int,
-      // [Clean Code]: قراءة النص من الداتابيز وتحويله لـ Enum باستخدام الدالة المساعدة
-      orderType: OrderType.fromString(map['order_type'] as String),
-      subTotal: (map['sub_total'] as num).toInt(),
-      discount: (map['discount'] as num?)?.toInt() ?? 0,
-      total: (map['total'] as num).toInt(),
-      paymentMethod: PaymentMethod.fromString(map['payment_method'] as String),
-      createdAt: DateTime.parse(map['created_at'] as String), // تحويل لنوع DateTime
-      status: OrderStatus.fromString(map['status'] as String),
+      id: order.id,
+      orderType: order.orderType,       // ممرر كـ Enum تلقائياً
+      subTotal: order.subTotal,
+      discount: order.discount,
+      total: order.total,
+      paymentMethod: order.paymentMethod, // ممرر كـ Enum تلقائياً
+      createdAt: order.createdAt,         // ممرر كـ DateTime تلقائياً
+      status: order.status,               // ممرر كـ Enum تلقائياً
       items: items,
     );
   }
@@ -44,11 +37,12 @@ class OrderItemHistoryModel extends OrderItemHistoryEntity {
     required super.unitPrice,
   });
   
-  factory OrderItemHistoryModel.fromMap(Map<String, dynamic> map) {
+  // [Refactor]: قراءة مباشرة
+  factory OrderItemHistoryModel.fromDrift(String name, int quantity, int unitPrice) {
     return OrderItemHistoryModel(
-      itemName: map['item_name'] as String,
-      quantity: map['quantity'] as int,
-      unitPrice: (map['unit_price'] as num).toInt(), 
+      itemName: name,
+      quantity: quantity,
+      unitPrice: unitPrice, 
     );
   }
 }
