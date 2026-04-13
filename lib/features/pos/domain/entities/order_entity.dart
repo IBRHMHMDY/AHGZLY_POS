@@ -6,17 +6,17 @@ import 'package:ahgzly_pos/features/pos/domain/entities/order_item_entity.dart';
 
 class OrderEntity extends Equatable {
   final int? shiftId; 
-  final int? tableId; // [Added] لدعم نظام الصالات والطاولات لاحقاً
-  final OrderType orderType; // [Refactored] String -> Enum
+  final int? tableId; 
+  final OrderType orderType; 
   final int subTotal;    
   final int discount;    
   final int taxAmount;   
   final int serviceFee;  
   final int deliveryFee; 
   final int total;       
-  final PaymentMethod paymentMethod; // [Refactored] String -> Enum
-  final OrderStatus status; // [Refactored] String -> Enum
-  final DateTime createdAt; // [Refactored] String -> DateTime
+  final PaymentMethod paymentMethod; 
+  final OrderStatus status; 
+  final DateTime createdAt; 
   final String customerName;
   final String customerPhone;
   final String customerAddress;
@@ -40,6 +40,32 @@ class OrderEntity extends Equatable {
     this.customerAddress = '', 
     required this.items,
   });
+
+  // [Refactored]: إضافة قاعدة عمل للتحقق من صحة الطلب داخل الـ Entity نفسه
+  // هذا يمنع إنشاء طلبات غير منطقية في أي مكان في التطبيق
+  bool get isValid => total >= 0 && items.isNotEmpty;
+
+  // [Refactored]: دالة لإنشاء نسخة جديدة من الطلب مع ربط الوردية (Immutability)
+  OrderEntity copyWithShift(int newShiftId) {
+    return OrderEntity(
+      shiftId: newShiftId,
+      tableId: tableId,
+      orderType: orderType,
+      subTotal: subTotal,
+      discount: discount,
+      taxAmount: taxAmount,
+      serviceFee: serviceFee,
+      deliveryFee: deliveryFee,
+      total: total,
+      paymentMethod: paymentMethod,
+      status: status,
+      createdAt: createdAt,
+      customerName: customerName,
+      customerPhone: customerPhone,
+      customerAddress: customerAddress,
+      items: items,
+    );
+  }
 
   @override
   List<Object?> get props => [
