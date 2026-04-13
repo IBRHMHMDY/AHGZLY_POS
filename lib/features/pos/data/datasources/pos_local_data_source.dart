@@ -4,7 +4,7 @@ import 'package:ahgzly_pos/core/database/app_database.dart';
 import 'package:ahgzly_pos/core/error/exceptions.dart';
 import 'package:ahgzly_pos/features/pos/data/models/order_model.dart';
 import 'package:ahgzly_pos/features/pos/data/models/order_item_model.dart';
-import 'package:ahgzly_pos/core/extensions/payment_method.dart'; // [Added] 
+import 'package:ahgzly_pos/core/common/enums/enums_data.dart'; 
 import 'package:drift/drift.dart';
 
 abstract class PosLocalDataSource {
@@ -21,7 +21,6 @@ class PosLocalDataSourceImpl implements PosLocalDataSource {
     try {
       return await appDatabase.transaction(() async {
         
-        // 1. التحقق من الوردية
         if (order.shiftId == null || order.shiftId == 0) {
             throw CacheException('لا يمكن إتمام البيع: لا توجد وردية نشطة محددة.');
         }
@@ -30,28 +29,27 @@ class PosLocalDataSourceImpl implements PosLocalDataSource {
           throw CacheException('لا يمكن حفظ فاتورة فارغة.');
         }
 
-        // 2. إدخال الفاتورة (Mapping Enums/DateTime to Drift Strings)
+        // [Refactor]: تمرير الـ Enums والـ DateTime مباشرة بفضل TypeConverters
         final orderId = await appDatabase.into(appDatabase.orders).insert(
           OrdersCompanion.insert(
             shiftId: order.shiftId!,
-            tableId: Value(order.tableId), // تمرير معرف الطاولة إذا وُجد
-            orderType: order.orderType.name,
+            tableId: Value(order.tableId),
+            orderType: order.orderType,       // بدون .name
             subTotal: order.subTotal,
             discount: Value(order.discount),
             taxAmount: order.taxAmount,
             serviceFee: order.serviceFee,
             deliveryFee: order.deliveryFee,
             total: order.total,
-            paymentMethod: order.paymentMethod.name,
-            status: order.status.name,
+            paymentMethod: order.paymentMethod, // بدون .name
+            status: order.status,               // بدون .name
             customerName: Value(order.customerName),
             customerPhone: Value(order.customerPhone),
             customerAddress: Value(order.customerAddress),
-            createdAt: order.createdAt.toIso8601String(), // String
+            createdAt: order.createdAt,         // بدون toIso8601String()
           ),
         );
 
-        // 3. إدخال عناصر الفاتورة
         for (var item in order.items) {
           final itemModel = item as OrderItemModel;
           await appDatabase.into(appDatabase.orderItems).insert(
@@ -65,7 +63,6 @@ class PosLocalDataSourceImpl implements PosLocalDataSource {
           );
         }
 
-        // 4. تحديث الوردية
         final shift = await (appDatabase.select(appDatabase.shifts)
               ..where((t) => t.id.equals(order.shiftId!) & t.status.equals('active')))
             .getSingleOrNull();
@@ -74,12 +71,10 @@ class PosLocalDataSourceImpl implements PosLocalDataSource {
            throw CacheException('الوردية الحالية غير نشطة أو تم إغلاقها.');
         }
 
-        // [Clean Code]: تقييم طرق الدفع مباشرة باستخدام الـ Enums (Type Safe)
         final isVisa = order.paymentMethod == PaymentMethod.visa;
         final isInstapay = order.paymentMethod == PaymentMethod.wallet;
         final isCash = order.paymentMethod == PaymentMethod.cash;
 
-        // حساب القيم الجديدة للوردية
         final updatedShift = shift.copyWith(
           totalSales: shift.totalSales + order.total,
           totalOrders: shift.totalOrders + 1,
@@ -89,15 +84,12 @@ class PosLocalDataSourceImpl implements PosLocalDataSource {
           expectedCash: isCash ? shift.expectedCash + order.total : shift.expectedCash,
         );
 
-        // حفظ الوردية
         await appDatabase.update(appDatabase.shifts).replace(updatedShift);
 
         return orderId;
       });
     } catch (e) {
-      if (e is CacheException) {
-        rethrow;
-      }
+      if (e is CacheException) rethrow;
       throw CacheException('حدث خطأ غير متوقع أثناء حفظ الفاتورة: ${e.toString()}');
     }
   }

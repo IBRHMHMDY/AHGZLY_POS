@@ -1,3 +1,6 @@
+import 'package:ahgzly_pos/core/common/enums/enums_data.dart';
+import 'package:ahgzly_pos/core/extensions/order_type.dart';
+import 'package:ahgzly_pos/core/utils/date_time_utils.dart';
 import 'package:ahgzly_pos/core/utils/money_formatter.dart';
 import 'package:ahgzly_pos/features/shift/domain/entities/shift_entity.dart';
 import 'package:flutter/material.dart';
@@ -6,8 +9,9 @@ import 'package:ahgzly_pos/features/orders/domain/entities/order_history_entity.
 // ignore: library_prefixes
 import 'package:intl/intl.dart' as intlDateTime;
 
-Widget _buildRow(String title, int valueInCents) { // Refactored: int
-  final formattedValue = MoneyFormatter.format(valueInCents); 
+Widget _buildRow(String title, int valueInCents) {
+  // Refactored: int
+  final formattedValue = MoneyFormatter.format(valueInCents);
   return Row(
     mainAxisAlignment: MainAxisAlignment.spaceBetween,
     children: [
@@ -19,9 +23,10 @@ Widget _buildRow(String title, int valueInCents) { // Refactored: int
     ],
   );
 }
+
 class CustomerReceiptWidget extends StatelessWidget {
   final int orderId;
-  final String orderType;
+  final OrderType orderType;
   final List<CartItem> items;
   final int subTotal;
   final int discountAmount;
@@ -57,6 +62,8 @@ class CustomerReceiptWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final dateFormat = intlDateTime.DateFormat('yyyy-MM-dd hh:mm a');
+    final formattedNow = dateFormat.format(DateTime.now());
     return Container(
       width: 350,
       color: Colors.white,
@@ -91,7 +98,7 @@ class CustomerReceiptWidget extends StatelessWidget {
                   ),
                 ),
                 Text(
-                  DateTime.now().toString().substring(0, 16),
+                  formattedNow,
                   style: const TextStyle(fontSize: 14, color: Colors.black),
                 ),
               ],
@@ -109,12 +116,9 @@ class CustomerReceiptWidget extends StatelessWidget {
                   ),
                 ),
                 Text(
-                  'النوع: $orderType',
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black,
-                  ),
+                  // [Refactor] استخدام دالة العرض المخصصة للـ Enum
+                  'النوع: ${orderType.toDisplayName()}',
+                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black),
                 ),
               ],
             ),
@@ -182,7 +186,7 @@ class CustomerReceiptWidget extends StatelessWidget {
                 ),
               ],
             ),
-            if (orderType == 'دليفري' &&
+            if (orderType == OrderType.delivery &&
                 (customerName.isNotEmpty ||
                     customerPhone.isNotEmpty ||
                     customerAddress.isNotEmpty)) ...[
@@ -225,10 +229,9 @@ class CustomerReceiptWidget extends StatelessWidget {
               ),
             ),
             Text(
-              DateTime.now().toString().substring(0, 16),
+              formattedNow,
               style: const TextStyle(fontSize: 14, color: Colors.black),
             ),
-            
           ],
         ),
       ),
@@ -238,7 +241,7 @@ class CustomerReceiptWidget extends StatelessWidget {
 
 class KitchenReceiptWidget extends StatelessWidget {
   final int orderId;
-  final String orderType;
+  final OrderType orderType;
   final List<CartItem> items;
 
   const KitchenReceiptWidget({
@@ -456,7 +459,7 @@ class CustomerHistoryReceiptWidget extends StatelessWidget {
             ),
             const SizedBox(height: 20),
             Text(
-              DateTime.parse(order.createdAt).toString().substring(0, 16),
+              DateTime.parse(order.createdAt.toDisplayDate()).toString().substring(0, 16),
               style: const TextStyle(fontSize: 14, color: Colors.black),
             ),
           ],
@@ -467,11 +470,11 @@ class CustomerHistoryReceiptWidget extends StatelessWidget {
 }
 
 class ZReportReceiptWidget extends StatelessWidget {
-  final ShiftEntity shift; 
+  final ShiftEntity shift;
   final String restaurantName;
   final String cashierName;
   final bool isXReport;
-  
+
   const ZReportReceiptWidget({
     super.key,
     required this.shift,
@@ -483,16 +486,20 @@ class ZReportReceiptWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isShortage = shift.shortageOrOverage < 0;
-    final diffLabel = isShortage ? 'عجز في الدرج:' : (shift.shortageOrOverage > 0 ? 'زيادة في الدرج:' : 'مطابقة تامة:');
+    final diffLabel = isShortage
+        ? 'عجز في الدرج:'
+        : (shift.shortageOrOverage > 0 ? 'زيادة في الدرج:' : 'مطابقة تامة:');
 
     // تنسيق التواريخ بشكل مقروء وأنيق (مثال: 2023-10-25 04:30 PM)
     final dateFormat = intlDateTime.DateFormat('yyyy-MM-dd hh:mm a');
     final startTimeFormatted = dateFormat.format(shift.startTime);
-    final endTimeFormatted = shift.endTime != null 
-        ? dateFormat.format(shift.endTime!) 
+    final endTimeFormatted = shift.endTime != null
+        ? dateFormat.format(shift.endTime!)
         : dateFormat.format(DateTime.now());
 
-    final String reportTitle = isXReport ? 'ملخص مبيعات الوردية (X-Report)' : 'تقرير إغلاق الوردية (Z-Report)';
+    final String reportTitle = isXReport
+        ? 'ملخص مبيعات الوردية (X-Report)'
+        : 'تقرير إغلاق الوردية (Z-Report)';
 
     return Container(
       width: 350,
@@ -504,28 +511,62 @@ class ZReportReceiptWidget extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            Text(restaurantName, style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.black)),
+            Text(
+              restaurantName,
+              style: const TextStyle(
+                fontSize: 28,
+                fontWeight: FontWeight.bold,
+                color: Colors.black,
+              ),
+            ),
             const SizedBox(height: 10),
-            Text(reportTitle, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black)),
+            Text(
+              reportTitle,
+              style: const TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: Colors.black,
+              ),
+            ),
             const Divider(color: Colors.black, thickness: 2),
-            
+
             // توثيق الأوقات
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text('بداية الوردية:', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black)),
-                Text(startTimeFormatted, style: const TextStyle(fontSize: 16, color: Colors.black)),
+                const Text(
+                  'بداية الوردية:',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black,
+                  ),
+                ),
+                Text(
+                  startTimeFormatted,
+                  style: const TextStyle(fontSize: 16, color: Colors.black),
+                ),
               ],
             ),
-            
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text( isXReport ? 'وقت الطباعه:' : 'نهاية الوردية:', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black)),
-                  Text(endTimeFormatted, style: const TextStyle(fontSize: 16, color: Colors.black)),
-                ],
-              ),
-            
+
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  isXReport ? 'وقت الطباعه:' : 'نهاية الوردية:',
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black,
+                  ),
+                ),
+                Text(
+                  endTimeFormatted,
+                  style: const TextStyle(fontSize: 16, color: Colors.black),
+                ),
+              ],
+            ),
+
             const Divider(color: Colors.black, thickness: 2),
             _buildRow('العهدة الافتتاحية:', shift.startingCash),
             _buildRow('إجمالي المبيعات:', shift.totalSales),
@@ -536,38 +577,101 @@ class ZReportReceiptWidget extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text('عدد طلبات المرتجع:', style: TextStyle(fontSize: 16, color: Colors.black)),
-                Text('${shift.totalOrders}', style: const TextStyle(fontSize: 16, color: Colors.black)),
+                const Text(
+                  'عدد طلبات المرتجع:',
+                  style: TextStyle(fontSize: 16, color: Colors.black),
+                ),
+                Text(
+                  '${shift.totalOrders}',
+                  style: const TextStyle(fontSize: 16, color: Colors.black),
+                ),
               ],
             ),
             _buildRow('إجمالي المرتجعات:', shift.totalRefunds),
             const Divider(color: Colors.black, thickness: 1),
             _buildRow('إجمالي المصروفات:', shift.totalExpenses),
             const Divider(color: Colors.black, thickness: 2),
-            
+
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Expanded(child: Text('النقدية المتوقعة:', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black))),
-                FittedBox(fit: BoxFit.scaleDown, child: Text('${MoneyFormatter.format(shift.expectedCash)} ج.م', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black))),
+                const Expanded(
+                  child: Text(
+                    'النقدية المتوقعة:',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black,
+                    ),
+                  ),
+                ),
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    '${MoneyFormatter.format(shift.expectedCash)} ج.م',
+                    style: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black,
+                    ),
+                  ),
+                ),
               ],
             ),
-            
+
             // 🪄 التعديل الجوهري (Refactoring): إخفاء النقدية الفعلية والعجز في حالة الـ X-Report
             if (!isXReport) ...[
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Expanded(child: Text('النقدية الفعلية:', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black))),
-                  FittedBox(fit: BoxFit.scaleDown, child: Text('${MoneyFormatter.format(shift.actualCash)} ج.م', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black))),
+                  const Expanded(
+                    child: Text(
+                      'النقدية الفعلية:',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black,
+                      ),
+                    ),
+                  ),
+                  FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(
+                      '${MoneyFormatter.format(shift.actualCash)} ج.م',
+                      style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black,
+                      ),
+                    ),
+                  ),
                 ],
               ),
               const Divider(color: Colors.black, thickness: 2),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Expanded(child: Text(diffLabel, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black))),
-                  FittedBox(fit: BoxFit.scaleDown, child: Text('${MoneyFormatter.format(shift.shortageOrOverage.abs())} ج.م', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black))),
+                  Expanded(
+                    child: Text(
+                      diffLabel,
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black,
+                      ),
+                    ),
+                  ),
+                  FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(
+                      '${MoneyFormatter.format(shift.shortageOrOverage.abs())} ج.م',
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black,
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ],
@@ -576,8 +680,22 @@ class ZReportReceiptWidget extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text('إجمالي عدد الطلبات:', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black)),
-                Text('${shift.totalOrders}', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black)),
+                const Text(
+                  'إجمالي عدد الطلبات:',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black,
+                  ),
+                ),
+                Text(
+                  '${shift.totalOrders}',
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black,
+                  ),
+                ),
               ],
             ),
             const SizedBox(height: 20),
@@ -586,8 +704,22 @@ class ZReportReceiptWidget extends StatelessWidget {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text('الكاشير:', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black)),
-                  Text(cashierName, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black)),
+                  const Text(
+                    'الكاشير:',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black,
+                    ),
+                  ),
+                  Text(
+                    cashierName,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black,
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -595,13 +727,22 @@ class ZReportReceiptWidget extends StatelessWidget {
             Row(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                const Text('توقيع المـديـر: ..................................', style: TextStyle(fontSize: 16, color: Colors.black)),
+                const Text(
+                  'توقيع المـديـر: ..................................',
+                  style: TextStyle(fontSize: 16, color: Colors.black),
+                ),
               ],
             ),
             const SizedBox(height: 20),
-            Text('طُبع في: ${dateFormat.format(DateTime.now())}', style: const TextStyle(fontSize: 14, color: Colors.black)),
+            Text(
+              'طُبع في: ${dateFormat.format(DateTime.now())}',
+              style: const TextStyle(fontSize: 14, color: Colors.black),
+            ),
             const SizedBox(height: 10),
-            Text('مع تحيات Ibrahim Hamdy', style: TextStyle(fontSize: 12, color: Colors.black)),
+            Text(
+              'مع تحيات Ibrahim Hamdy',
+              style: TextStyle(fontSize: 12, color: Colors.black),
+            ),
           ],
         ),
       ),

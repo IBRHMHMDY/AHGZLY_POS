@@ -1,6 +1,4 @@
-// مسار الملف: lib/features/expenses/data/datasources/expenses_local_data_source.dart
-
-import 'package:ahgzly_pos/core/database/app_database.dart'; // استيراد Drift
+import 'package:ahgzly_pos/core/database/app_database.dart'; 
 import 'package:ahgzly_pos/core/error/exceptions.dart';
 import 'package:ahgzly_pos/features/expenses/data/models/expense_model.dart';
 import 'package:drift/drift.dart';
@@ -12,20 +10,9 @@ abstract class ExpensesLocalDataSource {
 }
 
 class ExpensesLocalDataSourceImpl implements ExpensesLocalDataSource {
-  final AppDatabase appDatabase; // Refactored: استخدام AppDatabase
+  final AppDatabase appDatabase; 
 
   ExpensesLocalDataSourceImpl({required this.appDatabase});
-
-  // Mapper لتحويل كائن Drift إلى Map يقبله Model
-  Map<String, dynamic> _driftExpenseToMap(ExpenseData driftExpense) {
-    return {
-      'id': driftExpense.id,
-      'shift_id': driftExpense.shiftId,
-      'amount': driftExpense.amount,
-      'reason': driftExpense.reason,
-      'created_at': driftExpense.createdAt,
-    };
-  }
 
   @override
   Future<List<ExpenseModel>> getExpenses({required bool isAdmin, required int? shiftId}) async {
@@ -44,37 +31,32 @@ class ExpensesLocalDataSourceImpl implements ExpensesLocalDataSource {
             .get();
       }
       
-      return driftExpenses.map((e) => ExpenseModel.fromMap(_driftExpenseToMap(e))).toList();
+      // [Refactored]: استخدام fromDrift بدلاً من Map
+      return driftExpenses.map((e) => ExpenseModel.fromDrift(e)).toList();
     } catch (e) {
-      throw CacheException( 'فشل في جلب المصروفات: $e');
+      throw CacheException('فشل في جلب المصروفات: $e');
     }
   }
 
   @override
   Future<void> addExpense(ExpenseModel expense) async {
     try {
-      // استخدام Transaction لضمان تزامن حفظ المصروف وخصمه من الدرج
       await appDatabase.transaction(() async {
-        // 1. جلب الوردية والتحقق من نشاطها
         final shift = await (appDatabase.select(appDatabase.shifts)
               ..where((t) => t.id.equals(expense.shiftId) & t.status.equals('active')))
             .getSingleOrNull();
 
-        if (shift == null) {
-          throw CacheException( 'لا يمكن إضافة مصروف: لا توجد وردية نشطة.');
-        }
+        if (shift == null) throw CacheException('لا يمكن إضافة مصروف: لا توجد وردية نشطة.');
 
-        // 2. إدخال المصروف الجديد
         await appDatabase.into(appDatabase.expenses).insert(
           ExpensesCompanion.insert(
             shiftId: expense.shiftId,
             amount: expense.amount,
             reason: expense.reason,
-            createdAt: expense.createdAt,
+            createdAt: expense.createdAt, // [Refactored]: يُمرر كـ DateTime مباشرة
           ),
         );
 
-        // 3. تحديث حسابات الوردية (تقليل العهدة المتوقعة وزيادة المصروفات)
         final updatedShift = shift.copyWith(
           totalExpenses: shift.totalExpenses + expense.amount,
           expectedCash: shift.expectedCash - expense.amount,
@@ -84,29 +66,18 @@ class ExpensesLocalDataSourceImpl implements ExpensesLocalDataSource {
       });
     } catch (e) {
       if (e is CacheException) rethrow;
-      throw CacheException( 'حدث خطأ أثناء حفظ المصروف: ${e.toString()}');
+      throw CacheException('حدث خطأ أثناء حفظ المصروف: ${e.toString()}');
     }
   }
 
   @override
   Future<void> deleteExpense(int id) async {
+    // ... (هذه الدالة تبقى كما هي لديك لأنها سليمة وتؤدي عملها بشكل ممتاز)
     try {
       await appDatabase.transaction(() async {
-        // 1. جلب المصروف المراد حذفه لمعرفة قيمته
-        final expense = await (appDatabase.select(appDatabase.expenses)
-              ..where((t) => t.id.equals(id)))
-            .getSingleOrNull();
-
-        if (expense == null) {
-          throw CacheException( 'لم يتم العثور على المصروف.');
-        }
-
-        // 2. جلب الوردية الخاصة بهذا المصروف
-        final shift = await (appDatabase.select(appDatabase.shifts)
-              ..where((t) => t.id.equals(expense.shiftId) & t.status.equals('active')))
-            .getSingleOrNull();
-
-        // 3. إذا كانت الوردية لا تزال نشطة، نقوم بإرجاع المبلغ للدرج وتقليل المصروفات
+        final expense = await (appDatabase.select(appDatabase.expenses)..where((t) => t.id.equals(id))).getSingleOrNull();
+        if (expense == null) throw CacheException('لم يتم العثور على المصروف.');
+        final shift = await (appDatabase.select(appDatabase.shifts)..where((t) => t.id.equals(expense.shiftId) & t.status.equals('active'))).getSingleOrNull();
         if (shift != null) {
           final updatedShift = shift.copyWith(
             totalExpenses: shift.totalExpenses - expense.amount,
@@ -114,15 +85,11 @@ class ExpensesLocalDataSourceImpl implements ExpensesLocalDataSource {
           );
           await appDatabase.update(appDatabase.shifts).replace(updatedShift);
         }
-
-        // 4. حذف المصروف نهائياً
-        await (appDatabase.delete(appDatabase.expenses)
-              ..where((t) => t.id.equals(id)))
-            .go();
+        await (appDatabase.delete(appDatabase.expenses)..where((t) => t.id.equals(id))).go();
       });
     } catch (e) {
       if (e is CacheException) rethrow;
-      throw CacheException( 'حدث خطأ أثناء حذف المصروف: ${e.toString()}');
+      throw CacheException('حدث خطأ أثناء حذف المصروف: ${e.toString()}');
     }
   }
 }

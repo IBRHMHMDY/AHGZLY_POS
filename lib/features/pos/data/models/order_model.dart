@@ -46,23 +46,23 @@ class OrderModel extends OrderEntity {
     );
   }
 
-  Map<String, dynamic> toMap() {
-    return {
-      'shift_id': shiftId,
-      'table_id': tableId,
-      'order_type': orderType.name, // [Fix] تحويل الـ Enum لنص ليقبله Drift
-      'sub_total': subTotal,
-      'discount': discount,
-      'tax_amount': taxAmount,
-      'service_fee': serviceFee,
-      'delivery_fee': deliveryFee,
-      'total': total,
-      'payment_method': paymentMethod.name, 
-      'status': status.name, 
-      'created_at': createdAt.toIso8601String(), // [Fix] تحويل الـ DateTime لنص
-      'customer_name': customerName,
-      'customer_phone': customerPhone,
-      'customer_address': customerAddress,
-    };
-  }
+  // Map<String, dynamic> toMap() {
+  //   return {
+  //     'shift_id': shiftId,
+  //     'table_id': tableId,
+  //     'order_type': orderType.name, // [Fix] تحويل الـ Enum لنص ليقبله Drift
+  //     'sub_total': subTotal,
+  //     'discount': discount,
+  //     'tax_amount': taxAmount,
+  //     'service_fee': serviceFee,
+  //     'delivery_fee': deliveryFee,
+  //     'total': total,
+  //     'payment_method': paymentMethod.name, 
+  //     'status': status.name, 
+  //     'created_at': createdAt.toIso8601String(), // [Fix] تحويل الـ DateTime لنص
+  //     'customer_name': customerName,
+  //     'customer_phone': customerPhone,
+  //     'customer_address': customerAddress,
+  //   };
+  // }
 }

@@ -1,5 +1,7 @@
-import 'package:ahgzly_pos/core/extensions/order_type.dart';
+// [Fixed]: مسار الـ Enum الصحيح
+import 'package:ahgzly_pos/core/common/enums/enums_data.dart';
 import 'package:ahgzly_pos/core/common/widgets/custom_shimmer.dart';
+import 'package:ahgzly_pos/core/extensions/order_type.dart';
 import 'package:ahgzly_pos/core/usecases/usecase.dart';
 import 'package:ahgzly_pos/core/utils/money_formatter.dart';
 import 'package:ahgzly_pos/features/auth/presentation/bloc/auth_bloc.dart';
@@ -26,11 +28,17 @@ class _CartSectionState extends State<CartSection> {
   PosUpdated? _lastOrderState;
   Map<String, dynamic>? _lastCustomerData;
 
-  // 🪄 نقلت الدوال هنا لحين نقلها لاحقاً لطبقة الـ BLoC بالكامل في Sprint 5
-  void _handleAutoPrint(BuildContext context, int orderId, PosUpdated orderState, String mode) async {
+  void _handleAutoPrint(
+    BuildContext context,
+    int orderId,
+    PosUpdated orderState,
+    String mode,
+  ) async {
     final authState = context.read<AuthBloc>().state;
-    final String currentCashierName = (authState is AuthAuthenticated) ? authState.user.name : 'غير معروف';
-    
+    final String currentCashierName = (authState is AuthAuthenticated)
+        ? authState.user.name
+        : 'غير معروف';
+
     final settingsResult = await sl<GetSettingsUseCase>().call(NoParams());
     String pName = 'EPSON Printer';
     settingsResult.fold((l) => null, (r) => pName = r.printerName);
@@ -42,12 +50,22 @@ class _CartSectionState extends State<CartSection> {
     if (mode == 'customer' || mode == 'both') {
       customerSuccess = await printerService.printReceiptUsb(
         receiptWidget: CustomerReceiptWidget(
-          orderId: orderId, orderType: orderState.orderType.arabicName, items: orderState.cartItems,
-          subTotal: orderState.subTotal, discountAmount: orderState.discountAmount, taxAmount: orderState.taxAmount,
-          serviceFee: orderState.serviceFee, deliveryFee: orderState.deliveryFee, total: orderState.total,
-          restaurantName: orderState.restaurantName, taxNumber: orderState.taxNumber,
+          orderId: orderId,
+          // [Fixed]: تمرير الـ Enum مباشرة
+          orderType: orderState.orderType,
+          items: orderState.cartItems,
+          subTotal: orderState.subTotal,
+          discountAmount: orderState.discountAmount,
+          taxAmount: orderState.taxAmount,
+          serviceFee: orderState.serviceFee,
+          deliveryFee: orderState.deliveryFee,
+          total: orderState.total,
+          restaurantName: orderState.restaurantName,
+          taxNumber: orderState.taxNumber,
           cashierName: currentCashierName,
-          customerName: _lastCustomerData?['name'] ?? '', customerPhone: _lastCustomerData?['phone'] ?? '', customerAddress: _lastCustomerData?['address'] ?? '',
+          customerName: _lastCustomerData?['name'] ?? '',
+          customerPhone: _lastCustomerData?['phone'] ?? '',
+          customerAddress: _lastCustomerData?['address'] ?? '',
         ),
         printerName: pName,
       );
@@ -55,24 +73,45 @@ class _CartSectionState extends State<CartSection> {
 
     if (mode == 'kitchen' || mode == 'both') {
       kitchenSuccess = await printerService.printReceiptUsb(
-        receiptWidget: KitchenReceiptWidget(orderId: orderId, orderType: orderState.orderType.arabicName, items: orderState.cartItems),
+        receiptWidget: KitchenReceiptWidget(
+          orderId: orderId,
+          // [Fixed]: تمرير الـ Enum مباشرة
+          orderType: orderState.orderType,
+          items: orderState.cartItems,
+        ),
         printerName: pName,
       );
     }
 
     if (context.mounted) {
       if (customerSuccess && kitchenSuccess) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('تمت الطباعة بنجاح'), backgroundColor: Colors.green));
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('تمت الطباعة بنجاح'),
+            backgroundColor: Colors.green,
+          ),
+        );
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('حدث خطأ أثناء الاتصال بالطابعة!'), backgroundColor: Colors.red));
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('حدث خطأ أثناء الاتصال بالطابعة!'),
+            backgroundColor: Colors.red,
+          ),
+        );
       }
     }
   }
 
-  void _showPrintDialog(BuildContext context, int orderId, PosUpdated previousState) {
+  void _showPrintDialog(
+    BuildContext context,
+    int orderId,
+    PosUpdated previousState,
+  ) {
     final authState = context.read<AuthBloc>().state;
-    final String currentCashierName = (authState is AuthAuthenticated) ? authState.user.name : 'غير معروف';
-    
+    final String currentCashierName = (authState is AuthAuthenticated)
+        ? authState.user.name
+        : 'غير معروف';
+
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -86,10 +125,7 @@ class _CartSectionState extends State<CartSection> {
   }
 
   void _showDiscountDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (ctx) => const _DiscountDialog(),
-    );
+    showDialog(context: context, builder: (ctx) => const _DiscountDialog());
   }
 
   @override
@@ -97,56 +133,95 @@ class _CartSectionState extends State<CartSection> {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(-5, 0))],
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(-5, 0),
+          ),
+        ],
       ),
       child: BlocConsumer<PosBloc, PosState>(
-        listenWhen: (previous, current) => current is PosCheckoutSuccess || current is PosError,
+        listenWhen: (previous, current) =>
+            current is PosCheckoutSuccess || current is PosError,
         listener: (context, state) {
           if (state is PosCheckoutSuccess) {
-            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('تم حفظ الفاتورة بنجاح! (رقم: #${state.orderId})'), backgroundColor: Colors.green));
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  'تم حفظ الفاتورة بنجاح! (رقم: #${state.orderId})',
+                ),
+                backgroundColor: Colors.green,
+              ),
+            );
             if (_lastOrderState != null) {
               final mode = _lastOrderState!.printMode;
               if (mode == 'ask') {
                 _showPrintDialog(context, state.orderId, _lastOrderState!);
               } else {
-                _handleAutoPrint(context, state.orderId, _lastOrderState!, mode);
+                _handleAutoPrint(
+                  context,
+                  state.orderId,
+                  _lastOrderState!,
+                  mode,
+                );
               }
             }
           } else if (state is PosError) {
-            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(state.message), backgroundColor: Colors.red));
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(state.message),
+                backgroundColor: Colors.red,
+              ),
+            );
           }
         },
-        buildWhen: (previous, current) => current is PosUpdated || current is PosInitial,
+        buildWhen: (previous, current) =>
+            current is PosUpdated || current is PosInitial,
         builder: (context, state) {
           if (state is PosUpdated) {
             return Column(
               children: [
-                // 🪄 1. الهيدر (نوع الطلب ومسح السلة)
-                _CartHeader(orderType: state.orderType.arabicName),
-                
-                // 🪄 2. قائمة الأصناف
+                // [Fixed]: تمرير Enum بدلاً من arabicName
+                _CartHeader(orderType: state.orderType),
+
                 Expanded(child: _CartItemsList(cartItems: state.cartItems)),
-                
-                // 🪄 3. الملخص المالي وأزرار الدفع
+
                 _CartSummary(
                   state: state,
-                  onDiscountTap: state.cartItems.isEmpty ? null : () => _showDiscountDialog(context),
-                  onPayTap: state.cartItems.isEmpty ? null : () async {
-                    final result = await showDialog<Map<String, dynamic>>(
-                      context: context, barrierDismissible: false,
-                      builder: (_) => CheckoutDialog(totalAmount: state.total, orderType: state.orderType.arabicName),
-                    );
-                    if (result != null && context.mounted) {
-                      _lastOrderState = state;
-                      _lastCustomerData = result;
-                      context.read<PosBloc>().add(SubmitOrderEvent(result['method'], customerName: result['name'], customerPhone: result['phone'], customerAddress: result['address']));
-                    }
-                  },
+                  onDiscountTap: state.cartItems.isEmpty
+                      ? null
+                      : () => _showDiscountDialog(context),
+                  onPayTap: state.cartItems.isEmpty
+                      ? null
+                      : () async {
+                          final result = await showDialog<Map<String, dynamic>>(
+                            context: context,
+                            barrierDismissible: false,
+                            builder: (_) => CheckoutDialog(
+                              totalAmount: state.total,
+                              // [Fixed]: تمرير الـ Enum للـ CheckoutDialog (تأكد من تحديث CheckoutDialog ليستقبل OrderType إذا لم تفعل بعد)
+                              orderType: state.orderType, 
+                            ),
+                          );
+                          if (result != null && context.mounted) {
+                            _lastOrderState = state;
+                            _lastCustomerData = result;
+                            context.read<PosBloc>().add(
+                              SubmitOrderEvent(
+                                result['method'],
+                                customerName: result['name'],
+                                customerPhone: result['phone'],
+                                customerAddress: result['address'],
+                              ),
+                            );
+                          }
+                        },
                 ),
               ],
             );
           }
-          return _CartShimmerLoading();
+          return const _CartShimmerLoading();
         },
       ),
     );
@@ -158,30 +233,58 @@ class _CartSectionState extends State<CartSection> {
 // ==========================================
 
 class _CartHeader extends StatelessWidget {
-  final OrderType orderType;
+  final OrderType orderType; 
   const _CartHeader({required this.orderType});
 
   @override
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(color: Colors.white, border: Border(bottom: BorderSide(color: Colors.grey.shade200))),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        border: Border(bottom: BorderSide(color: Colors.grey.shade200)),
+      ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Expanded(
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 8),
-              decoration: BoxDecoration(color: Colors.grey.shade100, borderRadius: BorderRadius.circular(12), border: Border.all(color: Colors.grey.shade300)),
+              decoration: BoxDecoration(
+                color: Colors.grey.shade100,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.grey.shade300),
+              ),
               child: DropdownButtonHideUnderline(
-                child: DropdownButton<String>(
-                  value: orderType,
+                child: DropdownButton<OrderType>(
+                  value: orderType, 
                   isExpanded: true,
-                  icon: const Icon(Icons.keyboard_arrow_down, color: Colors.teal),
-                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.teal),
-                  items: ['تيك أواي', 'صالة', 'دليفري'].map((type) => DropdownMenuItem(value: type, child: Text(type))).toList(),
+                  icon: const Icon(
+                    Icons.keyboard_arrow_down,
+                    color: Colors.teal,
+                  ),
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.teal,
+                  ),
+                  items: OrderType.values
+                      .map(
+                        (type) => DropdownMenuItem<OrderType>(
+                          value: type, 
+                          child: Text(
+                            type.toDisplayName(), 
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                      )
+                      .toList(),
                   onChanged: (value) {
-                    if (value != null) context.read<PosBloc>().add(ChangeOrderTypeEvent(orderType));
+                    if (value != null) {
+                      context.read<PosBloc>().add(
+                        ChangeOrderTypeEvent(value), 
+                      );
+                    }
                   },
                 ),
               ),
@@ -190,7 +293,14 @@ class _CartHeader extends StatelessWidget {
           const SizedBox(width: 8),
           InkWell(
             onTap: () => context.read<PosBloc>().add(ClearCartEvent()),
-            child: Container(padding: const EdgeInsets.all(10), decoration: BoxDecoration(color: Colors.red.shade50, borderRadius: BorderRadius.circular(12)), child: const Icon(Icons.delete_sweep, color: Colors.red)),
+            child: Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: Colors.red.shade50,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Icon(Icons.delete_sweep, color: Colors.red),
+            ),
           ),
         ],
       ),
@@ -199,7 +309,7 @@ class _CartHeader extends StatelessWidget {
 }
 
 class _CartItemsList extends StatelessWidget {
-  final List<dynamic> cartItems; // يفضل استخدام النوع الصحيح (CartItem) بدلاً من dynamic إذا كان متوفراً
+  final List<dynamic> cartItems; 
   const _CartItemsList({required this.cartItems});
 
   @override
@@ -209,9 +319,20 @@ class _CartItemsList extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.shopping_basket_outlined, size: 64, color: Colors.grey.shade300),
+            Icon(
+              Icons.shopping_basket_outlined,
+              size: 64,
+              color: Colors.grey.shade300,
+            ),
             const SizedBox(height: 16),
-            Text('الفاتورة فارغة', style: TextStyle(fontSize: 18, color: Colors.grey.shade500, fontWeight: FontWeight.bold)),
+            Text(
+              'الفاتورة فارغة',
+              style: TextStyle(
+                fontSize: 18,
+                color: Colors.grey.shade500,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
           ],
         ),
       );
@@ -230,28 +351,89 @@ class _CartItemsList extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(cartItem.item.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14), maxLines: 2, overflow: TextOverflow.ellipsis),
+                  Text(
+                    cartItem.item.name,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                   const SizedBox(height: 2),
-                  Text('${MoneyFormatter.format(cartItem.item.price)} ج.م', style: const TextStyle(color: Colors.teal, fontWeight: FontWeight.bold, fontSize: 13)),
+                  Text(
+                    '${MoneyFormatter.format(cartItem.item.price)} ج.م',
+                    style: const TextStyle(
+                      color: Colors.teal,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 13,
+                    ),
+                  ),
                 ],
               ),
             ),
             const SizedBox(width: 4),
             Container(
-              decoration: BoxDecoration(color: Colors.grey.shade100, borderRadius: BorderRadius.circular(30), border: Border.all(color: Colors.grey.shade300)),
+              decoration: BoxDecoration(
+                color: Colors.grey.shade100,
+                borderRadius: BorderRadius.circular(30),
+                border: Border.all(color: Colors.grey.shade300),
+              ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  InkWell(onTap: () => context.read<PosBloc>().add(UpdateCartItemQuantityEvent(index, cartItem.quantity - 1)), child: const Padding(padding: EdgeInsets.symmetric(horizontal: 6, vertical: 8), child: Icon(Icons.remove, size: 16, color: Colors.black87))),
-                  Container(constraints: const BoxConstraints(minWidth: 20), alignment: Alignment.center, child: Text('${cartItem.quantity}', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold))),
-                  InkWell(onTap: () => context.read<PosBloc>().add(UpdateCartItemQuantityEvent(index, cartItem.quantity + 1)), child: const Padding(padding: EdgeInsets.symmetric(horizontal: 6, vertical: 8), child: Icon(Icons.add, size: 16, color: Colors.black87))),
+                  InkWell(
+                    onTap: () => context.read<PosBloc>().add(
+                      UpdateCartItemQuantityEvent(index, cartItem.quantity - 1),
+                    ),
+                    child: const Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 6, vertical: 8),
+                      child: Icon(
+                        Icons.remove,
+                        size: 16,
+                        color: Colors.black87,
+                      ),
+                    ),
+                  ),
+                  Container(
+                    constraints: const BoxConstraints(minWidth: 20),
+                    alignment: Alignment.center,
+                    child: Text(
+                      '${cartItem.quantity}',
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  InkWell(
+                    onTap: () => context.read<PosBloc>().add(
+                      UpdateCartItemQuantityEvent(index, cartItem.quantity + 1),
+                    ),
+                    child: const Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 6, vertical: 8),
+                      child: Icon(Icons.add, size: 16, color: Colors.black87),
+                    ),
+                  ),
                 ],
               ),
             ),
             const SizedBox(width: 4),
             InkWell(
-              onTap: () => context.read<PosBloc>().add(RemoveItemFromCartEvent(index)),
-              child: Container(padding: const EdgeInsets.all(6), decoration: BoxDecoration(color: Colors.red.shade50, shape: BoxShape.circle), child: const Icon(Icons.delete_outline, color: Colors.red, size: 18)),
+              onTap: () =>
+                  context.read<PosBloc>().add(RemoveItemFromCartEvent(index)),
+              child: Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: Colors.red.shade50,
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.delete_outline,
+                  color: Colors.red,
+                  size: 18,
+                ),
+              ),
             ),
           ],
         );
@@ -267,7 +449,12 @@ class _CartSummary extends StatelessWidget {
 
   const _CartSummary({required this.state, this.onDiscountTap, this.onPayTap});
 
-  Widget _buildSummaryRow(String label, int amount, {bool isDiscount = false, bool isTotal = false}) {
+  Widget _buildSummaryRow(
+    String label,
+    int amount, {
+    bool isDiscount = false,
+    bool isTotal = false,
+  }) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4.0),
       child: Row(
@@ -276,12 +463,27 @@ class _CartSummary extends StatelessWidget {
           Expanded(
             child: Text(
               label,
-              style: TextStyle(fontSize: isTotal ? 18 : 14, fontWeight: isTotal ? FontWeight.bold : FontWeight.w600, color: isDiscount ? Colors.red : (isTotal ? Colors.teal.shade800 : Colors.black87)),
+              style: TextStyle(
+                fontSize: isTotal ? 18 : 14,
+                fontWeight: isTotal ? FontWeight.bold : FontWeight.w600,
+                color: isDiscount
+                    ? Colors.red
+                    : (isTotal ? Colors.teal.shade800 : Colors.black87),
+              ),
               overflow: TextOverflow.ellipsis,
             ),
           ),
           const SizedBox(width: 8),
-          Text('${isDiscount ? "-" : ""}${MoneyFormatter.format(amount)} ج.م', style: TextStyle(fontSize: isTotal ? 20 : 14, fontWeight: FontWeight.bold, color: isDiscount ? Colors.red : (isTotal ? Colors.teal.shade800 : Colors.black87))),
+          Text(
+            '${isDiscount ? "-" : ""}${MoneyFormatter.format(amount)} ج.م',
+            style: TextStyle(
+              fontSize: isTotal ? 20 : 14,
+              fontWeight: FontWeight.bold,
+              color: isDiscount
+                  ? Colors.red
+                  : (isTotal ? Colors.teal.shade800 : Colors.black87),
+            ),
+          ),
         ],
       ),
     );
@@ -294,18 +496,37 @@ class _CartSummary extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.grey.shade50,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, -5))],
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, -5),
+          ),
+        ],
       ),
       child: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             _buildSummaryRow('الإجمالي الفرعي:', state.subTotal),
-            if (state.discountAmount > 0) _buildSummaryRow('قيمة الخصم:', state.discountAmount, isDiscount: true),
+            if (state.discountAmount > 0)
+              _buildSummaryRow(
+                'قيمة الخصم:',
+                state.discountAmount,
+                isDiscount: true,
+              ),
             _buildSummaryRow('الضريبة المضافة:', state.taxAmount),
-            if (state.orderType == 'صالة') _buildSummaryRow('رسوم الخدمة:', state.serviceFee),
-            if (state.orderType == 'دليفري') _buildSummaryRow('رسوم التوصيل:', state.deliveryFee),
-            const Padding(padding: EdgeInsets.symmetric(vertical: 6.0), child: Divider(thickness: 2)),
+            
+            // [Fixed]: التخلص من الشروط النصية الثابتة واعتماد الـ Enums بشكل آمن
+            if (state.orderType == OrderType.dineIn)
+              _buildSummaryRow('رسوم الخدمة:', state.serviceFee),
+            if (state.orderType == OrderType.delivery)
+              _buildSummaryRow('رسوم التوصيل:', state.deliveryFee),
+              
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 6.0),
+              child: Divider(thickness: 2),
+            ),
             _buildSummaryRow('الإجمالي النهائي:', state.total, isTotal: true),
             const SizedBox(height: 16),
             Row(
@@ -313,7 +534,14 @@ class _CartSummary extends StatelessWidget {
                 Expanded(
                   flex: 1,
                   child: OutlinedButton(
-                    style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 16), foregroundColor: Colors.teal, side: const BorderSide(color: Colors.teal, width: 2), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      foregroundColor: Colors.teal,
+                      side: const BorderSide(color: Colors.teal, width: 2),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
                     onPressed: onDiscountTap,
                     child: const Icon(Icons.discount_outlined, size: 24),
                   ),
@@ -322,14 +550,31 @@ class _CartSummary extends StatelessWidget {
                 Expanded(
                   flex: 3,
                   child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(backgroundColor: Colors.teal, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 16), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)), elevation: 4),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.teal,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      elevation: 4,
+                    ),
                     onPressed: onPayTap,
                     child: const Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Icon(Icons.print, size: 20),
                         SizedBox(width: 4),
-                        Flexible(child: Text('دفع وطباعة', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold), overflow: TextOverflow.ellipsis))
+                        Flexible(
+                          child: Text(
+                            'دفع وطباعة',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
                       ],
                     ),
                   ),
@@ -363,17 +608,30 @@ class _DiscountDialogState extends State<_DiscountDialog> {
   Widget build(BuildContext context) {
     return AlertDialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      title: const Text('إضافة خصم (مبلغ ثابت)', style: TextStyle(fontWeight: FontWeight.bold)),
+      title: const Text(
+        'إضافة خصم (مبلغ ثابت)',
+        style: TextStyle(fontWeight: FontWeight.bold),
+      ),
       content: TextField(
         controller: _controller,
         keyboardType: TextInputType.number,
         style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-        decoration: InputDecoration(labelText: 'قيمة الخصم (ج.م)', border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)), prefixIcon: const Icon(Icons.money_off, color: Colors.teal)),
+        decoration: InputDecoration(
+          labelText: 'قيمة الخصم (ج.م)',
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+          prefixIcon: const Icon(Icons.money_off, color: Colors.teal),
+        ),
       ),
       actions: [
-        TextButton(onPressed: () => Navigator.pop(context), child: const Text('إلغاء', style: TextStyle(fontSize: 16))),
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('إلغاء', style: TextStyle(fontSize: 16)),
+        ),
         ElevatedButton(
-          style: ElevatedButton.styleFrom(backgroundColor: Colors.teal, foregroundColor: Colors.white),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.teal,
+            foregroundColor: Colors.white,
+          ),
           onPressed: () {
             if (_controller.text.isNotEmpty) {
               final discountDouble = double.tryParse(_controller.text) ?? 0.0;
@@ -382,7 +640,10 @@ class _DiscountDialogState extends State<_DiscountDialog> {
               Navigator.pop(context);
             }
           },
-          child: const Text('تطبيق الخصم', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+          child: const Text(
+            'تطبيق الخصم',
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          ),
         ),
       ],
     );
@@ -406,26 +667,53 @@ class _PrintOptionsDialog extends StatelessWidget {
   Widget build(BuildContext context) {
     return AlertDialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      title: const Text('تم حفظ الطلب!', style: TextStyle(fontWeight: FontWeight.bold)),
-      content: const Text('اختر الفاتورة التي ترغب في طباعتها:', style: TextStyle(fontSize: 16)),
+      title: const Text(
+        'تم حفظ الطلب!',
+        style: TextStyle(fontWeight: FontWeight.bold),
+      ),
+      content: const Text(
+        'اختر الفاتورة التي ترغب في طباعتها:',
+        style: TextStyle(fontSize: 16),
+      ),
       actions: [
-        TextButton(onPressed: () => Navigator.pop(context), child: const Text('إغلاق', style: TextStyle(color: Colors.red, fontSize: 16))),
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text(
+            'إغلاق',
+            style: TextStyle(color: Colors.red, fontSize: 16),
+          ),
+        ),
         ElevatedButton.icon(
-          style: ElevatedButton.styleFrom(backgroundColor: Colors.teal, foregroundColor: Colors.white),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.teal,
+            foregroundColor: Colors.white,
+          ),
           icon: const Icon(Icons.person),
           label: const Text('فاتورة العميل'),
           onPressed: () async {
-            final settingsResult = await sl<GetSettingsUseCase>().call(NoParams());
+            final settingsResult = await sl<GetSettingsUseCase>().call(
+              NoParams(),
+            );
             String pName = 'EPSON Printer';
             settingsResult.fold((l) => null, (r) => pName = r.printerName);
 
             await sl<PrinterService>().printReceiptUsb(
               receiptWidget: CustomerReceiptWidget(
-                orderId: orderId, orderType: previousState.orderType.arabicName, items: previousState.cartItems,
-                subTotal: previousState.subTotal, discountAmount: previousState.discountAmount, taxAmount: previousState.taxAmount,
-                serviceFee: previousState.serviceFee, deliveryFee: previousState.deliveryFee, total: previousState.total,
-                restaurantName: previousState.restaurantName, taxNumber: previousState.taxNumber,
-                customerName: customerData?['name'] ?? '', customerPhone: customerData?['phone'] ?? '', customerAddress: customerData?['address'] ?? '',
+                orderId: orderId,
+                // [Fixed]: تمرير الـ Enum مباشرة
+                orderType: previousState.orderType,
+                items: previousState.cartItems,
+                subTotal: previousState.subTotal,
+                discountAmount: previousState.discountAmount,
+                taxAmount: previousState.taxAmount,
+                serviceFee: previousState.serviceFee,
+                deliveryFee: previousState.deliveryFee,
+                total: previousState.total,
+                restaurantName: previousState.restaurantName,
+                taxNumber: previousState.taxNumber,
+                customerName: customerData?['name'] ?? '',
+                customerPhone: customerData?['phone'] ?? '',
+                customerAddress: customerData?['address'] ?? '',
                 cashierName: cashierName,
               ),
               printerName: pName,
@@ -433,16 +721,26 @@ class _PrintOptionsDialog extends StatelessWidget {
           },
         ),
         ElevatedButton.icon(
-          style: ElevatedButton.styleFrom(backgroundColor: Colors.orange.shade700, foregroundColor: Colors.white),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.orange.shade700,
+            foregroundColor: Colors.white,
+          ),
           icon: const Icon(Icons.kitchen),
           label: const Text('بون المطبخ'),
           onPressed: () async {
-            final settingsResult = await sl<GetSettingsUseCase>().call(NoParams());
+            final settingsResult = await sl<GetSettingsUseCase>().call(
+              NoParams(),
+            );
             String pName = 'EPSON Printer';
             settingsResult.fold((l) => null, (r) => pName = r.printerName);
 
             await sl<PrinterService>().printReceiptUsb(
-              receiptWidget: KitchenReceiptWidget(orderId: orderId, orderType: previousState.orderType.arabicName, items: previousState.cartItems),
+              receiptWidget: KitchenReceiptWidget(
+                orderId: orderId,
+                // [Fixed]: تمرير الـ Enum مباشرة
+                orderType: previousState.orderType,
+                items: previousState.cartItems,
+              ),
               printerName: pName,
             );
           },
@@ -450,7 +748,6 @@ class _PrintOptionsDialog extends StatelessWidget {
       ],
     );
   }
-
 }
 
 class _CartShimmerLoading extends StatelessWidget {
@@ -460,26 +757,38 @@ class _CartShimmerLoading extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        // 🪄 1. Shimmer للهيدر (اختيار نوع الطلب وزر الحذف)
         Container(
           padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(color: Colors.white, border: Border(bottom: BorderSide(color: Colors.grey.shade200))),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            border: Border(bottom: BorderSide(color: Colors.grey.shade200)),
+          ),
           child: Row(
             children: [
               Expanded(
-                child: CustomShimmer.rectangular(height: 48, shapeBorder: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
+                child: CustomShimmer.rectangular(
+                  height: 48,
+                  shapeBorder: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
               ),
               const SizedBox(width: 8),
-              CustomShimmer.rectangular(height: 48, width: 48, shapeBorder: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
+              CustomShimmer.rectangular(
+                height: 48,
+                width: 48,
+                shapeBorder: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
             ],
           ),
         ),
-        
-        // 🪄 2. Shimmer لقائمة الأصناف الوهمية
+
         Expanded(
           child: ListView.separated(
             padding: const EdgeInsets.all(12),
-            itemCount: 4, // 4 عناصر وهمية
+            itemCount: 4, 
             separatorBuilder: (_, _) => const Divider(),
             itemBuilder: (context, index) {
               return Row(
@@ -488,14 +797,32 @@ class _CartShimmerLoading extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        CustomShimmer.rectangular(height: 16, width: double.infinity, shapeBorder: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4))),
+                        CustomShimmer.rectangular(
+                          height: 16,
+                          width: double.infinity,
+                          shapeBorder: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                        ),
                         const SizedBox(height: 8),
-                        CustomShimmer.rectangular(height: 14, width: 80, shapeBorder: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4))),
+                        CustomShimmer.rectangular(
+                          height: 14,
+                          width: 80,
+                          shapeBorder: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                        ),
                       ],
                     ),
                   ),
                   const SizedBox(width: 16),
-                  CustomShimmer.rectangular(height: 36, width: 90, shapeBorder: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30))),
+                  CustomShimmer.rectangular(
+                    height: 36,
+                    width: 90,
+                    shapeBorder: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(30),
+                    ),
+                  ),
                   const SizedBox(width: 8),
                   const CustomShimmer.circular(height: 36, width: 36),
                 ],
@@ -503,28 +830,64 @@ class _CartShimmerLoading extends StatelessWidget {
             },
           ),
         ),
-        
-        // 🪄 3. Shimmer لملخص الفاتورة السفلي
+
         Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
-            boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, -5))],
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: 10,
+                offset: const Offset(0, -5),
+              ),
+            ],
           ),
           child: Column(
             children: [
-              CustomShimmer.rectangular(height: 20, shapeBorder: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4))),
+              CustomShimmer.rectangular(
+                height: 20,
+                shapeBorder: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(4),
+                ),
+              ),
               const SizedBox(height: 12),
-              CustomShimmer.rectangular(height: 20, shapeBorder: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4))),
+              CustomShimmer.rectangular(
+                height: 20,
+                shapeBorder: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(4),
+                ),
+              ),
               const SizedBox(height: 12),
-              CustomShimmer.rectangular(height: 24, shapeBorder: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4))),
+              CustomShimmer.rectangular(
+                height: 24,
+                shapeBorder: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(4),
+                ),
+              ),
               const SizedBox(height: 16),
               Row(
                 children: [
-                  Expanded(flex: 1, child: CustomShimmer.rectangular(height: 56, shapeBorder: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)))),
+                  Expanded(
+                    flex: 1,
+                    child: CustomShimmer.rectangular(
+                      height: 56,
+                      shapeBorder: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  ),
                   const SizedBox(width: 8),
-                  Expanded(flex: 3, child: CustomShimmer.rectangular(height: 56, shapeBorder: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)))),
+                  Expanded(
+                    flex: 3,
+                    child: CustomShimmer.rectangular(
+                      height: 56,
+                      shapeBorder: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ],

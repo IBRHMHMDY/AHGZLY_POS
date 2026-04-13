@@ -10,7 +10,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:ahgzly_pos/features/expenses/domain/entities/expense_entity.dart';
 import 'package:ahgzly_pos/features/expenses/presentation/widgets/add_expense_dialog.dart';
-import 'package:ahgzly_pos/core/common/widgets/custom_shimmer.dart'; // 🪄 استيراد الشيمر
+import 'package:ahgzly_pos/core/common/widgets/custom_shimmer.dart';
+import 'package:intl/intl.dart'; // 🪄 استيراد الشيمر
 
 class ExpensesScreen extends StatefulWidget {
   const ExpensesScreen({super.key});
@@ -186,6 +187,9 @@ class _ExpenseList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // [Refactored]: استخدام intl لتنسيق التاريخ بشكل آمن وأنيق
+    final dateFormat = DateFormat('yyyy-MM-dd hh:mm a');
+
     return ListView.builder(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       itemCount: expenses.length,
@@ -205,7 +209,8 @@ class _ExpenseList extends StatelessWidget {
             ),
             title: Text(expense.reason, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
             subtitle: Text(
-              DateTime.parse(expense.createdAt).toString().substring(0, 16),
+              // [Refactored]: تمرير كائن الـ DateTime مباشرة إلى الـ Formatter
+              dateFormat.format(expense.createdAt),
               style: TextStyle(color: Colors.grey.shade600, fontWeight: FontWeight.w600),
             ),
             trailing: Row(
@@ -225,7 +230,6 @@ class _ExpenseList extends StatelessWidget {
     );
   }
 }
-
 class _EmptyExpensesView extends StatelessWidget {
   const _EmptyExpensesView();
 

@@ -3,9 +3,9 @@ import 'package:equatable/equatable.dart';
 class ExpenseEntity extends Equatable {
   final int? id;
   final int shiftId;
-  final int amount; // Refactored: تغيير من double إلى int (Cents)
+  final int amount; 
   final String reason;
-  final String createdAt;
+  final DateTime createdAt; // [Refactored]: تغيير من String إلى DateTime
 
   const ExpenseEntity({
     this.id,

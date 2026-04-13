@@ -1,6 +1,8 @@
-import 'package:ahgzly_pos/core/extensions/order_status.dart';
-import 'package:ahgzly_pos/core/extensions/order_type.dart';
+import 'package:ahgzly_pos/core/common/enums/enums_data.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+
+// [Fixed]: تصحيح مسارات استيراد الـ Enums والـ Extensions لتتطابق مع هيكلة Clean Architecture
+
 import 'package:ahgzly_pos/core/usecases/usecase.dart'; 
 import 'package:ahgzly_pos/features/pos/domain/usecases/save_order_usecase.dart';
 import 'package:ahgzly_pos/features/settings/domain/usecases/get_settings_usecase.dart';
@@ -14,7 +16,7 @@ class PosBloc extends Bloc<PosEvent, PosState> {
   final GetSettingsUseCase getSettingsUseCase;
 
   final List<CartItem> _cartItems = [];
-  OrderType _orderType = OrderType.takeaway;
+  OrderType _orderType = OrderType.takeaway; // القيمة الافتراضية الموحدة
   int _discountAmount = 0;
   
   double _taxRate = 0.0;
@@ -110,6 +112,7 @@ class PosBloc extends Bloc<PosEvent, PosState> {
     if (afterDiscount < 0) afterDiscount = 0;
 
     int taxAmount = (afterDiscount * _taxRate).round(); 
+    // الاعتماد بأمان على الـ Enums بدلاً من النصوص 
     int serviceFee = _orderType == OrderType.dineIn ? (afterDiscount * _serviceRate).round() : 0;
     int deliveryFee = _orderType == OrderType.delivery ? _deliveryFee : 0;
     
@@ -164,7 +167,6 @@ class PosBloc extends Bloc<PosEvent, PosState> {
       )).toList(),
     );
 
-    // Refactored: Pass SaveOrderParams instead of raw Order
     final result = await saveOrderUseCase(SaveOrderParams(order: order));
 
     result.fold(
@@ -176,7 +178,8 @@ class PosBloc extends Bloc<PosEvent, PosState> {
         emit(PosCheckoutSuccess(orderId));
         _cartItems.clear();
         _discountAmount = 0;
-        _orderType = OrderType.dineIn;
+        // [Fixed]: توحيد القيمة الافتراضية بعد الطلب مع القيمة الموجودة في _onClearCart
+        _orderType = OrderType.takeaway; 
         _emitUpdatedState(emit);
       },
     );
@@ -184,7 +187,6 @@ class PosBloc extends Bloc<PosEvent, PosState> {
 
   Future<void> _onSaveOrderLegacy(SaveOrderEvent event, Emitter<PosState> emit) async {
     emit(PosLoading());
-    // Refactored: Pass SaveOrderParams instead of raw Order
     final result = await saveOrderUseCase(SaveOrderParams(order: event.order));
     result.fold(
       (error) => emit(PosError(error.message)),

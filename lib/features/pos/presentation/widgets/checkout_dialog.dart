@@ -1,9 +1,10 @@
+import 'package:ahgzly_pos/core/common/enums/enums_data.dart';
 import 'package:ahgzly_pos/core/utils/money_formatter.dart';
 import 'package:flutter/material.dart';
 
 class CheckoutDialog extends StatefulWidget {
   final int totalAmount;
-  final String orderType;
+  final OrderType orderType;
 
   const CheckoutDialog({
     super.key,
@@ -71,7 +72,7 @@ class _CheckoutDialogState extends State<CheckoutDialog> {
 
   @override
   Widget build(BuildContext context) {
-    final isDelivery = widget.orderType == 'دليفري';
+    final isDelivery = widget.orderType == OrderType.delivery;
 
     return Directionality(
       textDirection: TextDirection.rtl,

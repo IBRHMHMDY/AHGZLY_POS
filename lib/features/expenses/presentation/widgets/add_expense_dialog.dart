@@ -39,7 +39,7 @@ class _AddExpenseDialogState extends State<AddExpenseDialog> {
       final expense = ExpenseEntity(
         amount: MoneyFormatter.toCents(amountDouble),
         reason: _reasonController.text.trim(),
-        createdAt: DateTime.now().toIso8601String(),
+        createdAt: DateTime.now(),
         shiftId: shiftState.shift.id,
       );
       Navigator.pop(context, expense);
