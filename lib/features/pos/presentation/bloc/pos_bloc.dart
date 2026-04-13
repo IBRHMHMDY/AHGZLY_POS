@@ -1,3 +1,5 @@
+import 'package:ahgzly_pos/core/common/enums/order_status.dart';
+import 'package:ahgzly_pos/core/common/enums/order_type.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:ahgzly_pos/core/usecases/usecase.dart'; 
 import 'package:ahgzly_pos/features/pos/domain/usecases/save_order_usecase.dart';
@@ -12,7 +14,7 @@ class PosBloc extends Bloc<PosEvent, PosState> {
   final GetSettingsUseCase getSettingsUseCase;
 
   final List<CartItem> _cartItems = [];
-  String _orderType = 'صالة';
+  OrderType _orderType = OrderType.takeaway;
   int _discountAmount = 0;
   
   double _taxRate = 0.0;
@@ -97,7 +99,7 @@ class PosBloc extends Bloc<PosEvent, PosState> {
   void _onClearCart(ClearCartEvent event, Emitter<PosState> emit) {
     _cartItems.clear();
     _discountAmount = 0;
-    _orderType = 'صالة';
+    _orderType = OrderType.takeaway;
     _emitUpdatedState(emit);
   }
 
@@ -108,8 +110,8 @@ class PosBloc extends Bloc<PosEvent, PosState> {
     if (afterDiscount < 0) afterDiscount = 0;
 
     int taxAmount = (afterDiscount * _taxRate).round(); 
-    int serviceFee = _orderType == 'صالة' ? (afterDiscount * _serviceRate).round() : 0;
-    int deliveryFee = _orderType == 'دليفري' ? _deliveryFee : 0;
+    int serviceFee = _orderType == OrderType.dineIn ? (afterDiscount * _serviceRate).round() : 0;
+    int deliveryFee = _orderType == OrderType.delivery ? _deliveryFee : 0;
     
     int total = subTotal - _discountAmount + taxAmount + serviceFee + deliveryFee;
 
@@ -140,7 +142,7 @@ class PosBloc extends Bloc<PosEvent, PosState> {
 
     emit(PosLoading());
 
-    final order = Order(
+    final order = OrderEntity(
       orderType: currentState.orderType,
       subTotal: currentState.subTotal,
       discount: currentState.discountAmount,
@@ -149,8 +151,8 @@ class PosBloc extends Bloc<PosEvent, PosState> {
       deliveryFee: currentState.deliveryFee,
       total: currentState.total,
       paymentMethod: event.paymentMethod,
-      status: 'completed',
-      createdAt: DateTime.now().toIso8601String(),
+      status: OrderStatus.completed,
+      createdAt: DateTime.now(),
       customerName: event.customerName,
       customerPhone: event.customerPhone,
       customerAddress: event.customerAddress,
@@ -174,7 +176,7 @@ class PosBloc extends Bloc<PosEvent, PosState> {
         emit(PosCheckoutSuccess(orderId));
         _cartItems.clear();
         _discountAmount = 0;
-        _orderType = 'صالة';
+        _orderType = OrderType.dineIn;
         _emitUpdatedState(emit);
       },
     );

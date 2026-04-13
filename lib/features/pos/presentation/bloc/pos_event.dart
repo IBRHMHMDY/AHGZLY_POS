@@ -1,3 +1,5 @@
+import 'package:ahgzly_pos/core/common/enums/order_type.dart';
+import 'package:ahgzly_pos/core/common/enums/payment_method.dart';
 import 'package:ahgzly_pos/features/pos/domain/entities/order_entity.dart';
 import 'package:equatable/equatable.dart';
 import 'package:ahgzly_pos/features/menu/domain/entities/item_entity.dart';
@@ -10,7 +12,7 @@ abstract class PosEvent extends Equatable {
 }
 
 class SaveOrderEvent extends PosEvent {
-  final Order order; // يفضل لاحقاً تغيير dynamic إلى الكيان Order
+  final OrderEntity order;
   const SaveOrderEvent(this.order);
   @override
   List<Object> get props => [order];
@@ -39,14 +41,14 @@ class RemoveItemFromCartEvent extends PosEvent {
 }
 
 class ChangeOrderTypeEvent extends PosEvent {
-  final String orderType; // 'صالة', 'تيك أواي', 'دليفري'
+  final OrderType orderType;
   const ChangeOrderTypeEvent(this.orderType);
   @override
   List<Object> get props => [orderType];
 }
 
 class SubmitOrderEvent extends PosEvent {
-  final String paymentMethod;
+  final PaymentMethod paymentMethod;
   final String customerName;
   final String customerPhone;
   final String customerAddress;

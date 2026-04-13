@@ -3343,6 +3343,17 @@ class $OrdersTable extends Orders with TableInfo<$OrdersTable, OrderData> {
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _tableIdMeta = const VerificationMeta(
+    'tableId',
+  );
+  @override
+  late final GeneratedColumn<int> tableId = GeneratedColumn<int>(
+    'table_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _subTotalMeta = const VerificationMeta(
     'subTotal',
   );
@@ -3480,6 +3491,7 @@ class $OrdersTable extends Orders with TableInfo<$OrdersTable, OrderData> {
     id,
     shiftId,
     orderType,
+    tableId,
     subTotal,
     discount,
     taxAmount,
@@ -3523,6 +3535,12 @@ class $OrdersTable extends Orders with TableInfo<$OrdersTable, OrderData> {
       );
     } else if (isInserting) {
       context.missing(_orderTypeMeta);
+    }
+    if (data.containsKey('table_id')) {
+      context.handle(
+        _tableIdMeta,
+        tableId.isAcceptableOrUnknown(data['table_id']!, _tableIdMeta),
+      );
     }
     if (data.containsKey('sub_total')) {
       context.handle(
@@ -3648,6 +3666,10 @@ class $OrdersTable extends Orders with TableInfo<$OrdersTable, OrderData> {
         DriftSqlType.string,
         data['${effectivePrefix}order_type'],
       )!,
+      tableId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}table_id'],
+      ),
       subTotal: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}sub_total'],
@@ -3709,6 +3731,7 @@ class OrderData extends DataClass implements Insertable<OrderData> {
   final int id;
   final int shiftId;
   final String orderType;
+  final int? tableId;
   final int subTotal;
   final int discount;
   final int taxAmount;
@@ -3725,6 +3748,7 @@ class OrderData extends DataClass implements Insertable<OrderData> {
     required this.id,
     required this.shiftId,
     required this.orderType,
+    this.tableId,
     required this.subTotal,
     required this.discount,
     required this.taxAmount,
@@ -3744,6 +3768,9 @@ class OrderData extends DataClass implements Insertable<OrderData> {
     map['id'] = Variable<int>(id);
     map['shift_id'] = Variable<int>(shiftId);
     map['order_type'] = Variable<String>(orderType);
+    if (!nullToAbsent || tableId != null) {
+      map['table_id'] = Variable<int>(tableId);
+    }
     map['sub_total'] = Variable<int>(subTotal);
     map['discount'] = Variable<int>(discount);
     map['tax_amount'] = Variable<int>(taxAmount);
@@ -3764,6 +3791,9 @@ class OrderData extends DataClass implements Insertable<OrderData> {
       id: Value(id),
       shiftId: Value(shiftId),
       orderType: Value(orderType),
+      tableId: tableId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(tableId),
       subTotal: Value(subTotal),
       discount: Value(discount),
       taxAmount: Value(taxAmount),
@@ -3788,6 +3818,7 @@ class OrderData extends DataClass implements Insertable<OrderData> {
       id: serializer.fromJson<int>(json['id']),
       shiftId: serializer.fromJson<int>(json['shiftId']),
       orderType: serializer.fromJson<String>(json['orderType']),
+      tableId: serializer.fromJson<int?>(json['tableId']),
       subTotal: serializer.fromJson<int>(json['subTotal']),
       discount: serializer.fromJson<int>(json['discount']),
       taxAmount: serializer.fromJson<int>(json['taxAmount']),
@@ -3809,6 +3840,7 @@ class OrderData extends DataClass implements Insertable<OrderData> {
       'id': serializer.toJson<int>(id),
       'shiftId': serializer.toJson<int>(shiftId),
       'orderType': serializer.toJson<String>(orderType),
+      'tableId': serializer.toJson<int?>(tableId),
       'subTotal': serializer.toJson<int>(subTotal),
       'discount': serializer.toJson<int>(discount),
       'taxAmount': serializer.toJson<int>(taxAmount),
@@ -3828,6 +3860,7 @@ class OrderData extends DataClass implements Insertable<OrderData> {
     int? id,
     int? shiftId,
     String? orderType,
+    Value<int?> tableId = const Value.absent(),
     int? subTotal,
     int? discount,
     int? taxAmount,
@@ -3844,6 +3877,7 @@ class OrderData extends DataClass implements Insertable<OrderData> {
     id: id ?? this.id,
     shiftId: shiftId ?? this.shiftId,
     orderType: orderType ?? this.orderType,
+    tableId: tableId.present ? tableId.value : this.tableId,
     subTotal: subTotal ?? this.subTotal,
     discount: discount ?? this.discount,
     taxAmount: taxAmount ?? this.taxAmount,
@@ -3862,6 +3896,7 @@ class OrderData extends DataClass implements Insertable<OrderData> {
       id: data.id.present ? data.id.value : this.id,
       shiftId: data.shiftId.present ? data.shiftId.value : this.shiftId,
       orderType: data.orderType.present ? data.orderType.value : this.orderType,
+      tableId: data.tableId.present ? data.tableId.value : this.tableId,
       subTotal: data.subTotal.present ? data.subTotal.value : this.subTotal,
       discount: data.discount.present ? data.discount.value : this.discount,
       taxAmount: data.taxAmount.present ? data.taxAmount.value : this.taxAmount,
@@ -3895,6 +3930,7 @@ class OrderData extends DataClass implements Insertable<OrderData> {
           ..write('id: $id, ')
           ..write('shiftId: $shiftId, ')
           ..write('orderType: $orderType, ')
+          ..write('tableId: $tableId, ')
           ..write('subTotal: $subTotal, ')
           ..write('discount: $discount, ')
           ..write('taxAmount: $taxAmount, ')
@@ -3916,6 +3952,7 @@ class OrderData extends DataClass implements Insertable<OrderData> {
     id,
     shiftId,
     orderType,
+    tableId,
     subTotal,
     discount,
     taxAmount,
@@ -3936,6 +3973,7 @@ class OrderData extends DataClass implements Insertable<OrderData> {
           other.id == this.id &&
           other.shiftId == this.shiftId &&
           other.orderType == this.orderType &&
+          other.tableId == this.tableId &&
           other.subTotal == this.subTotal &&
           other.discount == this.discount &&
           other.taxAmount == this.taxAmount &&
@@ -3954,6 +3992,7 @@ class OrdersCompanion extends UpdateCompanion<OrderData> {
   final Value<int> id;
   final Value<int> shiftId;
   final Value<String> orderType;
+  final Value<int?> tableId;
   final Value<int> subTotal;
   final Value<int> discount;
   final Value<int> taxAmount;
@@ -3970,6 +4009,7 @@ class OrdersCompanion extends UpdateCompanion<OrderData> {
     this.id = const Value.absent(),
     this.shiftId = const Value.absent(),
     this.orderType = const Value.absent(),
+    this.tableId = const Value.absent(),
     this.subTotal = const Value.absent(),
     this.discount = const Value.absent(),
     this.taxAmount = const Value.absent(),
@@ -3987,6 +4027,7 @@ class OrdersCompanion extends UpdateCompanion<OrderData> {
     this.id = const Value.absent(),
     required int shiftId,
     required String orderType,
+    this.tableId = const Value.absent(),
     required int subTotal,
     this.discount = const Value.absent(),
     required int taxAmount,
@@ -4013,6 +4054,7 @@ class OrdersCompanion extends UpdateCompanion<OrderData> {
     Expression<int>? id,
     Expression<int>? shiftId,
     Expression<String>? orderType,
+    Expression<int>? tableId,
     Expression<int>? subTotal,
     Expression<int>? discount,
     Expression<int>? taxAmount,
@@ -4030,6 +4072,7 @@ class OrdersCompanion extends UpdateCompanion<OrderData> {
       if (id != null) 'id': id,
       if (shiftId != null) 'shift_id': shiftId,
       if (orderType != null) 'order_type': orderType,
+      if (tableId != null) 'table_id': tableId,
       if (subTotal != null) 'sub_total': subTotal,
       if (discount != null) 'discount': discount,
       if (taxAmount != null) 'tax_amount': taxAmount,
@@ -4049,6 +4092,7 @@ class OrdersCompanion extends UpdateCompanion<OrderData> {
     Value<int>? id,
     Value<int>? shiftId,
     Value<String>? orderType,
+    Value<int?>? tableId,
     Value<int>? subTotal,
     Value<int>? discount,
     Value<int>? taxAmount,
@@ -4066,6 +4110,7 @@ class OrdersCompanion extends UpdateCompanion<OrderData> {
       id: id ?? this.id,
       shiftId: shiftId ?? this.shiftId,
       orderType: orderType ?? this.orderType,
+      tableId: tableId ?? this.tableId,
       subTotal: subTotal ?? this.subTotal,
       discount: discount ?? this.discount,
       taxAmount: taxAmount ?? this.taxAmount,
@@ -4092,6 +4137,9 @@ class OrdersCompanion extends UpdateCompanion<OrderData> {
     }
     if (orderType.present) {
       map['order_type'] = Variable<String>(orderType.value);
+    }
+    if (tableId.present) {
+      map['table_id'] = Variable<int>(tableId.value);
     }
     if (subTotal.present) {
       map['sub_total'] = Variable<int>(subTotal.value);
@@ -4138,6 +4186,7 @@ class OrdersCompanion extends UpdateCompanion<OrderData> {
           ..write('id: $id, ')
           ..write('shiftId: $shiftId, ')
           ..write('orderType: $orderType, ')
+          ..write('tableId: $tableId, ')
           ..write('subTotal: $subTotal, ')
           ..write('discount: $discount, ')
           ..write('taxAmount: $taxAmount, ')
@@ -7104,6 +7153,7 @@ typedef $$OrdersTableCreateCompanionBuilder =
       Value<int> id,
       required int shiftId,
       required String orderType,
+      Value<int?> tableId,
       required int subTotal,
       Value<int> discount,
       required int taxAmount,
@@ -7122,6 +7172,7 @@ typedef $$OrdersTableUpdateCompanionBuilder =
       Value<int> id,
       Value<int> shiftId,
       Value<String> orderType,
+      Value<int?> tableId,
       Value<int> subTotal,
       Value<int> discount,
       Value<int> taxAmount,
@@ -7193,6 +7244,11 @@ class $$OrdersTableFilterComposer
 
   ColumnFilters<String> get orderType => $composableBuilder(
     column: $table.orderType,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get tableId => $composableBuilder(
+    column: $table.tableId,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -7324,6 +7380,11 @@ class $$OrdersTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<int> get tableId => $composableBuilder(
+    column: $table.tableId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<int> get subTotal => $composableBuilder(
     column: $table.subTotal,
     builder: (column) => ColumnOrderings(column),
@@ -7422,6 +7483,9 @@ class $$OrdersTableAnnotationComposer
 
   GeneratedColumn<String> get orderType =>
       $composableBuilder(column: $table.orderType, builder: (column) => column);
+
+  GeneratedColumn<int> get tableId =>
+      $composableBuilder(column: $table.tableId, builder: (column) => column);
 
   GeneratedColumn<int> get subTotal =>
       $composableBuilder(column: $table.subTotal, builder: (column) => column);
@@ -7551,6 +7615,7 @@ class $$OrdersTableTableManager
                 Value<int> id = const Value.absent(),
                 Value<int> shiftId = const Value.absent(),
                 Value<String> orderType = const Value.absent(),
+                Value<int?> tableId = const Value.absent(),
                 Value<int> subTotal = const Value.absent(),
                 Value<int> discount = const Value.absent(),
                 Value<int> taxAmount = const Value.absent(),
@@ -7567,6 +7632,7 @@ class $$OrdersTableTableManager
                 id: id,
                 shiftId: shiftId,
                 orderType: orderType,
+                tableId: tableId,
                 subTotal: subTotal,
                 discount: discount,
                 taxAmount: taxAmount,
@@ -7585,6 +7651,7 @@ class $$OrdersTableTableManager
                 Value<int> id = const Value.absent(),
                 required int shiftId,
                 required String orderType,
+                Value<int?> tableId = const Value.absent(),
                 required int subTotal,
                 Value<int> discount = const Value.absent(),
                 required int taxAmount,
@@ -7601,6 +7668,7 @@ class $$OrdersTableTableManager
                 id: id,
                 shiftId: shiftId,
                 orderType: orderType,
+                tableId: tableId,
                 subTotal: subTotal,
                 discount: discount,
                 taxAmount: taxAmount,

@@ -1,25 +1,32 @@
+// مسار الملف: lib/features/pos/domain/entities/order_entity.dart
+
 import 'package:equatable/equatable.dart';
 import 'package:ahgzly_pos/features/pos/domain/entities/order_item_entity.dart';
+import 'package:ahgzly_pos/core/common/enums/order_type.dart';
+import 'package:ahgzly_pos/core/common/enums/payment_method.dart';
+import 'package:ahgzly_pos/core/common/enums/order_status.dart';
 
-class Order extends Equatable {
+class OrderEntity extends Equatable {
   final int? shiftId; 
-  final String orderType;
-  final int subTotal;    // Refactored: int (Cents)
-  final int discount;    // Refactored: int (Cents)
-  final int taxAmount;   // Refactored: int (Cents)
-  final int serviceFee;  // Refactored: int (Cents)
-  final int deliveryFee; // Refactored: int (Cents)
-  final int total;       // Refactored: int (Cents)
-  final String paymentMethod;
-  final String status;
-  final String createdAt;
+  final int? tableId; // [Added] لدعم نظام الصالات والطاولات لاحقاً
+  final OrderType orderType; // [Refactored] String -> Enum
+  final int subTotal;    
+  final int discount;    
+  final int taxAmount;   
+  final int serviceFee;  
+  final int deliveryFee; 
+  final int total;       
+  final PaymentMethod paymentMethod; // [Refactored] String -> Enum
+  final OrderStatus status; // [Refactored] String -> Enum
+  final DateTime createdAt; // [Refactored] String -> DateTime
   final String customerName;
   final String customerPhone;
   final String customerAddress;
   final List<OrderItemEntity> items;
 
-  const Order({
+  const OrderEntity({
     this.shiftId,
+    this.tableId,
     required this.orderType, 
     required this.subTotal, 
     required this.discount, 
@@ -38,7 +45,7 @@ class Order extends Equatable {
 
   @override
   List<Object?> get props => [
-    shiftId, orderType, subTotal, discount, taxAmount, serviceFee, 
+    shiftId, tableId, orderType, subTotal, discount, taxAmount, serviceFee, 
     deliveryFee, total, paymentMethod, status, createdAt, 
     customerName, customerPhone, customerAddress, items
   ];

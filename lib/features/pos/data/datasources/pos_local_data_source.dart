@@ -4,6 +4,7 @@ import 'package:ahgzly_pos/core/database/app_database.dart';
 import 'package:ahgzly_pos/core/error/exceptions.dart';
 import 'package:ahgzly_pos/features/pos/data/models/order_model.dart';
 import 'package:ahgzly_pos/features/pos/data/models/order_item_model.dart';
+import 'package:ahgzly_pos/core/common/enums/payment_method.dart'; // [Added] 
 import 'package:drift/drift.dart';
 
 abstract class PosLocalDataSource {
@@ -29,23 +30,24 @@ class PosLocalDataSourceImpl implements PosLocalDataSource {
           throw CacheException('لا يمكن حفظ فاتورة فارغة.');
         }
 
-        // 2. إدخال الفاتورة
+        // 2. إدخال الفاتورة (Mapping Enums/DateTime to Drift Strings)
         final orderId = await appDatabase.into(appDatabase.orders).insert(
           OrdersCompanion.insert(
             shiftId: order.shiftId!,
-            orderType: order.orderType,
+            tableId: Value(order.tableId), // تمرير معرف الطاولة إذا وُجد
+            orderType: order.orderType.name,
             subTotal: order.subTotal,
             discount: Value(order.discount),
             taxAmount: order.taxAmount,
             serviceFee: order.serviceFee,
             deliveryFee: order.deliveryFee,
             total: order.total,
-            paymentMethod: order.paymentMethod,
-            status: order.status,
+            paymentMethod: order.paymentMethod.name,
+            status: order.status.name,
             customerName: Value(order.customerName),
             customerPhone: Value(order.customerPhone),
             customerAddress: Value(order.customerAddress),
-            createdAt: order.createdAt,
+            createdAt: order.createdAt.toIso8601String(), // String
           ),
         );
 
@@ -72,14 +74,12 @@ class PosLocalDataSourceImpl implements PosLocalDataSource {
            throw CacheException('الوردية الحالية غير نشطة أو تم إغلاقها.');
         }
 
-        final paymentMethod = order.paymentMethod.toLowerCase();
-        
-        // [Refactoring Specialist]: تم الإصلاح هنا للتعرف على اللغتين وجعل الكاش افتراضياً
-        final isVisa = paymentMethod == 'visa' || paymentMethod == 'فيزا';
-        final isInstapay = paymentMethod == 'instapay' || paymentMethod == 'إنستاباي' || paymentMethod == 'انستاباي';
-        final isCash = !isVisa && !isInstapay; // أي طريقة أخرى تعتبر كاش لحماية الدرج
+        // [Clean Code]: تقييم طرق الدفع مباشرة باستخدام الـ Enums (Type Safe)
+        final isVisa = order.paymentMethod == PaymentMethod.visa;
+        final isInstapay = order.paymentMethod == PaymentMethod.wallet;
+        final isCash = order.paymentMethod == PaymentMethod.cash;
 
-        // حساب القيم الجديدة
+        // حساب القيم الجديدة للوردية
         final updatedShift = shift.copyWith(
           totalSales: shift.totalSales + order.total,
           totalOrders: shift.totalOrders + 1,

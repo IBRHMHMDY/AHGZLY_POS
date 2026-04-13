@@ -33,7 +33,7 @@ class SaveOrderUseCase implements UseCase<int, SaveOrderParams> {
           return const Left(ValidationFailure('يجب فتح وردية جديدة أولاً لإتمام عملية البيع.'));
         }
 
-        final orderWithShift = Order(
+        final orderWithShift = OrderEntity(
           shiftId: activeShift.id, 
           orderType: params.order.orderType,
           subTotal: params.order.subTotal,
@@ -58,7 +58,7 @@ class SaveOrderUseCase implements UseCase<int, SaveOrderParams> {
 }
 
 class SaveOrderParams extends Equatable {
-  final Order order;
+  final OrderEntity order;
   const SaveOrderParams({required this.order});
   @override List<Object> get props => [order];
 }

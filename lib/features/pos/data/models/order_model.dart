@@ -1,9 +1,12 @@
+// مسار الملف: lib/features/pos/data/models/order_model.dart
+
 import 'package:ahgzly_pos/features/pos/domain/entities/order_entity.dart';
 import 'package:ahgzly_pos/features/pos/data/models/order_item_model.dart';
 
-class OrderModel extends Order {
+class OrderModel extends OrderEntity {
   const OrderModel({
     super.shiftId,
+    super.tableId, // دعم الطاولات المستقبلي
     required super.orderType,
     required super.subTotal,
     required super.discount,
@@ -20,9 +23,10 @@ class OrderModel extends Order {
     required super.items,
   });
 
-  factory OrderModel.fromEntity(Order entity) {
+  factory OrderModel.fromEntity(OrderEntity entity) {
     return OrderModel(
       shiftId: entity.shiftId,
+      tableId: entity.tableId,
       orderType: entity.orderType,
       subTotal: entity.subTotal,
       discount: entity.discount,
@@ -44,17 +48,18 @@ class OrderModel extends Order {
 
   Map<String, dynamic> toMap() {
     return {
-      'shift_id': shiftId, // تمت الإضافة
-      'order_type': orderType,
+      'shift_id': shiftId,
+      'table_id': tableId,
+      'order_type': orderType.name, // [Fix] تحويل الـ Enum لنص ليقبله Drift
       'sub_total': subTotal,
       'discount': discount,
       'tax_amount': taxAmount,
       'service_fee': serviceFee,
       'delivery_fee': deliveryFee,
       'total': total,
-      'payment_method': paymentMethod,
-      'status': status,
-      'created_at': createdAt,
+      'payment_method': paymentMethod.name, 
+      'status': status.name, 
+      'created_at': createdAt.toIso8601String(), // [Fix] تحويل الـ DateTime لنص
       'customer_name': customerName,
       'customer_phone': customerPhone,
       'customer_address': customerAddress,

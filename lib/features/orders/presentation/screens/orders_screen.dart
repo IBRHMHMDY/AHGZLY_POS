@@ -1,3 +1,4 @@
+import 'package:ahgzly_pos/core/common/enums/order_status.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:ahgzly_pos/features/auth/presentation/bloc/auth_bloc.dart';
@@ -126,8 +127,8 @@ class _OrderCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final date = DateTime.parse(order.createdAt).toString().substring(0, 16);
-    final isRefunded = order.status == 'مرتجع';
+    final date = order.createdAt;
+    final isRefunded = order.status == OrderStatus.refunded;
     
     return Card(
       elevation: 2,
@@ -151,15 +152,15 @@ class _OrderCard extends StatelessWidget {
             children: [
               Icon(Icons.access_time, size: 16, color: Colors.grey.shade600),
               const SizedBox(width: 4),
-              Text(date, style: TextStyle(color: Colors.grey.shade700)),
+              Text(date.toIso8601String(), style: TextStyle(color: Colors.grey.shade700)),
               const SizedBox(width: 12),
               Icon(Icons.shopping_bag_outlined, size: 16, color: Colors.grey.shade600),
               const SizedBox(width: 4),
-              Text(order.orderType, style: TextStyle(color: Colors.grey.shade700)),
+              Text(order.orderType.arabicName, style: TextStyle(color: Colors.grey.shade700)),
               const SizedBox(width: 12),
               Icon(isRefunded ? Icons.cancel_outlined : Icons.payment, size: 16, color: isRefunded ? Colors.red : Colors.grey.shade600),
               const SizedBox(width: 4),
-              Text(isRefunded ? "مرتجع" : order.paymentMethod, style: TextStyle(color: isRefunded ? Colors.red : Colors.grey.shade700, fontWeight: isRefunded ? FontWeight.bold : FontWeight.normal)),
+              Text(isRefunded ? OrderStatus.refunded.arabicName : order.paymentMethod.arabicName, style: TextStyle(color: isRefunded ? Colors.red : Colors.grey.shade700, fontWeight: isRefunded ? FontWeight.bold : FontWeight.normal)),
             ],
           ),
         ),

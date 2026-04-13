@@ -1,3 +1,4 @@
+import 'package:ahgzly_pos/core/common/enums/order_type.dart';
 import 'package:ahgzly_pos/core/common/widgets/custom_shimmer.dart';
 import 'package:ahgzly_pos/core/usecases/usecase.dart';
 import 'package:ahgzly_pos/core/utils/money_formatter.dart';
@@ -41,7 +42,7 @@ class _CartSectionState extends State<CartSection> {
     if (mode == 'customer' || mode == 'both') {
       customerSuccess = await printerService.printReceiptUsb(
         receiptWidget: CustomerReceiptWidget(
-          orderId: orderId, orderType: orderState.orderType, items: orderState.cartItems,
+          orderId: orderId, orderType: orderState.orderType.arabicName, items: orderState.cartItems,
           subTotal: orderState.subTotal, discountAmount: orderState.discountAmount, taxAmount: orderState.taxAmount,
           serviceFee: orderState.serviceFee, deliveryFee: orderState.deliveryFee, total: orderState.total,
           restaurantName: orderState.restaurantName, taxNumber: orderState.taxNumber,
@@ -54,7 +55,7 @@ class _CartSectionState extends State<CartSection> {
 
     if (mode == 'kitchen' || mode == 'both') {
       kitchenSuccess = await printerService.printReceiptUsb(
-        receiptWidget: KitchenReceiptWidget(orderId: orderId, orderType: orderState.orderType, items: orderState.cartItems),
+        receiptWidget: KitchenReceiptWidget(orderId: orderId, orderType: orderState.orderType.arabicName, items: orderState.cartItems),
         printerName: pName,
       );
     }
@@ -121,7 +122,7 @@ class _CartSectionState extends State<CartSection> {
             return Column(
               children: [
                 // 🪄 1. الهيدر (نوع الطلب ومسح السلة)
-                _CartHeader(orderType: state.orderType),
+                _CartHeader(orderType: state.orderType.arabicName),
                 
                 // 🪄 2. قائمة الأصناف
                 Expanded(child: _CartItemsList(cartItems: state.cartItems)),
@@ -133,7 +134,7 @@ class _CartSectionState extends State<CartSection> {
                   onPayTap: state.cartItems.isEmpty ? null : () async {
                     final result = await showDialog<Map<String, dynamic>>(
                       context: context, barrierDismissible: false,
-                      builder: (_) => CheckoutDialog(totalAmount: state.total, orderType: state.orderType),
+                      builder: (_) => CheckoutDialog(totalAmount: state.total, orderType: state.orderType.arabicName),
                     );
                     if (result != null && context.mounted) {
                       _lastOrderState = state;
@@ -157,7 +158,7 @@ class _CartSectionState extends State<CartSection> {
 // ==========================================
 
 class _CartHeader extends StatelessWidget {
-  final String orderType;
+  final OrderType orderType;
   const _CartHeader({required this.orderType});
 
   @override
@@ -180,7 +181,7 @@ class _CartHeader extends StatelessWidget {
                   style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.teal),
                   items: ['تيك أواي', 'صالة', 'دليفري'].map((type) => DropdownMenuItem(value: type, child: Text(type))).toList(),
                   onChanged: (value) {
-                    if (value != null) context.read<PosBloc>().add(ChangeOrderTypeEvent(value));
+                    if (value != null) context.read<PosBloc>().add(ChangeOrderTypeEvent(orderType));
                   },
                 ),
               ),
@@ -420,7 +421,7 @@ class _PrintOptionsDialog extends StatelessWidget {
 
             await sl<PrinterService>().printReceiptUsb(
               receiptWidget: CustomerReceiptWidget(
-                orderId: orderId, orderType: previousState.orderType, items: previousState.cartItems,
+                orderId: orderId, orderType: previousState.orderType.arabicName, items: previousState.cartItems,
                 subTotal: previousState.subTotal, discountAmount: previousState.discountAmount, taxAmount: previousState.taxAmount,
                 serviceFee: previousState.serviceFee, deliveryFee: previousState.deliveryFee, total: previousState.total,
                 restaurantName: previousState.restaurantName, taxNumber: previousState.taxNumber,
@@ -441,7 +442,7 @@ class _PrintOptionsDialog extends StatelessWidget {
             settingsResult.fold((l) => null, (r) => pName = r.printerName);
 
             await sl<PrinterService>().printReceiptUsb(
-              receiptWidget: KitchenReceiptWidget(orderId: orderId, orderType: previousState.orderType, items: previousState.cartItems),
+              receiptWidget: KitchenReceiptWidget(orderId: orderId, orderType: previousState.orderType.arabicName, items: previousState.cartItems),
               printerName: pName,
             );
           },

@@ -94,6 +94,7 @@ class Orders extends Table {
   IntColumn get id => integer().autoIncrement()();
   IntColumn get shiftId => integer().references(Shifts, #id)();
   TextColumn get orderType => text()();
+  IntColumn get tableId => integer().nullable()();
   IntColumn get subTotal => integer()(); // بالسنت
   IntColumn get discount => integer().withDefault(const Constant(0))(); // بالسنت
   IntColumn get taxAmount => integer()(); // بالسنت

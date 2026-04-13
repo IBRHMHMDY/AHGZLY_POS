@@ -1,3 +1,4 @@
+import 'package:ahgzly_pos/core/common/enums/order_type.dart';
 import 'package:equatable/equatable.dart';
 import 'package:ahgzly_pos/features/menu/domain/entities/item_entity.dart';
 
@@ -23,7 +24,7 @@ class PosLoading extends PosState {}
 
 class PosUpdated extends PosState {
   final List<CartItem> cartItems;
-  final String orderType;
+  final OrderType orderType;
   final int subTotal;
   final int discountAmount; // جديد
   final int taxAmount;

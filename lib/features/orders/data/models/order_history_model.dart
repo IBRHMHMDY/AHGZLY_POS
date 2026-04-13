@@ -1,4 +1,9 @@
+// مسار الملف: lib/features/orders/data/models/order_history_model.dart
+
 import 'package:ahgzly_pos/features/orders/domain/entities/order_history_entity.dart';
+import 'package:ahgzly_pos/core/common/enums/order_type.dart';
+import 'package:ahgzly_pos/core/common/enums/payment_method.dart';
+import 'package:ahgzly_pos/core/common/enums/order_status.dart';
 
 class OrderHistoryModel extends OrderHistoryEntity {
   const OrderHistoryModel({
@@ -19,16 +24,14 @@ class OrderHistoryModel extends OrderHistoryEntity {
   ) {
     return OrderHistoryModel(
       id: map['id'] as int,
-      orderType: map['order_type'] as String,
-      // Refactored: تحويل إلى int بدلاً من double
+      // [Clean Code]: قراءة النص من الداتابيز وتحويله لـ Enum باستخدام الدالة المساعدة
+      orderType: OrderType.fromString(map['order_type'] as String),
       subTotal: (map['sub_total'] as num).toInt(),
-      // Refactored: تحويل إلى int وضبط القيمة الافتراضية لـ 0 بدلاً من 0.0
       discount: (map['discount'] as num?)?.toInt() ?? 0,
-      // Refactored: تحويل إلى int بدلاً من double
       total: (map['total'] as num).toInt(),
-      paymentMethod: map['payment_method'] as String,
-      createdAt: map['created_at'] as String,
-      status: map['status'] as String,
+      paymentMethod: PaymentMethod.fromString(map['payment_method'] as String),
+      createdAt: DateTime.parse(map['created_at'] as String), // تحويل لنوع DateTime
+      status: OrderStatus.fromString(map['status'] as String),
       items: items,
     );
   }
@@ -45,7 +48,6 @@ class OrderItemHistoryModel extends OrderItemHistoryEntity {
     return OrderItemHistoryModel(
       itemName: map['item_name'] as String,
       quantity: map['quantity'] as int,
-      // Refactored: تحويل إلى int بدلاً من double
       unitPrice: (map['unit_price'] as num).toInt(), 
     );
   }

@@ -11,7 +11,7 @@ class PosRepositoryImpl implements PosRepository {
   PosRepositoryImpl({required this.localDataSource});
 
   @override
-  Future<Either<Failure, int>> saveOrder(Order order) async {
+  Future<Either<Failure, int>> saveOrder(OrderEntity order) async {
     try {
       final orderModel = OrderModel.fromEntity(order);
       final orderId = await localDataSource.saveOrder(orderModel);
