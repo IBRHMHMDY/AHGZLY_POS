@@ -3,7 +3,7 @@ import 'package:go_router/go_router.dart';
 // ==========================================
 // 🪄 Core Entities
 // ==========================================
-import 'package:ahgzly_pos/core/common/entities/user.dart';
+import 'package:ahgzly_pos/core/common/users/entities/user.dart';
 
 // ==========================================
 // 🪄 Features Screens Imports

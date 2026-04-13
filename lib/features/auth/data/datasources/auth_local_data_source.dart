@@ -1,6 +1,4 @@
-// مسار الملف: lib/features/auth/data/datasources/auth_local_data_source.dart
-
-import 'package:ahgzly_pos/core/common/models/user_model.dart';
+import 'package:ahgzly_pos/core/common/users/models/user_model.dart';
 import 'package:ahgzly_pos/core/database/drift/app_database.dart'; 
 import 'package:ahgzly_pos/core/error/exceptions.dart'; 
 import 'package:ahgzly_pos/core/utils/hash_util.dart';

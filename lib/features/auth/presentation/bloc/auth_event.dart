@@ -1,4 +1,4 @@
-import 'package:ahgzly_pos/core/common/entities/user.dart';
+import 'package:ahgzly_pos/core/common/users/entities/user.dart';
 import 'package:flutter/foundation.dart';
 
 @immutable
