@@ -1,7 +1,7 @@
 import 'package:ahgzly_pos/core/error/failures.dart';
 import 'package:ahgzly_pos/core/usecases/usecase.dart';
 import 'package:ahgzly_pos/features/settings/domain/repositories/settings_repository.dart';
-import 'package:ahgzly_pos/features/settings/domain/entities/app_settings.dart';
+import 'package:ahgzly_pos/features/settings/domain/entities/app_settings_entity.dart';
 import 'package:dartz/dartz.dart';
 import 'package:equatable/equatable.dart';
 
@@ -22,7 +22,7 @@ class UpdateSettingsUseCase implements UseCase<void, UpdateSettingsParams> {
 }
 
 class UpdateSettingsParams extends Equatable {
-  final AppSettings settings;
+  final AppSettingsEntity settings;
 
   const UpdateSettingsParams({required this.settings});
 

@@ -1,6 +1,6 @@
 import 'package:equatable/equatable.dart';
 
-class OrderItem extends Equatable {
+class OrderItemEntity extends Equatable {
   final int? id;
   final int? orderId;
   final int itemId;
@@ -8,7 +8,7 @@ class OrderItem extends Equatable {
   final int unitPrice; // Refactored: تغيير من double إلى int (Cents)
   final String? notes;
 
-  const OrderItem({
+  const OrderItemEntity({
     this.id,
     this.orderId,
     required this.itemId,

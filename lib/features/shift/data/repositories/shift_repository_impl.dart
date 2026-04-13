@@ -2,7 +2,7 @@ import 'package:ahgzly_pos/core/error/exceptions.dart';
 import 'package:ahgzly_pos/core/error/failures.dart';
 import 'package:dartz/dartz.dart';
 import 'package:ahgzly_pos/features/shift/data/datasources/shift_local_data_source.dart';
-import 'package:ahgzly_pos/features/shift/domain/entities/shift.dart';
+import 'package:ahgzly_pos/features/shift/domain/entities/shift_entity.dart';
 import 'package:ahgzly_pos/features/shift/domain/repositories/shift_repository.dart';
 
 class ShiftRepositoryImpl implements ShiftRepository {
@@ -11,7 +11,7 @@ class ShiftRepositoryImpl implements ShiftRepository {
   ShiftRepositoryImpl({required this.localDataSource});
 
   @override
-  Future<Either<Failure, Shift?>> checkActiveShift() async {
+  Future<Either<Failure, ShiftEntity?>> checkActiveShift() async {
     try {
       final shift = await localDataSource.getActiveShift();
       return Right(shift);
@@ -22,7 +22,7 @@ class ShiftRepositoryImpl implements ShiftRepository {
   }
 
   @override
-  Future<Either<Failure, Shift>> openShift({required int userId, required int startingCash}) async {
+  Future<Either<Failure, ShiftEntity>> openShift({required int userId, required int startingCash}) async {
     try {
       final shift = await localDataSource.openShift(cashierId: userId,startingCash: startingCash);
       return Right(shift);
@@ -32,7 +32,7 @@ class ShiftRepositoryImpl implements ShiftRepository {
   }
 
   @override
-  Future<Either<Failure, Shift>> closeShift({required int shiftId, required int actualCash}) async {
+  Future<Either<Failure, ShiftEntity>> closeShift({required int shiftId, required int actualCash}) async {
     try {
       final shift = await localDataSource.closeShift(shiftId: shiftId, actualCash: actualCash);
       return Right(shift);

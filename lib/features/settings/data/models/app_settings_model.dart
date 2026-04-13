@@ -1,6 +1,6 @@
-import 'package:ahgzly_pos/features/settings/domain/entities/app_settings.dart';
+import 'package:ahgzly_pos/features/settings/domain/entities/app_settings_entity.dart';
 
-class AppSettingsModel extends AppSettings {
+class AppSettingsModel extends AppSettingsEntity {
   const AppSettingsModel({
     required super.taxRate,
     required super.serviceRate,
@@ -37,15 +37,15 @@ class AppSettingsModel extends AppSettings {
     };
   }
 
-  factory AppSettingsModel.fromEntity(AppSettings entity) {
+  factory AppSettingsModel.fromEntity(AppSettingsEntity setting) {
     return AppSettingsModel(
-      taxRate: entity.taxRate,
-      serviceRate: entity.serviceRate,
-      deliveryFee: entity.deliveryFee,
-      printerName: entity.printerName,
-      restaurantName: entity.restaurantName,
-      taxNumber: entity.taxNumber,
-      printMode: entity.printMode,
+      taxRate: setting.taxRate,
+      serviceRate: setting.serviceRate,
+      deliveryFee: setting.deliveryFee,
+      printerName: setting.printerName,
+      restaurantName: setting.restaurantName,
+      taxNumber: setting.taxNumber,
+      printMode: setting.printMode,
     );
   }
 }

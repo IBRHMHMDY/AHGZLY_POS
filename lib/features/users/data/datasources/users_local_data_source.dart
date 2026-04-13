@@ -1,7 +1,7 @@
 // مسار الملف: lib/features/users/data/datasources/users_local_data_source.dart
 
 import 'package:ahgzly_pos/core/common/users/models/user_model.dart';
-import 'package:ahgzly_pos/core/database/drift/app_database.dart'; // استيراد Drift
+import 'package:ahgzly_pos/core/database/app_database.dart'; // استيراد Drift
 import 'package:ahgzly_pos/core/error/exceptions.dart';
 import 'package:drift/drift.dart'; // استيراد مكتبة drift لاستخدام Value
 
@@ -17,7 +17,7 @@ class UsersLocalDataSourceImpl implements UsersLocalDataSource {
   UsersLocalDataSourceImpl({required this.appDatabase});
 
   // Mapper داخلي 
-  Map<String, dynamic> _driftUserToMap(UserDrift driftUser) {
+  Map<String, dynamic> _driftUserToMap(UserData driftUser) {
     return {
       'id': driftUser.id,
       'name': driftUser.name,

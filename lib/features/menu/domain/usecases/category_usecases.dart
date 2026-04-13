@@ -1,16 +1,16 @@
 import 'package:ahgzly_pos/core/error/failures.dart';
 import 'package:ahgzly_pos/core/usecases/usecase.dart';
-import 'package:ahgzly_pos/features/menu/domain/entities/category.dart';
+import 'package:ahgzly_pos/features/menu/domain/entities/category_entity.dart';
 import 'package:ahgzly_pos/features/menu/domain/repositories/menu_repository.dart';
 import 'package:dartz/dartz.dart';
 import 'package:equatable/equatable.dart';
 
-class GetCategoriesUseCase implements UseCase<List<Category>, NoParams> {
+class GetCategoriesUseCase implements UseCase<List<CategoryEntity>, NoParams> {
   final MenuRepository repository;
   GetCategoriesUseCase(this.repository);
 
   @override
-  Future<Either<Failure, List<Category>>> call(NoParams params) async {
+  Future<Either<Failure, List<CategoryEntity>>> call(NoParams params) async {
     return await repository.getCategories();
   }
 }
@@ -29,7 +29,7 @@ class AddCategoryUseCase implements UseCase<int, AddCategoryParams> {
 }
 
 class AddCategoryParams extends Equatable {
-  final Category category;
+  final CategoryEntity category;
   const AddCategoryParams({required this.category});
   @override List<Object> get props => [category];
 }
@@ -48,7 +48,7 @@ class UpdateCategoryUseCase implements UseCase<int, UpdateCategoryParams> {
 }
 
 class UpdateCategoryParams extends Equatable {
-  final Category category;
+  final CategoryEntity category;
   const UpdateCategoryParams({required this.category});
   @override List<Object> get props => [category];
 }

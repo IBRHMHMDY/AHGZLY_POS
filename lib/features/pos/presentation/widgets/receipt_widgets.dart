@@ -1,8 +1,8 @@
 import 'package:ahgzly_pos/core/utils/money_formatter.dart';
-import 'package:ahgzly_pos/features/shift/domain/entities/shift.dart';
+import 'package:ahgzly_pos/features/shift/domain/entities/shift_entity.dart';
 import 'package:flutter/material.dart';
 import 'package:ahgzly_pos/features/pos/presentation/bloc/pos_state.dart';
-import 'package:ahgzly_pos/features/orders/domain/entities/order_history.dart';
+import 'package:ahgzly_pos/features/orders/domain/entities/order_history_entity.dart';
 // ignore: library_prefixes
 import 'package:intl/intl.dart' as intlDateTime;
 
@@ -333,7 +333,7 @@ class KitchenReceiptWidget extends StatelessWidget {
 }
 
 class CustomerHistoryReceiptWidget extends StatelessWidget {
-  final OrderHistory order;
+  final OrderHistoryEntity order;
   final String restaurantName;
   final String taxNumber;
 
@@ -467,7 +467,7 @@ class CustomerHistoryReceiptWidget extends StatelessWidget {
 }
 
 class ZReportReceiptWidget extends StatelessWidget {
-  final Shift shift; 
+  final ShiftEntity shift; 
   final String restaurantName;
   final String cashierName;
   final bool isXReport;

@@ -2,15 +2,15 @@ import 'package:dartz/dartz.dart';
 import 'package:equatable/equatable.dart';
 import '../../../../core/error/failures.dart';
 import '../../../../core/usecases/usecase.dart';
-import '../entities/item.dart';
+import '../entities/item_entity.dart';
 import '../repositories/menu_repository.dart';
 
-class GetItemsUseCase implements UseCase<List<Item>, GetItemsParams> {
+class GetItemsUseCase implements UseCase<List<ItemEntity>, GetItemsParams> {
   final MenuRepository repository;
   GetItemsUseCase(this.repository);
 
   @override
-  Future<Either<Failure, List<Item>>> call(GetItemsParams params) async {
+  Future<Either<Failure, List<ItemEntity>>> call(GetItemsParams params) async {
     return await repository.getItems(params.categoryId);
   }
 }
@@ -39,7 +39,7 @@ class AddItemUseCase implements UseCase<int, AddItemParams> {
 }
 
 class AddItemParams extends Equatable {
-  final Item item;
+  final ItemEntity item;
   const AddItemParams({required this.item});
   @override List<Object> get props => [item];
 }
@@ -58,7 +58,7 @@ class UpdateItemUseCase implements UseCase<int, UpdateItemParams> {
 }
 
 class UpdateItemParams extends Equatable {
-  final Item item;
+  final ItemEntity item;
   const UpdateItemParams({required this.item});
   @override List<Object> get props => [item];
 }

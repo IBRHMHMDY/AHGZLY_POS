@@ -1,12 +1,12 @@
 import 'package:ahgzly_pos/core/utils/money_formatter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:ahgzly_pos/features/menu/domain/entities/item.dart';
+import 'package:ahgzly_pos/features/menu/domain/entities/item_entity.dart';
 import 'package:ahgzly_pos/features/pos/presentation/bloc/pos_bloc.dart';
 import 'package:ahgzly_pos/features/pos/presentation/bloc/pos_event.dart';
 
 class ItemsSection extends StatelessWidget {
-  final List<Item> items;
+  final List<ItemEntity> items;
   final String categoryName;
   final bool isLoading;
 

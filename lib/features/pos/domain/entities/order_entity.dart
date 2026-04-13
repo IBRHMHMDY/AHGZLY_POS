@@ -1,5 +1,5 @@
 import 'package:equatable/equatable.dart';
-import 'package:ahgzly_pos/features/pos/domain/entities/order_item.dart';
+import 'package:ahgzly_pos/features/pos/domain/entities/order_item_entity.dart';
 
 class Order extends Equatable {
   final int? shiftId; 
@@ -16,7 +16,7 @@ class Order extends Equatable {
   final String customerName;
   final String customerPhone;
   final String customerAddress;
-  final List<OrderItem> items;
+  final List<OrderItemEntity> items;
 
   const Order({
     this.shiftId,

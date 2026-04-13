@@ -1,6 +1,6 @@
 import 'package:ahgzly_pos/core/error/failures.dart';
 import 'package:ahgzly_pos/core/usecases/usecase.dart';
-import 'package:ahgzly_pos/features/pos/domain/entities/order.dart';
+import 'package:ahgzly_pos/features/pos/domain/entities/order_entity.dart';
 import 'package:ahgzly_pos/features/pos/domain/repositories/pos_repository.dart';
 import 'package:ahgzly_pos/features/shift/domain/usecases/check_active_shift_usecase.dart';
 import 'package:dartz/dartz.dart' hide Order;

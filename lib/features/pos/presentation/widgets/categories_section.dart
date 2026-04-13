@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:ahgzly_pos/features/menu/domain/entities/category.dart';
+import 'package:ahgzly_pos/features/menu/domain/entities/category_entity.dart';
 
 class CategoriesSection extends StatelessWidget {
-  final List<Category> categories;
-  final Category? selectedCategory;
+  final List<CategoryEntity> categories;
+  final CategoryEntity? selectedCategory;
   final bool isLoading;
-  final ValueChanged<Category> onCategorySelected;
+  final ValueChanged<CategoryEntity> onCategorySelected;
 
   const CategoriesSection({
     super.key,

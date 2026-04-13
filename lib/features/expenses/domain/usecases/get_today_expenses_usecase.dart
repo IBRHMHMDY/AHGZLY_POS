@@ -2,7 +2,7 @@ import 'package:dartz/dartz.dart';
 import 'package:equatable/equatable.dart';
 import 'package:ahgzly_pos/core/error/failures.dart';
 import 'package:ahgzly_pos/core/usecases/usecase.dart';
-import 'package:ahgzly_pos/features/expenses/domain/entities/expense.dart';
+import 'package:ahgzly_pos/features/expenses/domain/entities/expense_entity.dart';
 import 'package:ahgzly_pos/features/expenses/domain/repositories/expenses_repository.dart';
 
 // Refactored: Implement Equatable
@@ -15,12 +15,12 @@ class GetExpensesParams extends Equatable {
   List<Object?> get props => [isAdmin, shiftId];
 }
 
-class GetTodayExpensesUseCase implements UseCase<List<Expense>, GetExpensesParams> {
+class GetTodayExpensesUseCase implements UseCase<List<ExpenseEntity>, GetExpensesParams> {
   final ExpensesRepository repository;
   GetTodayExpensesUseCase(this.repository);
 
   @override
-  Future<Either<Failure, List<Expense>>> call(GetExpensesParams params) {
+  Future<Either<Failure, List<ExpenseEntity>>> call(GetExpensesParams params) {
     return repository.getExpenses(isAdmin: params.isAdmin, shiftId: params.shiftId);
   }
 }

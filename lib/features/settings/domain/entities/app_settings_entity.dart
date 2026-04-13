@@ -1,6 +1,6 @@
 import 'package:equatable/equatable.dart';
 
-class AppSettings extends Equatable {
+class AppSettingsEntity extends Equatable {
   final double taxRate; // تبقى double لأنها نسبة
   final double serviceRate; // تبقى double لأنها نسبة
   final int deliveryFee; // Refactored: تغيير من double إلى int (Cents)
@@ -9,7 +9,7 @@ class AppSettings extends Equatable {
   final String taxNumber;
   final String printMode;
 
-  const AppSettings({
+  const AppSettingsEntity({
     required this.taxRate,
     required this.serviceRate,
     required this.deliveryFee,

@@ -1,4 +1,4 @@
-import 'package:ahgzly_pos/core/common/users/entities/user.dart'; // المسار الجديد
+import 'package:ahgzly_pos/core/common/users/entities/user_entity.dart'; // المسار الجديد
 
 class UserModel extends User {
   const UserModel({

@@ -2,7 +2,7 @@ import 'package:ahgzly_pos/core/utils/money_formatter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:ahgzly_pos/features/expenses/domain/entities/expense.dart';
+import 'package:ahgzly_pos/features/expenses/domain/entities/expense_entity.dart';
 import 'package:ahgzly_pos/features/shift/presentation/bloc/shift_bloc.dart';
 import 'package:ahgzly_pos/features/shift/presentation/bloc/shift_state.dart';
 
@@ -36,7 +36,7 @@ class _AddExpenseDialogState extends State<AddExpenseDialog> {
       }
 
       final amountDouble = double.parse(_amountController.text);
-      final expense = Expense(
+      final expense = ExpenseEntity(
         amount: MoneyFormatter.toCents(amountDouble),
         reason: _reasonController.text.trim(),
         createdAt: DateTime.now().toIso8601String(),

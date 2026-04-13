@@ -8,7 +8,7 @@ import 'package:ahgzly_pos/features/shift/presentation/bloc/shift_bloc.dart';
 import 'package:ahgzly_pos/features/shift/presentation/bloc/shift_state.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:ahgzly_pos/features/expenses/domain/entities/expense.dart';
+import 'package:ahgzly_pos/features/expenses/domain/entities/expense_entity.dart';
 import 'package:ahgzly_pos/features/expenses/presentation/widgets/add_expense_dialog.dart';
 import 'package:ahgzly_pos/core/common/widgets/custom_shimmer.dart'; // 🪄 استيراد الشيمر
 
@@ -38,7 +38,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
 
   void _showAddExpenseDialog(BuildContext context) async {
     final bloc = context.read<ExpensesBloc>();
-    final newExpense = await showDialog<Expense>(
+    final newExpense = await showDialog<ExpenseEntity>(
       context: context,
       barrierDismissible: false,
       builder: (ctx) => const AddExpenseDialog(),
@@ -49,7 +49,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
     }
   }
 
-  void _confirmDelete(BuildContext context, Expense expense) {
+  void _confirmDelete(BuildContext context, ExpenseEntity expense) {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -179,8 +179,8 @@ class _ExpenseSummaryCard extends StatelessWidget {
 }
 
 class _ExpenseList extends StatelessWidget {
-  final List<Expense> expenses;
-  final ValueChanged<Expense> onDelete;
+  final List<ExpenseEntity> expenses;
+  final ValueChanged<ExpenseEntity> onDelete;
 
   const _ExpenseList({required this.expenses, required this.onDelete});
 

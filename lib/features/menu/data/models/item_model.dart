@@ -1,8 +1,8 @@
 // مسار الملف: lib/features/menu/data/models/item_model.dart
 
-import 'package:ahgzly_pos/features/menu/domain/entities/item.dart';
+import 'package:ahgzly_pos/features/menu/domain/entities/item_entity.dart';
 
-class ItemModel extends Item {
+class ItemModel extends ItemEntity {
   const ItemModel({
     super.id,
     required super.categoryId,

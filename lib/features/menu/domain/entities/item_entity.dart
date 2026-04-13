@@ -2,7 +2,7 @@
 
 import 'package:equatable/equatable.dart';
 
-class Item extends Equatable {
+class ItemEntity extends Equatable {
   final int? id;
   final int categoryId;
   final String name;
@@ -11,7 +11,7 @@ class Item extends Equatable {
   final String createdAt;
   final String updatedAt;
 
-  const Item({
+  const ItemEntity({
     this.id,
     required this.categoryId,
     required this.name,

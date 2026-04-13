@@ -1,6 +1,6 @@
 // مسار الملف: lib/features/expenses/data/datasources/expenses_local_data_source.dart
 
-import 'package:ahgzly_pos/core/database/drift/app_database.dart'; // استيراد Drift
+import 'package:ahgzly_pos/core/database/app_database.dart'; // استيراد Drift
 import 'package:ahgzly_pos/core/error/exceptions.dart';
 import 'package:ahgzly_pos/features/expenses/data/models/expense_model.dart';
 import 'package:drift/drift.dart';
@@ -17,7 +17,7 @@ class ExpensesLocalDataSourceImpl implements ExpensesLocalDataSource {
   ExpensesLocalDataSourceImpl({required this.appDatabase});
 
   // Mapper لتحويل كائن Drift إلى Map يقبله Model
-  Map<String, dynamic> _driftExpenseToMap(ExpenseDrift driftExpense) {
+  Map<String, dynamic> _driftExpenseToMap(ExpenseData driftExpense) {
     return {
       'id': driftExpense.id,
       'shift_id': driftExpense.shiftId,
@@ -30,7 +30,7 @@ class ExpensesLocalDataSourceImpl implements ExpensesLocalDataSource {
   @override
   Future<List<ExpenseModel>> getExpenses({required bool isAdmin, required int? shiftId}) async {
     try {
-      List<ExpenseDrift> driftExpenses;
+      List<ExpenseData> driftExpenses;
       
       if (isAdmin) {
         driftExpenses = await (appDatabase.select(appDatabase.expenses)

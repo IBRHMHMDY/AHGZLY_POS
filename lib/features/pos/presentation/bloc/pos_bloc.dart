@@ -4,8 +4,8 @@ import 'package:ahgzly_pos/features/pos/domain/usecases/save_order_usecase.dart'
 import 'package:ahgzly_pos/features/settings/domain/usecases/get_settings_usecase.dart';
 import 'package:ahgzly_pos/features/pos/presentation/bloc/pos_event.dart';
 import 'package:ahgzly_pos/features/pos/presentation/bloc/pos_state.dart';
-import 'package:ahgzly_pos/features/pos/domain/entities/order.dart';
-import 'package:ahgzly_pos/features/pos/domain/entities/order_item.dart';
+import 'package:ahgzly_pos/features/pos/domain/entities/order_entity.dart';
+import 'package:ahgzly_pos/features/pos/domain/entities/order_item_entity.dart';
 
 class PosBloc extends Bloc<PosEvent, PosState> {
   final SaveOrderUseCase saveOrderUseCase;
@@ -154,7 +154,7 @@ class PosBloc extends Bloc<PosEvent, PosState> {
       customerName: event.customerName,
       customerPhone: event.customerPhone,
       customerAddress: event.customerAddress,
-      items: currentState.cartItems.map((c) => OrderItem(
+      items: currentState.cartItems.map((c) => OrderItemEntity(
         itemId: c.item.id!,
         quantity: c.quantity,
         unitPrice: c.item.price,

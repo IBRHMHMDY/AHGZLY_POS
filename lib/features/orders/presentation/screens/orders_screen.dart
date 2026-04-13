@@ -7,7 +7,7 @@ import 'package:ahgzly_pos/features/shift/presentation/bloc/shift_state.dart';
 import 'package:ahgzly_pos/features/orders/presentation/bloc/orders_bloc.dart';
 import 'package:ahgzly_pos/features/orders/presentation/bloc/orders_event.dart';
 import 'package:ahgzly_pos/features/orders/presentation/bloc/orders_state.dart';
-import 'package:ahgzly_pos/features/orders/domain/entities/order_history.dart';
+import 'package:ahgzly_pos/features/orders/domain/entities/order_history_entity.dart';
 import 'package:ahgzly_pos/features/orders/presentation/widgets/order_details_dialog.dart';
 import 'package:ahgzly_pos/core/utils/money_formatter.dart';
 import 'package:ahgzly_pos/core/common/widgets/custom_shimmer.dart'; // 🪄 استيراد الشيمر
@@ -120,7 +120,7 @@ class _OrdersScreenState extends State<OrdersScreen> {
 // ==========================================
 
 class _OrderCard extends StatelessWidget {
-  final OrderHistory order;
+  final OrderHistoryEntity order;
 
   const _OrderCard({required this.order});
 

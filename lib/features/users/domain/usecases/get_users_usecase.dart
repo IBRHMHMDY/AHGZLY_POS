@@ -1,4 +1,4 @@
-import 'package:ahgzly_pos/core/common/users/entities/user.dart';
+import 'package:ahgzly_pos/core/common/users/entities/user_entity.dart';
 import 'package:ahgzly_pos/core/error/failures.dart';
 import 'package:ahgzly_pos/core/usecases/usecase.dart';
 import 'package:ahgzly_pos/features/users/domain/repositories/users_repository.dart';

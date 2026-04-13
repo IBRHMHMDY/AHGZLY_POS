@@ -2,7 +2,7 @@
 
 import 'package:equatable/equatable.dart';
 
-class Shift extends Equatable {
+class ShiftEntity extends Equatable {
   final int id;
   final int? cashierId;
   final DateTime startTime;
@@ -24,7 +24,7 @@ class Shift extends Equatable {
   final int actualCash; // Refactored: int (Cents)
   final String status;
 
-  const Shift({
+  const ShiftEntity({
     required this.id,
     this.cashierId,
     required this.startTime,

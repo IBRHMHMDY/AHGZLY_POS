@@ -1,6 +1,6 @@
 import 'package:equatable/equatable.dart';
-import '../../domain/entities/category.dart';
-import '../../domain/entities/item.dart';
+import '../../domain/entities/category_entity.dart';
+import '../../domain/entities/item_entity.dart';
 
 abstract class MenuEvent extends Equatable {
   const MenuEvent();
@@ -13,14 +13,14 @@ abstract class MenuEvent extends Equatable {
 class FetchCategoriesEvent extends MenuEvent {}
 
 class AddCategoryEvent extends MenuEvent {
-  final Category category;
+  final CategoryEntity category;
   const AddCategoryEvent(this.category);
   @override
   List<Object> get props => [category];
 }
 
 class UpdateCategoryEvent extends MenuEvent {
-  final Category category;
+  final CategoryEntity category;
   const UpdateCategoryEvent(this.category);
   @override
   List<Object> get props => [category];
@@ -42,14 +42,14 @@ class FetchItemsEvent extends MenuEvent {
 }
 
 class AddItemEvent extends MenuEvent {
-  final Item item;
+  final ItemEntity item;
   const AddItemEvent(this.item);
   @override
   List<Object> get props => [item];
 }
 
 class UpdateItemEvent extends MenuEvent {
-  final Item item;
+  final ItemEntity item;
   const UpdateItemEvent(this.item);
   @override
   List<Object> get props => [item];

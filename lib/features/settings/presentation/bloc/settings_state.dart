@@ -1,5 +1,5 @@
 import 'package:equatable/equatable.dart';
-import 'package:ahgzly_pos/features/settings/domain/entities/app_settings.dart';
+import 'package:ahgzly_pos/features/settings/domain/entities/app_settings_entity.dart';
 
 abstract class SettingsState extends Equatable {
   const SettingsState();
@@ -13,7 +13,7 @@ class SettingsInitial extends SettingsState {}
 class SettingsLoading extends SettingsState {}
 
 class SettingsLoaded extends SettingsState {
-  final AppSettings settings;
+  final AppSettingsEntity settings;
   
   // Refactored: Changed to Named Parameter
   const SettingsLoaded({required this.settings});

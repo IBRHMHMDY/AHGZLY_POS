@@ -1,12 +1,12 @@
 import 'package:ahgzly_pos/core/utils/money_formatter.dart';
+import 'package:ahgzly_pos/features/menu/domain/entities/category_entity.dart';
 import 'package:flutter/material.dart';
-import 'package:ahgzly_pos/features/menu/domain/entities/item.dart';
-import 'package:ahgzly_pos/features/menu/domain/entities/category.dart';
+import 'package:ahgzly_pos/features/menu/domain/entities/item_entity.dart';
 
 class ItemDialog extends StatefulWidget {
-  final Item? item;
+  final ItemEntity? item;
   final int initialCategoryId;
-  final List<Category> categories;
+  final List<CategoryEntity> categories;
 
   const ItemDialog({
     super.key,
@@ -44,7 +44,7 @@ class _ItemDialogState extends State<ItemDialog> {
     if (_formKey.currentState!.validate()) {
       final priceDouble = double.tryParse(_priceController.text.trim()) ?? 0.0;
       
-      final newItem = Item(
+      final newItem = ItemEntity(
         id: widget.item?.id,
         categoryId: _selectedCategoryId,
         name: _nameController.text.trim(),

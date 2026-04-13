@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:ahgzly_pos/features/menu/domain/entities/category.dart';
+import 'package:ahgzly_pos/features/menu/domain/entities/category_entity.dart';
 
 class CategoryDialog extends StatefulWidget {
-  final Category? category;
+  final CategoryEntity? category;
 
   const CategoryDialog({super.key, this.category});
 
@@ -28,7 +28,7 @@ class _CategoryDialogState extends State<CategoryDialog> {
 
   void _submit() {
     if (_formKey.currentState!.validate()) {
-      final newCategory = Category(
+      final newCategory = CategoryEntity(
         id: widget.category?.id,
         name: _nameController.text.trim(),
         createdAt: widget.category?.createdAt ?? DateTime.now().toIso8601String(),

@@ -1,23 +1,6 @@
-import 'package:ahgzly_pos/features/orders/domain/entities/order_history.dart';
+import 'package:ahgzly_pos/features/orders/domain/entities/order_history_entity.dart';
 
-class OrderHistoryItemModel extends OrderHistoryItem {
-  const OrderHistoryItemModel({
-    required super.itemName,
-    required super.quantity,
-    required super.unitPrice,
-  });
-  
-  factory OrderHistoryItemModel.fromMap(Map<String, dynamic> map) {
-    return OrderHistoryItemModel(
-      itemName: map['item_name'] as String,
-      quantity: map['quantity'] as int,
-      // Refactored: تحويل إلى int بدلاً من double
-      unitPrice: (map['unit_price'] as num).toInt(), 
-    );
-  }
-}
-
-class OrderHistoryModel extends OrderHistory {
+class OrderHistoryModel extends OrderHistoryEntity {
   const OrderHistoryModel({
     required super.id,
     required super.orderType,
@@ -32,7 +15,7 @@ class OrderHistoryModel extends OrderHistory {
 
   factory OrderHistoryModel.fromMap(
     Map<String, dynamic> map,
-    List<OrderHistoryItemModel> items,
+    List<OrderItemHistoryModel> items,
   ) {
     return OrderHistoryModel(
       id: map['id'] as int,
@@ -47,6 +30,23 @@ class OrderHistoryModel extends OrderHistory {
       createdAt: map['created_at'] as String,
       status: map['status'] as String,
       items: items,
+    );
+  }
+}
+
+class OrderItemHistoryModel extends OrderItemHistoryEntity {
+  const OrderItemHistoryModel({
+    required super.itemName,
+    required super.quantity,
+    required super.unitPrice,
+  });
+  
+  factory OrderItemHistoryModel.fromMap(Map<String, dynamic> map) {
+    return OrderItemHistoryModel(
+      itemName: map['item_name'] as String,
+      quantity: map['quantity'] as int,
+      // Refactored: تحويل إلى int بدلاً من double
+      unitPrice: (map['unit_price'] as num).toInt(), 
     );
   }
 }

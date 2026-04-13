@@ -1,5 +1,5 @@
 // --- States ---
-import 'package:ahgzly_pos/features/expenses/domain/entities/expense.dart';
+import 'package:ahgzly_pos/features/expenses/domain/entities/expense_entity.dart';
 import 'package:equatable/equatable.dart';
 
 abstract class ExpensesState extends Equatable {
@@ -12,7 +12,7 @@ class ExpensesInitial extends ExpensesState {}
 class ExpensesLoading extends ExpensesState {}
 
 class ExpensesLoaded extends ExpensesState {
-  final List<Expense> expenses;
+  final List<ExpenseEntity> expenses;
   final int totalExpenses;
   ExpensesLoaded(this.expenses, this.totalExpenses);
   @override

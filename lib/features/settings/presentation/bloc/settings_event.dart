@@ -1,5 +1,5 @@
 import 'package:equatable/equatable.dart';
-import 'package:ahgzly_pos/features/settings/domain/entities/app_settings.dart';
+import 'package:ahgzly_pos/features/settings/domain/entities/app_settings_entity.dart';
 
 abstract class SettingsEvent extends Equatable {
   const SettingsEvent();
@@ -10,7 +10,7 @@ abstract class SettingsEvent extends Equatable {
 class LoadSettingsEvent extends SettingsEvent {}
 
 class SaveSettingsEvent extends SettingsEvent {
-  final AppSettings settings;
+  final AppSettingsEntity settings;
   const SaveSettingsEvent(this.settings);
   @override
   List<Object> get props => [settings];

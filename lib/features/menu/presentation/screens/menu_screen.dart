@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:ahgzly_pos/features/menu/domain/entities/category.dart';
-import 'package:ahgzly_pos/features/menu/domain/entities/item.dart';
+import 'package:ahgzly_pos/features/menu/domain/entities/category_entity.dart';
+import 'package:ahgzly_pos/features/menu/domain/entities/item_entity.dart';
 import 'package:ahgzly_pos/features/menu/presentation/bloc/menu_bloc.dart';
 import 'package:ahgzly_pos/features/menu/presentation/bloc/menu_event.dart';
 import 'package:ahgzly_pos/features/menu/presentation/bloc/menu_state.dart';
@@ -18,9 +18,9 @@ class MenuScreen extends StatefulWidget {
 }
 
 class _MenuScreenState extends State<MenuScreen> {
-  Category? _selectedCategory;
-  List<Category> _categories = [];
-  List<Item> _items = [];
+  CategoryEntity? _selectedCategory;
+  List<CategoryEntity> _categories = [];
+  List<ItemEntity> _items = [];
 
   @override
   void initState() {
@@ -28,8 +28,8 @@ class _MenuScreenState extends State<MenuScreen> {
     context.read<MenuBloc>().add(FetchCategoriesEvent());
   }
 
-  void _handleCategoryAction(Category? existingCategory) async {
-    final result = await showDialog<Category>(
+  void _handleCategoryAction(CategoryEntity? existingCategory) async {
+    final result = await showDialog<CategoryEntity>(
       context: context,
       barrierDismissible: false,
       builder: (_) => CategoryDialog(category: existingCategory),
@@ -44,9 +44,9 @@ class _MenuScreenState extends State<MenuScreen> {
     }
   }
 
-  void _handleItemAction(Item? existingItem) async {
+  void _handleItemAction(ItemEntity? existingItem) async {
     if (_selectedCategory == null) return;
-    final result = await showDialog<Item>(
+    final result = await showDialog<ItemEntity>(
       context: context,
       barrierDismissible: false,
       builder: (_) => ItemDialog(
@@ -183,13 +183,13 @@ class _MenuScreenState extends State<MenuScreen> {
 // ==========================================
 
 class _MenuCategoriesSection extends StatelessWidget {
-  final List<Category> categories;
-  final Category? selectedCategory;
+  final List<CategoryEntity> categories;
+  final CategoryEntity? selectedCategory;
   final bool isLoading;
-  final ValueChanged<Category> onCategorySelected;
+  final ValueChanged<CategoryEntity> onCategorySelected;
   final VoidCallback onAddCategory;
-  final ValueChanged<Category> onEditCategory;
-  final ValueChanged<Category> onDeleteCategory;
+  final ValueChanged<CategoryEntity> onEditCategory;
+  final ValueChanged<CategoryEntity> onDeleteCategory;
 
   const _MenuCategoriesSection({
     required this.categories,
@@ -274,12 +274,12 @@ class _MenuCategoriesSection extends StatelessWidget {
 }
 
 class _MenuItemsSection extends StatelessWidget {
-  final List<Item> items;
-  final Category? selectedCategory;
+  final List<ItemEntity> items;
+  final CategoryEntity? selectedCategory;
   final bool isLoading;
   final VoidCallback onAddItem;
-  final ValueChanged<Item> onEditItem;
-  final ValueChanged<Item> onDeleteItem;
+  final ValueChanged<ItemEntity> onEditItem;
+  final ValueChanged<ItemEntity> onDeleteItem;
 
   const _MenuItemsSection({
     required this.items,

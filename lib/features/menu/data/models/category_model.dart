@@ -1,6 +1,6 @@
-import 'package:ahgzly_pos/features/menu/domain/entities/category.dart';
+import 'package:ahgzly_pos/features/menu/domain/entities/category_entity.dart';
 
-class CategoryModel extends Category {
+class CategoryModel extends CategoryEntity {
   const CategoryModel({
     super.id,
     required super.name,

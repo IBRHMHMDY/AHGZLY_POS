@@ -1,6 +1,6 @@
 // مسار الملف: lib/features/menu/data/datasources/menu_local_data_source.dart
 
-import 'package:ahgzly_pos/core/database/drift/app_database.dart'; // استيراد Drift
+import 'package:ahgzly_pos/core/database/app_database.dart'; // استيراد Drift
 import 'package:ahgzly_pos/features/menu/data/models/category_model.dart';
 import 'package:ahgzly_pos/features/menu/data/models/item_model.dart';
 import 'package:drift/drift.dart';
@@ -23,7 +23,7 @@ class MenuLocalDataSourceImpl implements MenuLocalDataSource {
   MenuLocalDataSourceImpl({required this.appDatabase});
 
   // Mapper للأقسام
-  Map<String, dynamic> _driftCategoryToMap(CategoryDrift driftCategory) {
+  Map<String, dynamic> _driftCategoryToMap(CategoryData driftCategory) {
     return {
       'id': driftCategory.id,
       'name': driftCategory.name,
@@ -33,7 +33,7 @@ class MenuLocalDataSourceImpl implements MenuLocalDataSource {
   }
 
   // Mapper للمنتجات
-  Map<String, dynamic> _driftItemToMap(ItemDrift driftItem) {
+  Map<String, dynamic> _driftItemToMap(ItemData driftItem) {
     return {
       'id': driftItem.id,
       'category_id': driftItem.categoryId,

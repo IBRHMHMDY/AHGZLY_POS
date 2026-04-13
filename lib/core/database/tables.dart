@@ -3,7 +3,7 @@
 import 'package:drift/drift.dart';
 
 // 1. جدول الترخيص
-@DataClassName('LicenseDrift')
+@DataClassName('LicenseData')
 class License extends Table {
   IntColumn get id => integer().autoIncrement()();
   BoolColumn get isActivated => boolean().withDefault(const Constant(false))();
@@ -12,7 +12,7 @@ class License extends Table {
 }
 
 // 2. جدول الإعدادات
-@DataClassName('SettingsDrift')
+@DataClassName('SettingsData')
 class Settings extends Table {
   IntColumn get id => integer().autoIncrement()();
   RealColumn get taxRate => real()();
@@ -25,7 +25,7 @@ class Settings extends Table {
 }
 
 // 3. جدول المستخدمين
-@DataClassName('UserDrift')
+@DataClassName('UserData')
 class Users extends Table {
   IntColumn get id => integer().autoIncrement()();
   TextColumn get name => text()();
@@ -38,7 +38,7 @@ class Users extends Table {
 }
 
 // 4. جدول الورديات
-@DataClassName('ShiftDrift')
+@DataClassName('ShiftData')
 class Shifts extends Table {
   IntColumn get id => integer().autoIncrement()();
   IntColumn get cashierId => integer().nullable().references(Users, #id)();
@@ -59,7 +59,7 @@ class Shifts extends Table {
 }
 
 // 5. جدول الأقسام
-@DataClassName('CategoryDrift')
+@DataClassName('CategoryData')
 class Categories extends Table {
   IntColumn get id => integer().autoIncrement()();
   TextColumn get name => text()();
@@ -68,7 +68,7 @@ class Categories extends Table {
 }
 
 // 6. جدول المنتجات
-@DataClassName('ItemDrift')
+@DataClassName('ItemData')
 class Items extends Table {
   IntColumn get id => integer().autoIncrement()();
   IntColumn get categoryId => integer().references(Categories, #id)();
@@ -79,7 +79,7 @@ class Items extends Table {
 }
 
 // 7. جدول المصروفات
-@DataClassName('ExpenseDrift')
+@DataClassName('ExpenseData')
 class Expenses extends Table {
   IntColumn get id => integer().autoIncrement()();
   IntColumn get shiftId => integer().references(Shifts, #id)();
@@ -89,7 +89,7 @@ class Expenses extends Table {
 }
 
 // 8. جدول الطلبات
-@DataClassName('OrderDrift')
+@DataClassName('OrderData')
 class Orders extends Table {
   IntColumn get id => integer().autoIncrement()();
   IntColumn get shiftId => integer().references(Shifts, #id)();
@@ -109,7 +109,7 @@ class Orders extends Table {
 }
 
 // 9. جدول عناصر الطلب
-@DataClassName('OrderItemsDrift')
+@DataClassName('OrderItemsData')
 class OrderItems extends Table {
   IntColumn get id => integer().autoIncrement()();
   IntColumn get orderId => integer().references(Orders, #id)(); // Cascade Delete سيتم إدارته عبر Drift

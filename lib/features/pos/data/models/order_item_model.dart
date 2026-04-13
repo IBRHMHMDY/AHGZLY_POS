@@ -1,6 +1,6 @@
-import 'package:ahgzly_pos/features/pos/domain/entities/order_item.dart';
+import 'package:ahgzly_pos/features/pos/domain/entities/order_item_entity.dart';
 
-class OrderItemModel extends OrderItem {
+class OrderItemModel extends OrderItemEntity {
   const OrderItemModel({
     super.id,
     super.orderId,
@@ -10,7 +10,7 @@ class OrderItemModel extends OrderItem {
     super.notes,
   });
 
-  factory OrderItemModel.fromEntity(OrderItem entity) {
+  factory OrderItemModel.fromEntity(OrderItemEntity entity) {
     return OrderItemModel(
       id: entity.id,
       orderId: entity.orderId,

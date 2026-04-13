@@ -17,7 +17,7 @@ import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../../auth/presentation/bloc/auth_event.dart';
 import '../../../auth/presentation/bloc/auth_state.dart';
 
-import '../../domain/entities/shift.dart';
+import '../../domain/entities/shift_entity.dart';
 import '../bloc/shift_bloc.dart';
 import '../bloc/shift_event.dart';
 import '../bloc/shift_state.dart';
@@ -37,7 +37,7 @@ class _ShiftReportScreenState extends State<ShiftReportScreen> {
     context.read<ShiftBloc>().add(CheckActiveShiftEvent());
   }
 
-  void _onCloseShiftPressed(Shift shift) async {
+  void _onCloseShiftPressed(ShiftEntity shift) async {
     final actualCash = await showDialog<int>(
       context: context,
       barrierDismissible: false,
@@ -51,7 +51,7 @@ class _ShiftReportScreenState extends State<ShiftReportScreen> {
     }
   }
 
-  void _printReportOnly(Shift shift) async {
+  void _printReportOnly(ShiftEntity shift) async {
     ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('جاري طباعة ملخص المبيعات (X-Report)...'), backgroundColor: Colors.teal));
 
     String rName = 'مطعم احجزلي';
@@ -79,7 +79,7 @@ class _ShiftReportScreenState extends State<ShiftReportScreen> {
     }
   }
 
-  void _processClosePrintAndExit(Shift shift) async {
+  void _processClosePrintAndExit(ShiftEntity shift) async {
     final settingsResult = await sl<GetSettingsUseCase>().call(NoParams());
     String restaurantName = 'مطعم احجزلي';
     String printerName = 'EPSON Printer';
@@ -173,7 +173,7 @@ class _ShiftReportScreenState extends State<ShiftReportScreen> {
 // ==========================================
 
 class _ActiveShiftView extends StatelessWidget {
-  final Shift shift;
+  final ShiftEntity shift;
   final VoidCallback onPrintReport;
   final VoidCallback onCloseShift;
 
@@ -206,7 +206,7 @@ class _ActiveShiftView extends StatelessWidget {
 }
 
 class _ShiftStatusHeader extends StatelessWidget {
-  final Shift shift;
+  final ShiftEntity shift;
   const _ShiftStatusHeader({required this.shift});
 
   @override
@@ -257,7 +257,7 @@ class _ShiftStatusHeader extends StatelessWidget {
 }
 
 class _FinancialSummaryCard extends StatelessWidget {
-  final Shift shift;
+  final ShiftEntity shift;
   const _FinancialSummaryCard({required this.shift});
 
   Widget _buildRow(

@@ -2,7 +2,7 @@ import 'package:ahgzly_pos/core/error/exceptions.dart';
 import 'package:ahgzly_pos/core/error/failures.dart';
 import 'package:ahgzly_pos/features/settings/data/datasources/settings_local_data_source.dart';
 import 'package:ahgzly_pos/features/settings/data/models/app_settings_model.dart';
-import 'package:ahgzly_pos/features/settings/domain/entities/app_settings.dart';
+import 'package:ahgzly_pos/features/settings/domain/entities/app_settings_entity.dart';
 import 'package:ahgzly_pos/features/settings/domain/repositories/settings_repository.dart';
 import 'package:dartz/dartz.dart';
 
@@ -12,7 +12,7 @@ class SettingsRepositoryImpl implements SettingsRepository {
   SettingsRepositoryImpl({required this.localDataSource});
 
   @override
-  Future<Either<Failure, AppSettings>> getSettings() async {
+  Future<Either<Failure, AppSettingsEntity>> getSettings() async {
     try {
       final settings = await localDataSource.getSettings();
       return Right(settings);
@@ -23,7 +23,7 @@ class SettingsRepositoryImpl implements SettingsRepository {
   }
 
   @override
-  Future<Either<Failure, void>> updateSettings(AppSettings settings) async {
+  Future<Either<Failure, void>> updateSettings(AppSettingsEntity settings) async {
     try {
       // Mapping Entity to Model before sending to Data Source
       final model = AppSettingsModel(

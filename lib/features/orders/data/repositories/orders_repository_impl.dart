@@ -1,6 +1,6 @@
 import 'package:dartz/dartz.dart';
 import 'package:ahgzly_pos/core/error/failures.dart';
-import 'package:ahgzly_pos/features/orders/domain/entities/order_history.dart';
+import 'package:ahgzly_pos/features/orders/domain/entities/order_history_entity.dart';
 import 'package:ahgzly_pos/features/orders/domain/repositories/orders_repository.dart';
 import 'package:ahgzly_pos/features/orders/data/datasources/orders_local_data_source.dart';
 
@@ -9,7 +9,7 @@ class OrdersRepositoryImpl implements OrdersRepository {
   OrdersRepositoryImpl({required this.localDataSource});
 
   @override
-  Future<Either<Failure, List<OrderHistory>>> getOrdersHistory({required bool isAdmin, required int? shiftId}) async {
+  Future<Either<Failure, List<OrderHistoryEntity>>> getOrdersHistory({required bool isAdmin, required int? shiftId}) async {
     try {
       final orders = await localDataSource.getOrdersHistory(isAdmin: isAdmin, shiftId: shiftId);
       return Right(orders);

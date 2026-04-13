@@ -1,5 +1,5 @@
 import 'package:ahgzly_pos/core/common/users/models/user_model.dart';
-import 'package:ahgzly_pos/core/database/drift/app_database.dart'; 
+import 'package:ahgzly_pos/core/database/app_database.dart'; 
 import 'package:ahgzly_pos/core/error/exceptions.dart'; 
 import 'package:ahgzly_pos/core/utils/hash_util.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -19,7 +19,7 @@ class AuthLocalDataSourceImpl implements AuthLocalDataSource {
   AuthLocalDataSourceImpl({required this.appDatabase, required this.secureStorage});
 
   // تم التصحيح: استخدام UserDrift المُولد من Drift لتجنب أي تعارض
-  Map<String, dynamic> _driftUserToMap(UserDrift driftUser) {
+  Map<String, dynamic> _driftUserToMap(UserData driftUser) {
     return {
       'id': driftUser.id,
       'name': driftUser.name,

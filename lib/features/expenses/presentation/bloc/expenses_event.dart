@@ -1,5 +1,5 @@
 // --- Events ---
-import 'package:ahgzly_pos/features/expenses/domain/entities/expense.dart';
+import 'package:ahgzly_pos/features/expenses/domain/entities/expense_entity.dart';
 import 'package:equatable/equatable.dart';
 
 abstract class ExpensesEvent extends Equatable {
@@ -18,7 +18,7 @@ class LoadExpensesEvent extends ExpensesEvent {
 }
 
 class AddExpenseEvent extends ExpensesEvent {
-  final Expense expense;
+  final ExpenseEntity expense;
   AddExpenseEvent(this.expense);
   @override
   List<Object> get props => [expense];

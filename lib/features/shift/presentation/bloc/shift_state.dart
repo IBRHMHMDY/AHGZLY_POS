@@ -1,5 +1,5 @@
 import 'package:flutter/foundation.dart';
-import '../../domain/entities/shift.dart';
+import '../../domain/entities/shift_entity.dart';
 
 @immutable
 abstract class ShiftState {}
@@ -8,19 +8,19 @@ class ShiftInitial extends ShiftState {}
 class ShiftLoading extends ShiftState {}
 
 class ActiveShiftLoaded extends ShiftState {
-  final Shift shift;
+  final ShiftEntity shift;
   ActiveShiftLoaded({required this.shift});
 }
 
 class NoActiveShiftState extends ShiftState {}
 
 class ShiftOpenedSuccess extends ShiftState {
-  final Shift shift;
+  final ShiftEntity shift;
   ShiftOpenedSuccess({required this.shift});
 }
 
 class ShiftClosedSuccess extends ShiftState {
-  final Shift closedShift; // يمكن استخدامها لطباعة الزي ريبورت Z-Report فور الإغلاق
+  final ShiftEntity closedShift; // يمكن استخدامها لطباعة الزي ريبورت Z-Report فور الإغلاق
   ShiftClosedSuccess({required this.closedShift});
 }
 

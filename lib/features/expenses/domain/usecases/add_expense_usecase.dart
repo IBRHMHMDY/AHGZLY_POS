@@ -1,6 +1,6 @@
 import 'package:ahgzly_pos/core/error/failures.dart';
 import 'package:ahgzly_pos/core/usecases/usecase.dart';
-import 'package:ahgzly_pos/features/expenses/domain/entities/expense.dart';
+import 'package:ahgzly_pos/features/expenses/domain/entities/expense_entity.dart';
 import 'package:ahgzly_pos/features/expenses/domain/repositories/expenses_repository.dart';
 import 'package:dartz/dartz.dart';
 import 'package:equatable/equatable.dart';
@@ -24,7 +24,7 @@ class AddExpenseUseCase implements UseCase<void, AddExpenseParams> {
 }
 
 class AddExpenseParams extends Equatable {
-  final Expense expense;
+  final ExpenseEntity expense;
   const AddExpenseParams({required this.expense});
   
   @override

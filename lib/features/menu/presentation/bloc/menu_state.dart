@@ -1,6 +1,6 @@
 import 'package:equatable/equatable.dart';
-import '../../domain/entities/category.dart';
-import '../../domain/entities/item.dart';
+import '../../domain/entities/category_entity.dart';
+import '../../domain/entities/item_entity.dart';
 
 abstract class MenuState extends Equatable {
   const MenuState();
@@ -14,14 +14,14 @@ class MenuInitial extends MenuState {}
 class MenuLoading extends MenuState {}
 
 class CategoriesLoaded extends MenuState {
-  final List<Category> categories;
+  final List<CategoryEntity> categories;
   const CategoriesLoaded(this.categories);
   @override
   List<Object> get props => [categories];
 }
 
 class ItemsLoaded extends MenuState {
-  final List<Item> items;
+  final List<ItemEntity> items;
   const ItemsLoaded(this.items);
   @override
   List<Object> get props => [items];

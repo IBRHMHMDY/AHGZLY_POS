@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ahgzly_pos/core/utils/snackbar_utils.dart';
-import 'package:ahgzly_pos/features/menu/domain/entities/category.dart';
-import 'package:ahgzly_pos/features/menu/domain/entities/item.dart';
+import 'package:ahgzly_pos/features/menu/domain/entities/category_entity.dart';
+import 'package:ahgzly_pos/features/menu/domain/entities/item_entity.dart';
 import 'package:ahgzly_pos/features/menu/presentation/bloc/menu_bloc.dart';
 import 'package:ahgzly_pos/features/menu/presentation/bloc/menu_event.dart';
 import 'package:ahgzly_pos/features/menu/presentation/bloc/menu_state.dart';
@@ -26,9 +26,9 @@ class PosScreen extends StatefulWidget {
 }
 
 class _PosScreenState extends State<PosScreen> {
-  Category? _selectedCategory;
-  List<Category> _categories = [];
-  List<Item> _items = [];
+  CategoryEntity? _selectedCategory;
+  List<CategoryEntity> _categories = [];
+  List<ItemEntity> _items = [];
 
   @override
   void initState() {

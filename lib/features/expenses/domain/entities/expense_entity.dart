@@ -1,13 +1,13 @@
 import 'package:equatable/equatable.dart';
 
-class Expense extends Equatable {
+class ExpenseEntity extends Equatable {
   final int? id;
   final int shiftId;
   final int amount; // Refactored: تغيير من double إلى int (Cents)
   final String reason;
   final String createdAt;
 
-  const Expense({
+  const ExpenseEntity({
     this.id,
     required this.shiftId,
     required this.amount,

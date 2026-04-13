@@ -1,6 +1,6 @@
-import 'package:ahgzly_pos/features/license/domain/entities/license.dart';
+import 'package:ahgzly_pos/features/license/domain/entities/license_entity.dart';
 
-class LicenseModel extends License {
+class LicenseModel extends LicenseEntity {
   const LicenseModel({
     required super.isActivated,
     required super.isTrialExpired,

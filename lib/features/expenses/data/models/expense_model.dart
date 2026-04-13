@@ -1,6 +1,6 @@
-import 'package:ahgzly_pos/features/expenses/domain/entities/expense.dart';
+import 'package:ahgzly_pos/features/expenses/domain/entities/expense_entity.dart';
 
-class ExpenseModel extends Expense {
+class ExpenseModel extends ExpenseEntity {
   const ExpenseModel({
     super.id,
     required super.shiftId,
@@ -29,13 +29,13 @@ class ExpenseModel extends Expense {
     };
   }
 
-  factory ExpenseModel.fromEntity(Expense entity) {
+  factory ExpenseModel.fromEntity(ExpenseEntity expense) {
     return ExpenseModel(
-      id: entity.id,
-      shiftId: entity.shiftId,
-      amount: entity.amount,
-      reason: entity.reason,
-      createdAt: entity.createdAt,
+      id: expense.id,
+      shiftId: expense.shiftId,
+      amount: expense.amount,
+      reason: expense.reason,
+      createdAt: expense.createdAt,
     );
   }
 }

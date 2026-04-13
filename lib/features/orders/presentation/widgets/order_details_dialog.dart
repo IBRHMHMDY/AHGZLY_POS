@@ -7,7 +7,7 @@ import 'package:ahgzly_pos/features/shift/presentation/bloc/shift_state.dart';
 import 'package:ahgzly_pos/core/di/dependency_injection.dart';
 import 'package:ahgzly_pos/core/services/printer_service.dart';
 import 'package:ahgzly_pos/core/usecases/usecase.dart';
-import 'package:ahgzly_pos/features/orders/domain/entities/order_history.dart';
+import 'package:ahgzly_pos/features/orders/domain/entities/order_history_entity.dart';
 import 'package:ahgzly_pos/features/orders/presentation/bloc/orders_bloc.dart';
 import 'package:ahgzly_pos/features/orders/presentation/bloc/orders_event.dart';
 import 'package:ahgzly_pos/features/pos/presentation/widgets/receipt_widgets.dart';
@@ -15,7 +15,7 @@ import 'package:ahgzly_pos/features/settings/domain/usecases/get_settings_usecas
 import 'package:ahgzly_pos/core/utils/money_formatter.dart';
 
 class OrderDetailsDialog extends StatelessWidget {
-  final OrderHistory order;
+  final OrderHistoryEntity order;
 
   const OrderDetailsDialog({super.key, required this.order});
 
@@ -149,7 +149,7 @@ class _OrderItemsList extends StatelessWidget {
 }
 
 class _DialogActions extends StatelessWidget {
-  final OrderHistory order;
+  final OrderHistoryEntity order;
   final bool isRefunded;
 
   const _DialogActions({required this.order, required this.isRefunded});

@@ -1,6 +1,6 @@
 // مسار الملف: lib/features/settings/data/datasources/settings_local_data_source.dart
 
-import 'package:ahgzly_pos/core/database/drift/app_database.dart'; // استيراد Drift
+import 'package:ahgzly_pos/core/database/app_database.dart'; // استيراد Drift
 import 'package:ahgzly_pos/features/settings/data/models/app_settings_model.dart';
 import 'package:drift/drift.dart'; // استيراد Value
 
@@ -15,7 +15,7 @@ class SettingsLocalDataSourceImpl implements SettingsLocalDataSource {
   SettingsLocalDataSourceImpl({required this.appDatabase});
 
   // Mapper لتحويل كائن Drift إلى Map تتوقعه Models
-  Map<String, dynamic> _driftSettingsToMap(SettingsDrift driftSettings) {
+  Map<String, dynamic> _driftSettingsToMap(SettingsData driftSettings) {
     return {
       'id': driftSettings.id,
       'tax_rate': driftSettings.taxRate,

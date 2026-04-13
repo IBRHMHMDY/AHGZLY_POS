@@ -1,4 +1,4 @@
-import 'package:ahgzly_pos/features/pos/domain/entities/order.dart';
+import 'package:ahgzly_pos/features/pos/domain/entities/order_entity.dart';
 import 'package:ahgzly_pos/features/pos/data/models/order_item_model.dart';
 
 class OrderModel extends Order {

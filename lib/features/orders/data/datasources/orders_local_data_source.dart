@@ -1,6 +1,6 @@
 // مسار الملف: lib/features/orders/data/datasources/orders_local_data_source.dart
 
-import 'package:ahgzly_pos/core/database/drift/app_database.dart'; // استيراد Drift
+import 'package:ahgzly_pos/core/database/app_database.dart'; // استيراد Drift
 import 'package:ahgzly_pos/core/error/exceptions.dart';
 import 'package:ahgzly_pos/features/orders/data/models/order_history_model.dart';
 import 'package:drift/drift.dart';
@@ -16,7 +16,7 @@ class OrdersLocalDataSourceImpl implements OrdersLocalDataSource {
   OrdersLocalDataSourceImpl({required this.appDatabase});
 
   // Mapper لتحويل كائن Order الخاص بـ Drift إلى Map ليقبله Model القديم
-  Map<String, dynamic> _driftOrderToMap(OrderDrift order) {
+  Map<String, dynamic> _driftOrderToMap(OrderData order) {
     return {
       'id': order.id,
       'order_type': order.orderType,
@@ -42,7 +42,7 @@ class OrdersLocalDataSourceImpl implements OrdersLocalDataSource {
   @override
   Future<List<OrderHistoryModel>> getOrdersHistory({required bool isAdmin, required int? shiftId}) async {
     try {
-      List<OrderDrift> ordersDrift = [];
+      List<OrderData> ordersDrift = [];
       
       // 1. جلب الطلبات بناءً على الصلاحية
       if (isAdmin) {
@@ -67,12 +67,12 @@ class OrdersLocalDataSourceImpl implements OrdersLocalDataSource {
         
         final rows = await query.get();
         
-        List<OrderHistoryItemModel> items = [];
+        List<OrderItemHistoryModel> items = [];
         for (var row in rows) {
           final orderItem = row.readTable(appDatabase.orderItems);
           final item = row.readTable(appDatabase.items); // جلب بيانات المنتج المرتبط
           
-          items.add(OrderHistoryItemModel.fromMap(
+          items.add(OrderItemHistoryModel.fromMap(
             _driftItemToMap(orderItem.quantity, orderItem.unitPrice, item.name)
           ));
         }

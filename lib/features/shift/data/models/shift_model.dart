@@ -1,8 +1,8 @@
 // مسار الملف: lib/features/shift/data/models/shift_model.dart
 
-import '../../domain/entities/shift.dart';
+import '../../domain/entities/shift_entity.dart';
 
-class ShiftModel extends Shift {
+class ShiftModel extends ShiftEntity {
   const ShiftModel({
     required super.id,
     super.cashierId,

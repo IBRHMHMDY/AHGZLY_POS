@@ -1,8 +1,8 @@
 import 'package:equatable/equatable.dart';
-import 'package:ahgzly_pos/features/menu/domain/entities/item.dart';
+import 'package:ahgzly_pos/features/menu/domain/entities/item_entity.dart';
 
 class CartItem extends Equatable {
-  final Item item;
+  final ItemEntity item;
   final int quantity;
   final String? notes;
   const CartItem({required this.item, required this.quantity, this.notes});

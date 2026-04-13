@@ -1,12 +1,12 @@
 import 'dart:io';
-import 'package:ahgzly_pos/core/database/drift/app_database.dart';
+import 'package:ahgzly_pos/core/database/app_database.dart';
 import 'package:ahgzly_pos/core/di/dependency_injection.dart';
 import 'package:ahgzly_pos/core/utils/money_formatter.dart';
 import 'package:drift/drift.dart' as drift;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:ahgzly_pos/core/services/backup_service.dart';
-import 'package:ahgzly_pos/features/settings/domain/entities/app_settings.dart';
+import 'package:ahgzly_pos/features/settings/domain/entities/app_settings_entity.dart';
 import 'package:ahgzly_pos/features/settings/presentation/bloc/settings_bloc.dart';
 import 'package:ahgzly_pos/features/settings/presentation/bloc/settings_event.dart';
 import 'package:ahgzly_pos/features/settings/presentation/bloc/settings_state.dart';
@@ -73,7 +73,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   void _saveSettings() {
     if (_formKey.currentState!.validate()) {
-      final newSettings = AppSettings(
+      final newSettings = AppSettingsEntity(
         taxRate: double.parse(_taxController.text) / 100,
         serviceRate: double.parse(_serviceController.text) / 100,
         deliveryFee: MoneyFormatter.toCents(double.parse(_deliveryController.text.trim())),

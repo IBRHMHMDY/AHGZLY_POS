@@ -1,4 +1,4 @@
-import 'package:ahgzly_pos/core/database/drift/app_database.dart';
+import 'package:ahgzly_pos/core/database/app_database.dart';
 import 'package:ahgzly_pos/features/shift/domain/usecases/check_active_shift_usecase.dart';
 import 'package:ahgzly_pos/features/shift/domain/usecases/open_shift_usecase.dart';
 import 'package:get_it/get_it.dart';

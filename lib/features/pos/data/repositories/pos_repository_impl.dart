@@ -1,5 +1,5 @@
 import 'package:ahgzly_pos/core/error/failures.dart';
-import 'package:ahgzly_pos/features/pos/domain/entities/order.dart';
+import 'package:ahgzly_pos/features/pos/domain/entities/order_entity.dart';
 import 'package:ahgzly_pos/features/pos/domain/repositories/pos_repository.dart';
 import 'package:ahgzly_pos/features/pos/data/datasources/pos_local_data_source.dart';
 import 'package:ahgzly_pos/features/pos/data/models/order_model.dart';

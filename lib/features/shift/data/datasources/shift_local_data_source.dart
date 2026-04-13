@@ -1,6 +1,6 @@
 // مسار الملف: lib/features/shift/data/datasources/shift_local_data_source.dart
 
-import 'package:ahgzly_pos/core/database/drift/app_database.dart'; 
+import 'package:ahgzly_pos/core/database/app_database.dart'; 
 import 'package:ahgzly_pos/core/error/exceptions.dart';
 import 'package:ahgzly_pos/features/shift/data/models/shift_model.dart';
 import 'package:drift/drift.dart';
