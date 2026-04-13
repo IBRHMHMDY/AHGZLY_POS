@@ -14,7 +14,7 @@ class License extends Table {
   BoolColumn get isActivated => boolean().withDefault(const Constant(false))();
   TextColumn get licenseKey => text().withDefault(const Constant(""))();
   // [Refactored] تحويل النص إلى DateTime تلقائياً
-  TextColumn get trialStartDate => text().map(const DateTimeConverter()).withDefault(const Constant(""))(); 
+  TextColumn get trialStartDate => text().map(const DateTimeConverter()).withDefault(const Constant("1970-01-01T00:00:00.000"))();
 }
 
 // 2. جدول الإعدادات

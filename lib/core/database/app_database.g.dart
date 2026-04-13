@@ -56,7 +56,7 @@ class $LicenseTable extends License with TableInfo<$LicenseTable, LicenseData> {
         false,
         type: DriftSqlType.string,
         requiredDuringInsert: false,
-        defaultValue: const Constant(""),
+        defaultValue: const Constant("1970-01-01T00:00:00.000"),
       ).withConverter<DateTime>($LicenseTable.$convertertrialStartDate);
   @override
   List<GeneratedColumn> get $columns => [

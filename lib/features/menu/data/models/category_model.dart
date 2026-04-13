@@ -1,3 +1,4 @@
+import 'package:ahgzly_pos/core/database/app_database.dart';
 import 'package:ahgzly_pos/features/menu/domain/entities/category_entity.dart';
 
 class CategoryModel extends CategoryEntity {
@@ -9,13 +10,12 @@ class CategoryModel extends CategoryEntity {
     required super.updatedAt,
   });
 
-  factory CategoryModel.fromMap(Map<String, dynamic> map) {
+  factory CategoryModel.fromDrift(CategoryData data) {
     return CategoryModel(
-      id: map['id'],
-      name: map['name'],
-      imagePath: map.containsKey('image_path') ? map['image_path'] : null,
-      createdAt: map['created_at'],
-      updatedAt: map['updated_at'],
+      id: data.id,
+      name: data.name,
+      createdAt: data.createdAt, // من المفترض أن تكون DateTime
+      updatedAt: data.updatedAt, // من المفترض أن تكون DateTime
     );
   }
 

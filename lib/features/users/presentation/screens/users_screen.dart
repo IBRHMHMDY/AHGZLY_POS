@@ -1,3 +1,4 @@
+import 'package:ahgzly_pos/core/extensions/user_role.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:ahgzly_pos/features/users/presentation/bloc/users_bloc.dart';
@@ -127,7 +128,7 @@ class _UserCard extends StatelessWidget {
               Icon(isAdmin ? Icons.shield : Icons.badge, size: 16, color: Colors.grey.shade600),
               const SizedBox(width: 4),
               Text(
-                isAdmin ? 'مدير نظام (Admin)' : 'كاشير (Cashier)',
+                user.role.toDisplayName(), // [Refactored]: استدعاء مباشر لاسم الصلاحية من الـ Enum
                 style: TextStyle(color: Colors.grey.shade700, fontWeight: FontWeight.w600),
               ),
             ],

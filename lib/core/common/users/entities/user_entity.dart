@@ -1,9 +1,10 @@
+import 'package:ahgzly_pos/core/common/enums/enums_data.dart';
 import 'package:equatable/equatable.dart';
 
 class User extends Equatable {
   final int id;
   final String name;
-  final String role; // 'admin' or 'cashier'
+  final UserRole role; // [Refactored]: تغيير من String إلى Enum
   final bool isActive; 
 
   const User({
@@ -13,7 +14,7 @@ class User extends Equatable {
     this.isActive = true, 
   });
 
-  bool get isAdmin => role == 'admin';
+  bool get isAdmin => role == UserRole.admin; // [Refactored]: تحقق آمن عبر الـ Enum
 
   @override
   List<Object?> get props => [id, name, role, isActive];

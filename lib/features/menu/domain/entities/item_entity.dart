@@ -8,8 +8,8 @@ class ItemEntity extends Equatable {
   final String name;
   final int price; // Refactored: تغيير من double إلى int (Cents)
   final String? imagePath;
-  final String createdAt;
-  final String updatedAt;
+  final DateTime createdAt;
+  final DateTime updatedAt;
 
   const ItemEntity({
     this.id,

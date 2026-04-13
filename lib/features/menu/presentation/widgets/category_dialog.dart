@@ -31,8 +31,8 @@ class _CategoryDialogState extends State<CategoryDialog> {
       final newCategory = CategoryEntity(
         id: widget.category?.id,
         name: _nameController.text.trim(),
-        createdAt: widget.category?.createdAt ?? DateTime.now().toIso8601String(),
-        updatedAt: DateTime.now().toIso8601String(),
+        createdAt: widget.category!.createdAt,
+        updatedAt: DateTime.now(),
       );
       Navigator.pop(context, newCategory);
     }

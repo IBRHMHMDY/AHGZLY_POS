@@ -1,5 +1,6 @@
 // مسار الملف: lib/features/menu/data/models/item_model.dart
 
+import 'package:ahgzly_pos/core/database/app_database.dart';
 import 'package:ahgzly_pos/features/menu/domain/entities/item_entity.dart';
 
 class ItemModel extends ItemEntity {
@@ -13,16 +14,14 @@ class ItemModel extends ItemEntity {
     required super.updatedAt,
   });
 
-  factory ItemModel.fromMap(Map<String, dynamic> map) {
+  factory ItemModel.fromDrift(ItemData data) {
     return ItemModel(
-      id: map['id'],
-      categoryId: map['category_id'],
-      name: map['name'],
-      // Refactored: تحويل إلى int لضمان التوافق مع قاعدة البيانات الجديدة (القروش)
-      price: (map['price'] as num).toInt(), 
-      imagePath: map.containsKey('image_path') ? map['image_path'] : null,
-      createdAt: map['created_at'],
-      updatedAt: map['updated_at'],
+      id: data.id,
+      categoryId: data.categoryId,
+      name: data.name,
+      price: data.price,
+      createdAt: data.createdAt, // من المفترض أن تكون DateTime
+      updatedAt: data.updatedAt, // من المفترض أن تكون DateTime
     );
   }
 

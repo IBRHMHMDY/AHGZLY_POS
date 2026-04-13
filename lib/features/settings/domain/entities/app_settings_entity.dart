@@ -1,13 +1,14 @@
+import 'package:ahgzly_pos/core/common/enums/enums_data.dart';
 import 'package:equatable/equatable.dart';
 
 class AppSettingsEntity extends Equatable {
-  final double taxRate; // تبقى double لأنها نسبة
-  final double serviceRate; // تبقى double لأنها نسبة
-  final int deliveryFee; // Refactored: تغيير من double إلى int (Cents)
+  final double taxRate; 
+  final double serviceRate; 
+  final int deliveryFee; 
   final String printerName;
   final String restaurantName;
   final String taxNumber;
-  final String printMode;
+  final PrintMode printMode; // [Refactored]: تغيير من String إلى Enum
 
   const AppSettingsEntity({
     required this.taxRate,

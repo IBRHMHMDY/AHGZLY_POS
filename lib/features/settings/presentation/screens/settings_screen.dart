@@ -1,6 +1,8 @@
 import 'dart:io';
+import 'package:ahgzly_pos/core/common/enums/enums_data.dart';
 import 'package:ahgzly_pos/core/database/app_database.dart';
 import 'package:ahgzly_pos/core/di/dependency_injection.dart';
+import 'package:ahgzly_pos/core/extensions/print_mode.dart';
 import 'package:ahgzly_pos/core/utils/money_formatter.dart';
 import 'package:drift/drift.dart' as drift;
 import 'package:flutter/material.dart';
@@ -27,7 +29,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   List<Printer> _printers = [];
   bool _isLoadingPrinters = false;
   String? _selectedPrinterName;
-  String _selectedPrintMode = 'ask';
+  PrintMode _selectedPrintMode = PrintMode.ask;
   bool _isInit = false;
 
   late TextEditingController _taxController;
@@ -346,15 +348,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Widget _buildPrintModeSelector() {
-    return DropdownButtonFormField<String>(
+    // [Refactored]: استخدام الـ Enum بشكل آلي ومحمي
+    return DropdownButtonFormField<PrintMode>(
       value: _selectedPrintMode,
       decoration: _inputStyle(label: 'وضع الطباعة بعد الدفع', icon: Icons.settings_suggest),
-      items: const [
-        DropdownMenuItem(value: 'ask', child: Text('اسأل أولاً (عرض نافذة الطباعة)', style: TextStyle(fontWeight: FontWeight.w600))),
-        DropdownMenuItem(value: 'customer', child: Text('طباعة فاتورة العميل تلقائياً', style: TextStyle(fontWeight: FontWeight.w600))),
-        DropdownMenuItem(value: 'kitchen', child: Text('طباعة بون المطبخ تلقائياً', style: TextStyle(fontWeight: FontWeight.w600))),
-        DropdownMenuItem(value: 'both', child: Text('طباعة العميل والمطبخ تلقائياً', style: TextStyle(fontWeight: FontWeight.w600))),
-      ],
+      items: PrintMode.values.map((mode) {
+        return DropdownMenuItem<PrintMode>(
+          value: mode,
+          child: Text(mode.toDisplayName(), style: const TextStyle(fontWeight: FontWeight.w600)),
+        );
+      }).toList(),
       onChanged: (val) {
         if (val != null) setState(() => _selectedPrintMode = val);
       },

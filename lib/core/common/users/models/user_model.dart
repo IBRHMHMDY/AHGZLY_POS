@@ -1,4 +1,6 @@
-import 'package:ahgzly_pos/core/common/users/entities/user_entity.dart'; // المسار الجديد
+import 'package:ahgzly_pos/core/database/app_database.dart'; // [Added]
+import 'package:ahgzly_pos/core/common/users/entities/user_entity.dart';
+import 'package:ahgzly_pos/core/extensions/user_role.dart';
 
 class UserModel extends User {
   const UserModel({
@@ -8,12 +10,13 @@ class UserModel extends User {
     required super.isActive,
   });
 
-  factory UserModel.fromMap(Map<String, dynamic> map) {
+  // [Refactored]: قراءة آمنة ومباشرة من كائن Drift
+  factory UserModel.fromDrift(UserData data) {
     return UserModel(
-      id: map['id'] as int,
-      name: map['name'] as String,
-      role: map['role'] as String,
-      isActive: (map['is_active'] as int) == 1, 
+      id: data.id,
+      name: data.name,
+      role: UserRoleExtension.fromValue(data.role), // تحويل النص إلى Enum
+      isActive: data.isActive,
     );
   }
 }

@@ -10,10 +10,13 @@ class LicenseModel extends LicenseEntity {
 
   factory LicenseModel.fromJson(Map<String, dynamic> json, int calculatedElapsedDays, bool calculatedIsTrialExpired) {
     return LicenseModel(
-      isActivated: json['is_activated'] == 1,
+      isActivated: json['is_activated'] == 1 || json['is_activated'] == true,
       isTrialExpired: calculatedIsTrialExpired,
       elapsedDays: calculatedElapsedDays,
-      trialStartDate: json['trial_start_date'] as String,
+      // [Refactored]: التحويل الآمن إلى DateTime
+      trialStartDate: json['trial_start_date'] is String 
+          ? DateTime.tryParse(json['trial_start_date'] as String) ?? DateTime.now()
+          : (json['trial_start_date'] as DateTime? ?? DateTime.now()),
     );
   }
 }

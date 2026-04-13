@@ -1,3 +1,5 @@
+import 'package:ahgzly_pos/core/database/app_database.dart';
+import 'package:ahgzly_pos/core/extensions/print_mode.dart';
 import 'package:ahgzly_pos/features/settings/domain/entities/app_settings_entity.dart';
 
 class AppSettingsModel extends AppSettingsEntity {
@@ -11,30 +13,18 @@ class AppSettingsModel extends AppSettingsEntity {
     required super.printMode,
   });
 
-  factory AppSettingsModel.fromMap(Map<String, dynamic> map) {
+  // [Refactored]: قراءة آمنة ومباشرة من Drift
+  factory AppSettingsModel.fromDrift(SettingsData data) {
     return AppSettingsModel(
-      taxRate: (map['tax_rate'] as num).toDouble(),
-      serviceRate: (map['service_rate'] as num).toDouble(),
-      // Refactored: تحويل إلى int ليتوافق مع قاعدة البيانات الجديدة
-      deliveryFee: (map['delivery_fee'] as num).toInt(), 
-      printerName: map['printer_name'] as String,
-      restaurantName: map['restaurant_name'] as String? ?? 'مـطـعـم احـجـزلـي',
-      taxNumber: map['tax_number'] as String? ?? '123-456-789',
-      printMode: map['print_mode'] as String? ?? 'ask',
+      taxRate: data.taxRate,
+      serviceRate: data.serviceRate,
+      deliveryFee: data.deliveryFee,
+      printerName: data.printerName,
+      restaurantName: data.restaurantName,
+      taxNumber: data.taxNumber,
+      // تحويل النص المحفوظ في الداتا بيز إلى Enum
+      printMode: PrintModeExtension.fromValue(data.printMode), 
     );
-  }
-
-  Map<String, dynamic> toMap() {
-    return {
-      'id': 1,
-      'tax_rate': taxRate,
-      'service_rate': serviceRate,
-      'delivery_fee': deliveryFee, // سيتم حفظه كـ Integer
-      'printer_name': printerName,
-      'restaurant_name': restaurantName,
-      'tax_number': taxNumber,
-      'print_mode': printMode,
-    };
   }
 
   factory AppSettingsModel.fromEntity(AppSettingsEntity setting) {

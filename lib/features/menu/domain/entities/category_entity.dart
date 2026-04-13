@@ -4,8 +4,8 @@ class CategoryEntity extends Equatable {
   final int? id;
   final String name;
   final String? imagePath;
-  final String createdAt;
-  final String updatedAt;
+  final DateTime createdAt;
+  final DateTime updatedAt;
 
   const CategoryEntity({
     this.id,

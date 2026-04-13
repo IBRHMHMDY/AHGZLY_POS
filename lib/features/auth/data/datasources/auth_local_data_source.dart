@@ -18,35 +18,20 @@ class AuthLocalDataSourceImpl implements AuthLocalDataSource {
 
   AuthLocalDataSourceImpl({required this.appDatabase, required this.secureStorage});
 
-  // تم التصحيح: استخدام UserDrift المُولد من Drift لتجنب أي تعارض
-  Map<String, dynamic> _driftUserToMap(UserData driftUser) {
-    return {
-      'id': driftUser.id,
-      'name': driftUser.name,
-      'pin_hash': driftUser.pinHash,
-      'salt': driftUser.salt,
-      'role': driftUser.role,
-      'is_active': driftUser.isActive ? 1 : 0,
-      'failed_attempts': driftUser.failedAttempts,
-      'lockout_until': driftUser.lockoutUntil,
-    };
-  }
-
   @override
   Future<UserModel> loginWithPin(String pin) async {
-    final lockoutUntilStr = await secureStorage.read(key: 'device_lockout_until');
+    String? lockoutUntilStr = await secureStorage.read(key: 'device_lockout_until');
     if (lockoutUntilStr != null) {
-      final lockoutUntil = DateTime.tryParse(lockoutUntilStr);
-      if (lockoutUntil != null && DateTime.now().isBefore(lockoutUntil)) {
-        final remainingMins = lockoutUntil.difference(DateTime.now()).inMinutes;
-        throw AuthException('تم حظر الجهاز مؤقتاً لحمايتك. يرجى المحاولة بعد $remainingMins دقيقة.');
+      final lockoutTime = DateTime.tryParse(lockoutUntilStr);
+      if (lockoutTime != null && DateTime.now().isBefore(lockoutTime)) {
+        final remaining = lockoutTime.difference(DateTime.now()).inMinutes;
+        throw AuthException('التطبيق محظور مؤقتاً. حاول مجدداً بعد $remaining دقائق.');
       } else {
         await secureStorage.delete(key: 'device_lockout_until');
         await secureStorage.write(key: 'device_failed_attempts', value: '0');
       }
     }
 
-    // الاستعلام سيعيد قائمة من UserDrift بفضل الـ DataClassName
     final users = await (appDatabase.select(appDatabase.users)
           ..where((t) => t.isActive.equals(true)))
         .get();
@@ -57,8 +42,8 @@ class AuthLocalDataSourceImpl implements AuthLocalDataSource {
 
       if (HashUtil.verifyPin(pin, salt, pinHash)) {
         await secureStorage.write(key: 'device_failed_attempts', value: '0');
-        // إرسال كائن Drift بأمان إلى الـ Mapper
-        return UserModel.fromMap(_driftUserToMap(driftUser)); 
+        // [Refactored]: قراءة آمنة ومباشرة من كائن Drift بدون وسيط
+        return UserModel.fromDrift(driftUser); 
       }
     }
 
@@ -72,13 +57,12 @@ class AuthLocalDataSourceImpl implements AuthLocalDataSource {
       throw AuthException('تجاوزت الحد الأقصى للمحاولات. تم حظر الدخول لمدة $lockoutMinutes دقائق.');
     } else {
       await secureStorage.write(key: 'device_failed_attempts', value: failedAttempts.toString());
-      final remaining = maxFailedAttempts - failedAttempts;
-      throw AuthException('الرقم السري غير صحيح. متبقي لك $remaining محاولات.');
+      throw AuthException('الرمز السري غير صحيح. المحاولات المتبقية: ${maxFailedAttempts - failedAttempts}');
     }
   }
 
   @override
   Future<void> logout() async {
-    // Session clearing logic if any
+    // ضع هنا منطق تسجيل الخروج إن وجد
   }
 }

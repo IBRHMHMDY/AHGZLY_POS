@@ -1,6 +1,4 @@
-// مسار الملف: lib/features/menu/data/datasources/menu_local_data_source.dart
-
-import 'package:ahgzly_pos/core/database/app_database.dart'; // استيراد Drift
+import 'package:ahgzly_pos/core/database/app_database.dart'; 
 import 'package:ahgzly_pos/features/menu/data/models/category_model.dart';
 import 'package:ahgzly_pos/features/menu/data/models/item_model.dart';
 import 'package:drift/drift.dart';
@@ -18,38 +16,15 @@ abstract class MenuLocalDataSource {
 }
 
 class MenuLocalDataSourceImpl implements MenuLocalDataSource {
-  final AppDatabase appDatabase; // Refactored: استخدام AppDatabase
+  final AppDatabase appDatabase; 
 
   MenuLocalDataSourceImpl({required this.appDatabase});
 
-  // Mapper للأقسام
-  Map<String, dynamic> _driftCategoryToMap(CategoryData driftCategory) {
-    return {
-      'id': driftCategory.id,
-      'name': driftCategory.name,
-      'created_at': driftCategory.createdAt,
-      'updated_at': driftCategory.updatedAt,
-    };
-  }
-
-  // Mapper للمنتجات
-  Map<String, dynamic> _driftItemToMap(ItemData driftItem) {
-    return {
-      'id': driftItem.id,
-      'category_id': driftItem.categoryId,
-      'name': driftItem.name,
-      'price': driftItem.price,
-      'created_at': driftItem.createdAt,
-      'updated_at': driftItem.updatedAt,
-    };
-  }
-
   @override
   Future<List<CategoryModel>> getCategories() async {
-    final maps = await (appDatabase.select(appDatabase.categories)
-          ..orderBy([(t) => OrderingTerm(expression: t.id, mode: OrderingMode.desc)]))
-        .get();
-    return maps.map((c) => CategoryModel.fromMap(_driftCategoryToMap(c))).toList();
+    final maps = await appDatabase.select(appDatabase.categories).get();
+    // [Refactored]: الاعتماد على Factory المباشر
+    return maps.map((c) => CategoryModel.fromDrift(c)).toList();
   }
 
   @override
@@ -57,6 +32,7 @@ class MenuLocalDataSourceImpl implements MenuLocalDataSource {
     return await appDatabase.into(appDatabase.categories).insert(
           CategoriesCompanion.insert(
             name: category.name,
+            // [Refactored]: التواريخ ستُمرر كـ DateTime تلقائياً
             createdAt: category.createdAt,
             updatedAt: category.updatedAt,
           ),
@@ -89,7 +65,8 @@ class MenuLocalDataSourceImpl implements MenuLocalDataSource {
           ..where((t) => t.categoryId.equals(categoryId))
           ..orderBy([(t) => OrderingTerm(expression: t.id, mode: OrderingMode.desc)]))
         .get();
-    return maps.map((i) => ItemModel.fromMap(_driftItemToMap(i))).toList();
+    // [Refactored]: الاعتماد على Factory المباشر
+    return maps.map((i) => ItemModel.fromDrift(i)).toList();
   }
 
   @override

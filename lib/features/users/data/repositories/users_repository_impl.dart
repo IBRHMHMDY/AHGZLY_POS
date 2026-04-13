@@ -1,3 +1,4 @@
+import 'package:ahgzly_pos/core/common/enums/enums_data.dart';
 import 'package:ahgzly_pos/core/common/users/entities/user_entity.dart';
 import 'package:ahgzly_pos/core/error/exceptions.dart';
 import 'package:dartz/dartz.dart';
@@ -25,7 +26,7 @@ class UsersRepositoryImpl implements UsersRepository {
   @override
   Future<Either<Failure, void>> addUser({
     required String name,
-    required String role,
+    required UserRole role,
     required String pin,
   }) async {
     try {

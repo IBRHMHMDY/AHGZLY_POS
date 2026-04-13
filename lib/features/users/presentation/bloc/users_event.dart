@@ -1,3 +1,4 @@
+import 'package:ahgzly_pos/core/common/enums/enums_data.dart';
 import 'package:equatable/equatable.dart';
 
 abstract class UsersEvent extends Equatable {
@@ -11,7 +12,7 @@ class LoadUsersEvent extends UsersEvent {}
 
 class AddUserEvent extends UsersEvent {
   final String name;
-  final String role;
+  final UserRole role;
   final String pin;
 
   const AddUserEvent({required this.name, required this.role, required this.pin});

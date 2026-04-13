@@ -1,3 +1,4 @@
+import 'package:ahgzly_pos/core/common/enums/enums_data.dart';
 import 'package:ahgzly_pos/core/error/failures.dart';
 import 'package:ahgzly_pos/core/usecases/usecase.dart';
 import 'package:ahgzly_pos/features/users/domain/repositories/users_repository.dart';
@@ -25,7 +26,7 @@ class AddUserUseCase implements UseCase<void, AddUserParams> {
 
 class AddUserParams extends Equatable {
   final String name;
-  final String role;
+  final UserRole role;
   final String pin;
 
   const AddUserParams({required this.name, required this.role, required this.pin});

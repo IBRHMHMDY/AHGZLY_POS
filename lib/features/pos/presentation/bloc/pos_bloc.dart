@@ -1,4 +1,5 @@
 import 'package:ahgzly_pos/core/common/enums/enums_data.dart';
+import 'package:ahgzly_pos/core/extensions/print_mode.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 // [Fixed]: تصحيح مسارات استيراد الـ Enums والـ Extensions لتتطابق مع هيكلة Clean Architecture
@@ -53,7 +54,7 @@ class PosBloc extends Bloc<PosEvent, PosState> {
         _deliveryFee = settings.deliveryFee;
         _restaurantName = settings.restaurantName;
         _taxNumber = settings.taxNumber;
-        _printMode = settings.printMode;
+        _printMode = settings.printMode.toDisplayName();
         _emitUpdatedState(emit); 
       },
     );

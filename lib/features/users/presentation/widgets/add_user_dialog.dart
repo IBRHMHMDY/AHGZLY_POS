@@ -1,3 +1,5 @@
+import 'package:ahgzly_pos/core/common/enums/enums_data.dart';
+import 'package:ahgzly_pos/core/extensions/user_role.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -15,7 +17,7 @@ class _AddUserDialogState extends State<AddUserDialog> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _pinController = TextEditingController();
-  String _selectedRole = 'cashier'; // افتراضياً كاشير
+  UserRole _selectedRole = UserRole.cashier; // افتراضياً كاشير
 
   @override
   void dispose() {
@@ -85,13 +87,21 @@ class _AddUserDialogState extends State<AddUserDialog> {
   }
 
   Widget _buildRoleDropdown() {
-    return DropdownButtonFormField<String>(
+    return DropdownButtonFormField<UserRole>(
       value: _selectedRole,
       decoration: _inputDecoration(label: 'الصلاحية', icon: Icons.admin_panel_settings),
-      items: const [
-        DropdownMenuItem(value: 'cashier', child: Text('كاشير (Cashier)', style: TextStyle(fontWeight: FontWeight.bold))),
-        DropdownMenuItem(value: 'admin', child: Text('مدير نظام (Admin)', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.red))),
-      ],
+      items: UserRole.values.map((role) {
+        return DropdownMenuItem<UserRole>(
+          value: role,
+          child: Text(
+            role.toDisplayName(),
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              color: role == UserRole.admin ? Colors.red : Colors.black87,
+            ),
+          ),
+        );
+      }).toList(),
       onChanged: (val) {
         if (val != null) setState(() => _selectedRole = val);
       },
