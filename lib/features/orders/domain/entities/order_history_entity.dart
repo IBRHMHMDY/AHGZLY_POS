@@ -1,9 +1,9 @@
 // مسار الملف: lib/features/orders/domain/entities/order_history_entity.dart
 
 import 'package:equatable/equatable.dart';
-import 'package:ahgzly_pos/core/common/enums/order_type.dart';
-import 'package:ahgzly_pos/core/common/enums/payment_method.dart';
-import 'package:ahgzly_pos/core/common/enums/order_status.dart';
+import 'package:ahgzly_pos/core/extensions/order_type.dart';
+import 'package:ahgzly_pos/core/extensions/payment_method.dart';
+import 'package:ahgzly_pos/core/extensions/order_status.dart';
 
 class OrderHistoryEntity extends Equatable {
   final int id;

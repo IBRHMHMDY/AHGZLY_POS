@@ -4,7 +4,7 @@ import 'package:ahgzly_pos/core/database/app_database.dart';
 import 'package:ahgzly_pos/core/error/exceptions.dart';
 import 'package:ahgzly_pos/features/pos/data/models/order_model.dart';
 import 'package:ahgzly_pos/features/pos/data/models/order_item_model.dart';
-import 'package:ahgzly_pos/core/common/enums/payment_method.dart'; // [Added] 
+import 'package:ahgzly_pos/core/extensions/payment_method.dart'; // [Added] 
 import 'package:drift/drift.dart';
 
 abstract class PosLocalDataSource {

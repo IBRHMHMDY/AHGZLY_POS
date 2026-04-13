@@ -1,0 +1,12 @@
+  const String splashPath = '/';
+  const String licensePath = '/license';
+  const String loginPath = '/login';
+  const String lockPath = '/lock'; // 🪄 تم إضافة الثابت المفقود
+  const String openShiftPath = '/open-shift'; 
+  const String shiftPath = '/shift';
+  const String posPath = '/pos';
+  const String menuPath = '/menu';
+  const String ordersPath = '/orders';
+  const String expensesPath = '/expenses';
+  const String usersPath = '/users';
+  const String settingsPath = '/settings';

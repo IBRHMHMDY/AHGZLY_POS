@@ -1,5 +1,5 @@
-import 'package:ahgzly_pos/core/common/enums/order_status.dart';
-import 'package:ahgzly_pos/core/common/enums/order_type.dart';
+import 'package:ahgzly_pos/core/extensions/order_status.dart';
+import 'package:ahgzly_pos/core/extensions/order_type.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:ahgzly_pos/core/usecases/usecase.dart'; 
 import 'package:ahgzly_pos/features/pos/domain/usecases/save_order_usecase.dart';

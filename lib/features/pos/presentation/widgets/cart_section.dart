@@ -1,4 +1,4 @@
-import 'package:ahgzly_pos/core/common/enums/order_type.dart';
+import 'package:ahgzly_pos/core/extensions/order_type.dart';
 import 'package:ahgzly_pos/core/common/widgets/custom_shimmer.dart';
 import 'package:ahgzly_pos/core/usecases/usecase.dart';
 import 'package:ahgzly_pos/core/utils/money_formatter.dart';

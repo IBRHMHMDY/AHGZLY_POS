@@ -1,4 +1,6 @@
 import 'dart:io';
+import 'package:ahgzly_pos/core/common/enums/enums_data.dart';
+import 'package:ahgzly_pos/core/database/types_converter.dart';
 import 'package:ahgzly_pos/core/utils/hash_util.dart';
 import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
@@ -30,7 +32,7 @@ class AppDatabase extends _$AppDatabase {
         await into(license).insert(
           LicenseCompanion.insert(
             isActivated: const Value(false),
-            trialStartDate: Value(DateTime.now().toIso8601String()),
+            trialStartDate: Value(DateTime.now()),
           ),
         );
 
