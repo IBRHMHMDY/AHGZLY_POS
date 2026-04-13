@@ -1,4 +1,8 @@
+// مسار الملف: lib/features/pos/presentation/widgets/checkout_dialog.dart
+
 import 'package:ahgzly_pos/core/common/enums/enums_data.dart';
+
+import 'package:ahgzly_pos/core/extensions/payment_method.dart';
 import 'package:ahgzly_pos/core/utils/money_formatter.dart';
 import 'package:flutter/material.dart';
 
@@ -18,7 +22,10 @@ class CheckoutDialog extends StatefulWidget {
 
 class _CheckoutDialogState extends State<CheckoutDialog> {
   final _formKey = GlobalKey<FormState>();
-  String _selectedMethod = 'كاش';
+  
+  // 🪄 [Refactored]: استخدام الـ Enum بشكل مباشر بدلاً من النصوص
+  PaymentMethod _selectedMethod = PaymentMethod.cash; 
+  
   late TextEditingController _paidController;
   late TextEditingController _nameController;
   late TextEditingController _phoneController;
@@ -57,12 +64,13 @@ class _CheckoutDialogState extends State<CheckoutDialog> {
 
   void _submit() {
     if (_formKey.currentState!.validate()) {
-      if (_selectedMethod == 'كاش' && _change < 0) return; // منع الدفع إذا كان المبلغ ناقصاً
+      // [Refactored]: التحقق عبر الـ Enum
+      if (_selectedMethod == PaymentMethod.cash && _change < 0) return; 
 
       setState(() => _isProcessing = true);
 
       Navigator.pop(context, {
-        'method': _selectedMethod,
+        'method': _selectedMethod, // 🪄 [Refactored]: إرجاع كائن Enum الآن وليس String!
         'name': _nameController.text.trim(),
         'phone': _phoneController.text.trim(),
         'address': _addressController.text.trim(),
@@ -77,12 +85,12 @@ class _CheckoutDialogState extends State<CheckoutDialog> {
     return Directionality(
       textDirection: TextDirection.rtl,
       child: AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)), // حواف أنعم
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         titlePadding: const EdgeInsets.all(0),
         title: _DialogHeader(onClose: () => Navigator.pop(context)),
         contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
         content: SizedBox(
-          width: 500, // تثبيت العرض لشاشات الـ POS
+          width: 500,
           child: SingleChildScrollView(
             child: Form(
               key: _formKey,
@@ -90,11 +98,9 @@ class _CheckoutDialogState extends State<CheckoutDialog> {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  // 🪄 1. ملخص المبلغ الإجمالي المطلوب
                   _TotalAmountDisplay(totalAmount: widget.totalAmount),
                   const SizedBox(height: 24),
 
-                  // 🪄 2. بيانات الدليفري (تظهر فقط إذا كان الطلب دليفري)
                   if (isDelivery) ...[
                     _DeliveryDetailsForm(
                       nameController: _nameController,
@@ -104,13 +110,13 @@ class _CheckoutDialogState extends State<CheckoutDialog> {
                     const SizedBox(height: 24),
                   ],
 
-                  // 🪄 3. اختيار طريقة الدفع
+                  // 🪄 تمرير الكائن بدلاً من النصوص
                   _PaymentMethodSelector(
                     selectedMethod: _selectedMethod,
                     onMethodChanged: (val) {
                       setState(() {
                         _selectedMethod = val;
-                        if (val != 'كاش') {
+                        if (val != PaymentMethod.cash) {
                           _paidController.text = MoneyFormatter.format(widget.totalAmount);
                         }
                       });
@@ -118,8 +124,8 @@ class _CheckoutDialogState extends State<CheckoutDialog> {
                   ),
                   const SizedBox(height: 20),
 
-                  // 🪄 4. تفاصيل دفع الكاش (الباقي والمدفوع)
-                  if (_selectedMethod == 'كاش')
+                  // 🪄 التحقق عبر الكائن
+                  if (_selectedMethod == PaymentMethod.cash)
                     _CashPaymentSection(
                       paidController: _paidController,
                       totalAmount: widget.totalAmount,
@@ -134,7 +140,8 @@ class _CheckoutDialogState extends State<CheckoutDialog> {
         actions: [
           _DialogActions(
             isProcessing: _isProcessing,
-            canSubmit: !(_selectedMethod == 'كاش' && _change < 0),
+            // 🪄 التحقق عبر الكائن
+            canSubmit: !(_selectedMethod == PaymentMethod.cash && _change < 0),
             onSubmit: _submit,
             onCancel: () => Navigator.pop(context),
           ),
@@ -145,7 +152,7 @@ class _CheckoutDialogState extends State<CheckoutDialog> {
 }
 
 // ==========================================
-// 🪄 المكونات الفرعية (Sub-Widgets) المستخرجة للترتيب
+// 🪄 المكونات الفرعية (Sub-Widgets)
 // ==========================================
 
 class _DialogHeader extends StatelessWidget {
@@ -273,8 +280,8 @@ class _DeliveryDetailsForm extends StatelessWidget {
 }
 
 class _PaymentMethodSelector extends StatelessWidget {
-  final String selectedMethod;
-  final ValueChanged<String> onMethodChanged;
+  final PaymentMethod selectedMethod; // 🪄 أصبح يستقبل Enum
+  final ValueChanged<PaymentMethod> onMethodChanged; // 🪄 أصبح يرجع Enum
 
   const _PaymentMethodSelector({required this.selectedMethod, required this.onMethodChanged});
 
@@ -286,7 +293,8 @@ class _PaymentMethodSelector extends StatelessWidget {
         const Text('طريقة الدفع', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.black87)),
         const SizedBox(height: 8),
         Row(
-          children: ['كاش', 'فيزا', 'InstaPay'].map((method) {
+          // 🪄 توليد الأزرار بناءً على قيم الـ Enum بشكل آلي
+          children: PaymentMethod.values.map((method) {
             final isSelected = selectedMethod == method;
             return Expanded(
               child: Padding(
@@ -304,7 +312,7 @@ class _PaymentMethodSelector extends StatelessWidget {
                     ),
                     alignment: Alignment.center,
                     child: Text(
-                      method,
+                      method.toDisplayName(), 
                       style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: isSelected ? Colors.white : Colors.black87),
                     ),
                   ),

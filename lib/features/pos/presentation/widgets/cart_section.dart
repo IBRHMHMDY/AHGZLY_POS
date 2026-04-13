@@ -2,6 +2,7 @@
 import 'package:ahgzly_pos/core/common/enums/enums_data.dart';
 import 'package:ahgzly_pos/core/common/widgets/custom_shimmer.dart';
 import 'package:ahgzly_pos/core/extensions/order_type.dart';
+import 'package:ahgzly_pos/core/extensions/payment_method.dart';
 import 'package:ahgzly_pos/core/usecases/usecase.dart';
 import 'package:ahgzly_pos/core/utils/money_formatter.dart';
 import 'package:ahgzly_pos/features/auth/presentation/bloc/auth_bloc.dart';
@@ -200,16 +201,23 @@ class _CartSectionState extends State<CartSection> {
                             barrierDismissible: false,
                             builder: (_) => CheckoutDialog(
                               totalAmount: state.total,
-                              // [Fixed]: تمرير الـ Enum للـ CheckoutDialog (تأكد من تحديث CheckoutDialog ليستقبل OrderType إذا لم تفعل بعد)
                               orderType: state.orderType, 
                             ),
                           );
+                          
                           if (result != null && context.mounted) {
                             _lastOrderState = state;
                             _lastCustomerData = result;
+
+                            // 🪄 [Fixed]: تحويل النص القادم من النافذة إلى كائن PaymentMethod آمن
+                            final rawMethod = result['method'];
+                            final PaymentMethod paymentMethod = rawMethod is PaymentMethod 
+                                ? rawMethod // إذا كانت النافذة ترجع Enum بالفعل
+                                : PaymentMethodExtension.fromValue(rawMethod.toString()); // إذا كانت ترجع نصاً
+
                             context.read<PosBloc>().add(
                               SubmitOrderEvent(
-                                result['method'],
+                                paymentMethod, // تمرير الـ Enum السليم
                                 customerName: result['name'],
                                 customerPhone: result['phone'],
                                 customerAddress: result['address'],
