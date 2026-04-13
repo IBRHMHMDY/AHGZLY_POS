@@ -13,7 +13,7 @@ import 'package:ahgzly_pos/features/settings/presentation/bloc/settings_bloc.dar
 import 'package:ahgzly_pos/features/settings/presentation/bloc/settings_event.dart';
 import 'package:ahgzly_pos/features/settings/presentation/bloc/settings_state.dart';
 import 'package:printing/printing.dart';
-import 'package:ahgzly_pos/core/common/widgets/custom_shimmer.dart'; // 🪄 استيراد مكون الشيمر
+import 'package:ahgzly_pos/core/widgets/custom_shimmer.dart'; // 🪄 استيراد مكون الشيمر
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});

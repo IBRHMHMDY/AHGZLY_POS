@@ -8,7 +8,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 // [Clean Architecture Imports]
 // [Added] للتعامل مع الطباعة الآلية
-import 'package:ahgzly_pos/core/common/widgets/custom_shimmer.dart';
+import 'package:ahgzly_pos/core/widgets/custom_shimmer.dart';
 import 'package:ahgzly_pos/core/usecases/usecase.dart';
 import 'package:ahgzly_pos/core/utils/money_formatter.dart';
 import 'package:ahgzly_pos/core/di/dependency_injection.dart';

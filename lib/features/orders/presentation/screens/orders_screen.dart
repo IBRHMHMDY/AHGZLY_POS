@@ -14,7 +14,7 @@ import 'package:ahgzly_pos/features/orders/presentation/bloc/orders_state.dart';
 import 'package:ahgzly_pos/features/orders/domain/entities/order_history_entity.dart';
 import 'package:ahgzly_pos/features/orders/presentation/widgets/order_details_dialog.dart';
 import 'package:ahgzly_pos/core/utils/money_formatter.dart';
-import 'package:ahgzly_pos/core/common/widgets/custom_shimmer.dart'; // 🪄 استيراد الشيمر
+import 'package:ahgzly_pos/core/widgets/custom_shimmer.dart'; // 🪄 استيراد الشيمر
 
 class OrdersScreen extends StatefulWidget {
   const OrdersScreen({super.key});

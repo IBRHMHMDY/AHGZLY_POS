@@ -9,6 +9,12 @@ abstract class AuthLocalDataSource {
   Future<void> logout();
 }
 
+// 🛡️ تجميع الثوابت لمنع الأخطاء الإملائية
+class _AuthKeys {
+  static const String lockoutUntil = 'device_lockout_until';
+  static const String failedAttempts = 'device_failed_attempts';
+}
+
 class AuthLocalDataSourceImpl implements AuthLocalDataSource {
   final AppDatabase appDatabase; 
   final FlutterSecureStorage secureStorage;
@@ -20,15 +26,15 @@ class AuthLocalDataSourceImpl implements AuthLocalDataSource {
 
   @override
   Future<UserModel> loginWithPin(String pin) async {
-    String? lockoutUntilStr = await secureStorage.read(key: 'device_lockout_until');
+    String? lockoutUntilStr = await secureStorage.read(key: _AuthKeys.lockoutUntil);
     if (lockoutUntilStr != null) {
       final lockoutTime = DateTime.tryParse(lockoutUntilStr);
       if (lockoutTime != null && DateTime.now().isBefore(lockoutTime)) {
         final remaining = lockoutTime.difference(DateTime.now()).inMinutes;
         throw AuthException('التطبيق محظور مؤقتاً. حاول مجدداً بعد $remaining دقائق.');
       } else {
-        await secureStorage.delete(key: 'device_lockout_until');
-        await secureStorage.write(key: 'device_failed_attempts', value: '0');
+        await secureStorage.delete(key: _AuthKeys.lockoutUntil);
+        await secureStorage.write(key: _AuthKeys.failedAttempts, value: '0');
       }
     }
 
@@ -37,32 +43,26 @@ class AuthLocalDataSourceImpl implements AuthLocalDataSource {
         .get();
 
     for (var driftUser in users) {
-      final salt = driftUser.salt;
-      final pinHash = driftUser.pinHash;
-
-      if (HashUtil.verifyPin(pin, salt, pinHash)) {
-        await secureStorage.write(key: 'device_failed_attempts', value: '0');
-        // [Refactored]: قراءة آمنة ومباشرة من كائن Drift بدون وسيط
+      if (HashUtil.verifyPin(pin, driftUser.salt, driftUser.pinHash)) {
+        await secureStorage.write(key: _AuthKeys.failedAttempts, value: '0');
         return UserModel.fromDrift(driftUser); 
       }
     }
 
-    String? attemptsStr = await secureStorage.read(key: 'device_failed_attempts');
+    String? attemptsStr = await secureStorage.read(key: _AuthKeys.failedAttempts);
     int failedAttempts = int.tryParse(attemptsStr ?? '0') ?? 0;
     failedAttempts++;
 
     if (failedAttempts >= maxFailedAttempts) {
       final lockoutTime = DateTime.now().add(const Duration(minutes: lockoutMinutes));
-      await secureStorage.write(key: 'device_lockout_until', value: lockoutTime.toIso8601String());
+      await secureStorage.write(key: _AuthKeys.lockoutUntil, value: lockoutTime.toIso8601String());
       throw AuthException('تجاوزت الحد الأقصى للمحاولات. تم حظر الدخول لمدة $lockoutMinutes دقائق.');
     } else {
-      await secureStorage.write(key: 'device_failed_attempts', value: failedAttempts.toString());
+      await secureStorage.write(key: _AuthKeys.failedAttempts, value: failedAttempts.toString());
       throw AuthException('الرمز السري غير صحيح. المحاولات المتبقية: ${maxFailedAttempts - failedAttempts}');
     }
   }
 
   @override
-  Future<void> logout() async {
-    // ضع هنا منطق تسجيل الخروج إن وجد
-  }
+  Future<void> logout() async {}
 }

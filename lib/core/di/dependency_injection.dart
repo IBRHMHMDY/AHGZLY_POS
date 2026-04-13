@@ -147,7 +147,7 @@ void _initAuth() {
   sl.registerLazySingleton<AuthRepository>(() => AuthRepositoryImpl(localDataSource: sl()));
   sl.registerLazySingleton(() => LoginUseCase(sl()));
   sl.registerLazySingleton(() => LogoutUseCase(sl()));
-  sl.registerLazySingleton(() => AuthBloc(loginUseCase: sl(), logoutUseCase: sl()));
+  sl.registerLazySingleton(() => AuthBloc(loginUseCase: sl(), logoutUseCase: sl(), unlockUseCase: sl()));
 }
 
 void _initMenu() {

@@ -6,7 +6,7 @@ import 'package:ahgzly_pos/features/users/presentation/bloc/users_event.dart';
 import 'package:ahgzly_pos/features/users/presentation/bloc/users_state.dart';
 import 'package:ahgzly_pos/features/users/presentation/widgets/add_user_dialog.dart';
 import 'package:ahgzly_pos/core/common/users/entities/user_entity.dart';
-import 'package:ahgzly_pos/core/common/widgets/custom_shimmer.dart'; // 🪄 استيراد الشيمر
+import 'package:ahgzly_pos/core/widgets/custom_shimmer.dart'; // 🪄 استيراد الشيمر
 
 class UsersScreen extends StatefulWidget {
   const UsersScreen({super.key});

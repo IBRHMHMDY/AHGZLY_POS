@@ -8,7 +8,7 @@ import 'package:ahgzly_pos/features/menu/presentation/bloc/menu_state.dart';
 import 'package:ahgzly_pos/features/menu/presentation/widgets/category_dialog.dart';
 import 'package:ahgzly_pos/features/menu/presentation/widgets/item_dialog.dart';
 import 'package:ahgzly_pos/core/utils/money_formatter.dart';
-import 'package:ahgzly_pos/core/common/widgets/custom_shimmer.dart'; // 🪄 استيراد مكون الشيمر
+import 'package:ahgzly_pos/core/widgets/custom_shimmer.dart'; // 🪄 استيراد مكون الشيمر
 
 class MenuScreen extends StatefulWidget {
   const MenuScreen({super.key});

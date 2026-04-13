@@ -10,7 +10,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:ahgzly_pos/features/expenses/domain/entities/expense_entity.dart';
 import 'package:ahgzly_pos/features/expenses/presentation/widgets/add_expense_dialog.dart';
-import 'package:ahgzly_pos/core/common/widgets/custom_shimmer.dart';
+import 'package:ahgzly_pos/core/widgets/custom_shimmer.dart';
 import 'package:intl/intl.dart'; // 🪄 استيراد الشيمر
 
 class ExpensesScreen extends StatefulWidget {

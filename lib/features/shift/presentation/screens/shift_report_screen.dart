@@ -10,7 +10,7 @@ import '../../../../core/routing/app_router.dart';
 import '../../../../core/di/dependency_injection.dart';
 import '../../../../core/usecases/usecase.dart';
 import '../../../../core/services/printer_service.dart';
-import '../../../../core/common/widgets/custom_shimmer.dart'; // 🪄 استدعاء الشيمر
+import '../../../../core/widgets/custom_shimmer.dart'; // 🪄 استدعاء الشيمر
 import '../../../settings/domain/usecases/get_settings_usecase.dart';
 import '../../../pos/presentation/widgets/receipt_widgets.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
