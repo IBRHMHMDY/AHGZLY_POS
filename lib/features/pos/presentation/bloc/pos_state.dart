@@ -33,7 +33,7 @@ class PosUpdated extends PosState {
   final int total;
   final String restaurantName;
   final String taxNumber;
-  final String printMode;
+  final PrintMode printMode;
 
   PosUpdated({
     required this.cartItems, required this.orderType, required this.subTotal, required this.discountAmount,

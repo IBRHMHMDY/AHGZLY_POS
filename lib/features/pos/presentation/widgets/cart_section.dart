@@ -159,13 +159,8 @@ class _CartSectionState extends State<CartSection> {
               
               // 🪄 [Robust Check]: التحقق المرن لدعم الـ Enums والنصوص
               bool isAsk = false;
-              if (mode is PrintMode) {
-                isAsk = mode == PrintMode.ask;
-              } else {
-                final modeStr = mode.toString();
-                isAsk = modeStr == 'ask' || modeStr.contains('اسأل');
-              }
-
+              isAsk = mode == PrintMode.ask;
+            
               if (isAsk) {
                 _showPrintDialog(context, state.orderId, _lastOrderState!);
               } else {

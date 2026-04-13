@@ -3,6 +3,7 @@
 import 'package:ahgzly_pos/core/database/app_database.dart'; 
 import 'package:ahgzly_pos/core/error/exceptions.dart';
 import 'package:ahgzly_pos/features/pos/data/models/order_model.dart';
+import 'package:ahgzly_pos/features/pos/data/models/order_item_model.dart';
 import 'package:ahgzly_pos/core/common/enums/enums_data.dart'; 
 import 'package:drift/drift.dart';
 
@@ -17,78 +18,79 @@ class PosLocalDataSourceImpl implements PosLocalDataSource {
 
   @override
   Future<int> saveOrder(OrderModel order) async {
-    try {
-      return await appDatabase.transaction(() async {
-        
-        // 🪄 [Fixed 1]: جلب الوردية النشطة تلقائياً من قاعدة البيانات بدلاً من انتظارها من الـ BLoC
-        final activeShift = await (appDatabase.select(appDatabase.shifts)
-              ..where((t) => t.status.equals('active')))
-            .getSingleOrNull();
+    // [Refactored]: تمت إزالة كتلة try-catch بالكامل من هنا.
+    // مبدأ Clean Architecture: الـ Data Source يجب أن يرمي الخطأ كما هو (Raw Exception)، 
+    // والـ Repository هو المسؤول عن التقاطه، عمل Logging له، وتحويله إلى Failure مفهوم للمستخدم.
+    
+    return await appDatabase.transaction(() async {
+      
+      if (order.shiftId == null || order.shiftId == 0) {
+          throw CacheException('لا يمكن إتمام البيع: لا توجد وردية نشطة محددة.');
+      }
 
-        if (activeShift == null) {
-           throw CacheException('لا يمكن إتمام البيع: لا توجد وردية نشطة مفتوحة حالياً.');
-        }
+      if (order.items.isEmpty) {
+        throw CacheException('لا يمكن حفظ فاتورة فارغة.');
+      }
 
-        if (order.items.isEmpty) {
-          throw CacheException('لا يمكن حفظ فاتورة فارغة.');
-        }
+      final orderId = await appDatabase.into(appDatabase.orders).insert(
+        OrdersCompanion.insert(
+          shiftId: order.shiftId!,
+          tableId: Value(order.tableId),
+          orderType: order.orderType,       
+          subTotal: order.subTotal,
+          discount: Value(order.discount),
+          taxAmount: order.taxAmount,
+          serviceFee: order.serviceFee,
+          deliveryFee: order.deliveryFee,
+          total: order.total,
+          paymentMethod: order.paymentMethod, 
+          status: order.status,               
+          customerName: Value(order.customerName),
+          customerPhone: Value(order.customerPhone),
+          customerAddress: Value(order.customerAddress),
+          createdAt: order.createdAt,         
+        ),
+      );
 
-        // 1. حفظ الفاتورة الأساسية
-        final orderId = await appDatabase.into(appDatabase.orders).insert(
-          OrdersCompanion.insert(
-            shiftId: activeShift.id, // الاعتماد على الوردية النشطة
-            tableId: Value(order.tableId),
-            orderType: order.orderType,       
-            subTotal: order.subTotal,
-            discount: Value(order.discount),
-            taxAmount: order.taxAmount,
-            serviceFee: order.serviceFee,
-            deliveryFee: order.deliveryFee,
-            total: order.total,
-            paymentMethod: order.paymentMethod, 
-            status: order.status,               
-            customerName: Value(order.customerName),
-            customerPhone: Value(order.customerPhone),
-            customerAddress: Value(order.customerAddress),
-            createdAt: order.createdAt,         
+      for (var item in order.items) {
+        final itemModel = item as OrderItemModel;
+        await appDatabase.into(appDatabase.orderItems).insert(
+          OrderItemsCompanion.insert(
+            orderId: orderId,
+            itemId: itemModel.itemId,
+            quantity: itemModel.quantity,
+            unitPrice: itemModel.unitPrice,
+            notes: Value(itemModel.notes),
           ),
         );
+      }
 
-        // 2. حفظ عناصر الفاتورة
-        for (var item in order.items) {
-          // 🪄 [Fixed 2]: إزالة الـ Cast (as OrderItemModel) واستخدام الخصائص المشتركة مباشرة لتجنب CastError
-          await appDatabase.into(appDatabase.orderItems).insert(
-            OrderItemsCompanion.insert(
-              orderId: orderId,
-              itemId: item.itemId,
-              quantity: item.quantity,
-              unitPrice: item.unitPrice,
-              notes: Value(item.notes),
-            ),
-          );
-        }
+      // [ملاحظة هامة]: إذا كان status في جدول shifts هو Enum، 
+      // يجب تغييره هنا من 'active' إلى ShiftStatus.active مثلاً (حسب كيف عرفته في قاعدة البيانات).
+      final shift = await (appDatabase.select(appDatabase.shifts)
+            ..where((t) => t.id.equals(order.shiftId!) & t.status.equals('active')))
+          .getSingleOrNull();
 
-        // 3. تحديث مبالغ الوردية بناءً على طريقة الدفع
-        final isVisa = order.paymentMethod == PaymentMethod.visa;
-        final isInstapay = order.paymentMethod == PaymentMethod.wallet;
-        final isCash = order.paymentMethod == PaymentMethod.cash;
+      if (shift == null) {
+         throw CacheException('الوردية الحالية غير نشطة أو تم إغلاقها.');
+      }
 
-        final updatedShift = activeShift.copyWith(
-          totalSales: activeShift.totalSales + order.total,
-          totalOrders: activeShift.totalOrders + 1,
-          totalCash: isCash ? activeShift.totalCash + order.total : activeShift.totalCash,
-          totalVisa: isVisa ? activeShift.totalVisa + order.total : activeShift.totalVisa,
-          totalInstapay: isInstapay ? activeShift.totalInstapay + order.total : activeShift.totalInstapay,
-          expectedCash: isCash ? activeShift.expectedCash + order.total : activeShift.expectedCash,
-        );
+      final isVisa = order.paymentMethod == PaymentMethod.visa;
+      final isInstapay = order.paymentMethod == PaymentMethod.wallet;
+      final isCash = order.paymentMethod == PaymentMethod.cash;
 
-        await appDatabase.update(appDatabase.shifts).replace(updatedShift);
+      final updatedShift = shift.copyWith(
+        totalSales: shift.totalSales + order.total,
+        totalOrders: shift.totalOrders + 1,
+        totalCash: isCash ? shift.totalCash + order.total : shift.totalCash,
+        totalVisa: isVisa ? shift.totalVisa + order.total : shift.totalVisa,
+        totalInstapay: isInstapay ? shift.totalInstapay + order.total : shift.totalInstapay,
+        expectedCash: isCash ? shift.expectedCash + order.total : shift.expectedCash,
+      );
 
-        return orderId; // إرجاع رقم الفاتورة لطباعته
-      });
-    } catch (e) {
-      if (e is CacheException) rethrow;
-      throw CacheException('حدث خطأ غير متوقع أثناء حفظ الفاتورة: ${e.toString()}');
-    }
+      await appDatabase.update(appDatabase.shifts).replace(updatedShift);
+
+      return orderId;
+    });
   }
 }

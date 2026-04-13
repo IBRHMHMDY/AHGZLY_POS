@@ -108,7 +108,7 @@ class CustomerReceiptWidget extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  'طلب رقم: #$orderId',
+                  'فاتورة رقم: #$orderId',
                   style: const TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
@@ -281,7 +281,7 @@ class KitchenReceiptWidget extends StatelessWidget {
               ),
             ),
             Text(
-              'النوع: $orderType',
+              'النوع: ${orderType.toDisplayName()}',
               style: const TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
@@ -384,7 +384,7 @@ class CustomerHistoryReceiptWidget extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  'طلب رقم: #${order.id}',
+                  'فاتورة رقم: #${order.id}',
                   style: const TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
@@ -392,7 +392,7 @@ class CustomerHistoryReceiptWidget extends StatelessWidget {
                   ),
                 ),
                 Text(
-                  'النوع: ${order.orderType}',
+                  'النوع: ${order.orderType.toDisplayName()}',
                   style: const TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,

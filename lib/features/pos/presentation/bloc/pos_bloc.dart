@@ -1,9 +1,5 @@
 import 'package:ahgzly_pos/core/common/enums/enums_data.dart';
-import 'package:ahgzly_pos/core/extensions/print_mode.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-
-// [Fixed]: تصحيح مسارات استيراد الـ Enums والـ Extensions لتتطابق مع هيكلة Clean Architecture
-
 import 'package:ahgzly_pos/core/usecases/usecase.dart'; 
 import 'package:ahgzly_pos/features/pos/domain/usecases/save_order_usecase.dart';
 import 'package:ahgzly_pos/features/settings/domain/usecases/get_settings_usecase.dart';
@@ -25,7 +21,7 @@ class PosBloc extends Bloc<PosEvent, PosState> {
   int _deliveryFee = 0;
   String _restaurantName = '';
   String _taxNumber = '';
-  String _printMode = 'ask';
+  PrintMode _printMode = PrintMode.ask;
 
   PosBloc({
     required this.saveOrderUseCase,
@@ -46,15 +42,20 @@ class PosBloc extends Bloc<PosEvent, PosState> {
 
   Future<void> _onReloadSettings(ReloadSettingsEvent event, Emitter<PosState> emit) async {
     final result = await getSettingsUseCase(NoParams());
+    
     result.fold(
-      (failure) {},
+      (failure) {
+        // ✅ [Refactored]: عدم تجاهل الأخطاء. يجب إبلاغ الواجهة لكي تمنع الكاشير من البيع بإعدادات خاطئة
+        emit(PosError('فشل في تحميل إعدادات النظام (الضرائب والرسوم). يرجى التأكد من ضبط الإعدادات أولاً.'));
+      },
       (settings) {
         _taxRate = settings.taxRate;
         _serviceRate = settings.serviceRate;
         _deliveryFee = settings.deliveryFee;
         _restaurantName = settings.restaurantName;
         _taxNumber = settings.taxNumber;
-        _printMode = settings.printMode.toDisplayName();
+        _printMode = settings.printMode;
+        
         _emitUpdatedState(emit); 
       },
     );

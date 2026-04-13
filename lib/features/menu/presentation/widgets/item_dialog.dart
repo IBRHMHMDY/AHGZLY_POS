@@ -49,7 +49,7 @@ class _ItemDialogState extends State<ItemDialog> {
         categoryId: _selectedCategoryId,
         name: _nameController.text.trim(),
         price: MoneyFormatter.toCents(priceDouble),
-        createdAt: widget.item!.createdAt,
+        createdAt: widget.item?.createdAt ?? DateTime.now(),
         updatedAt: DateTime.now(),
       );
       Navigator.pop(context, newItem);
