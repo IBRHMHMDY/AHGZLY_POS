@@ -9,6 +9,7 @@ class ItemModel extends ItemEntity {
     required super.categoryId,
     required super.name,
     required super.price,
+    required super.cost, // [Refactored]: تمرير التكلفة للكيان
     super.imagePath,
     required super.createdAt,
     required super.updatedAt,
@@ -20,8 +21,9 @@ class ItemModel extends ItemEntity {
       categoryId: data.categoryId,
       name: data.name,
       price: data.price,
-      createdAt: data.createdAt, // من المفترض أن تكون DateTime
-      updatedAt: data.updatedAt, // من المفترض أن تكون DateTime
+      cost: data.cost, // [Refactored]: قراءة التكلفة من قاعدة البيانات
+      createdAt: data.createdAt, 
+      updatedAt: data.updatedAt, 
     );
   }
 
@@ -30,8 +32,8 @@ class ItemModel extends ItemEntity {
       if (id != null) 'id': id,
       'category_id': categoryId,
       'name': name,
-      'price': price, // سيتم حفظه كـ Integer
-      // 'image_path': imagePath,
+      'price': price, 
+      'cost': cost, // [Refactored]: تحضير التكلفة للحفظ
       'created_at': createdAt,
       'updated_at': updatedAt,
     };

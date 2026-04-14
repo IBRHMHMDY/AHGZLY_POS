@@ -77,14 +77,14 @@ class Categories extends Table {
   TextColumn get updatedAt => text().map(const DateTimeConverter())();
 }
 
-// 6. جدول المنتجات
 @DataClassName('ItemData')
 class Items extends Table {
   IntColumn get id => integer().autoIncrement()();
   IntColumn get categoryId => integer().references(Categories, #id)();
   TextColumn get name => text()();
   IntColumn get price => integer()(); 
-  // [Refactored] تحويل التواريخ
+  // [Refactored]: إضافة حقل التكلفة (بالسنت) لحساب الأرباح لاحقاً
+  IntColumn get cost => integer().withDefault(const Constant(0))(); 
   TextColumn get createdAt => text().map(const DateTimeConverter())();
   TextColumn get updatedAt => text().map(const DateTimeConverter())();
 }
@@ -132,5 +132,7 @@ class OrderItems extends Table {
   IntColumn get itemId => integer().references(Items, #id)();
   IntColumn get quantity => integer()();
   IntColumn get unitPrice => integer()(); 
+  // [Refactored]: حفظ التكلفة وقت البيع كقيمة ثابتة لضمان دقة التقارير التاريخية
+  IntColumn get unitCost => integer().withDefault(const Constant(0))(); 
   TextColumn get notes => text().nullable()();
 }

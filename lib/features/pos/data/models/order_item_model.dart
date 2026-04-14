@@ -1,3 +1,4 @@
+// مسار الملف: lib/features/pos/data/models/order_item_model.dart
 import 'package:ahgzly_pos/features/pos/domain/entities/order_item_entity.dart';
 
 class OrderItemModel extends OrderItemEntity {
@@ -7,6 +8,7 @@ class OrderItemModel extends OrderItemEntity {
     required super.itemId,
     required super.quantity,
     required super.unitPrice,
+    required super.unitCost, // [Refactored]
     super.notes,
   });
 
@@ -17,6 +19,7 @@ class OrderItemModel extends OrderItemEntity {
       itemId: entity.itemId,
       quantity: entity.quantity,
       unitPrice: entity.unitPrice,
+      unitCost: entity.unitCost, // [Refactored]
       notes: entity.notes,
     );
   }
@@ -28,6 +31,7 @@ class OrderItemModel extends OrderItemEntity {
       'item_id': itemId,
       'quantity': quantity,
       'unit_price': unitPrice,
+      'unit_cost': unitCost, // [Refactored]
       'notes': notes,
     };
   }

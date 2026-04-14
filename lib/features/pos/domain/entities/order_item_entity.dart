@@ -1,3 +1,4 @@
+// مسار الملف: lib/features/pos/domain/entities/order_item_entity.dart
 import 'package:equatable/equatable.dart';
 
 class OrderItemEntity extends Equatable {
@@ -5,7 +6,8 @@ class OrderItemEntity extends Equatable {
   final int? orderId;
   final int itemId;
   final int quantity;
-  final int unitPrice; // Refactored: تغيير من double إلى int (Cents)
+  final int unitPrice; 
+  final int unitCost; // [Refactored]: إضافة تكلفة الوحدة وقت البيع
   final String? notes;
 
   const OrderItemEntity({
@@ -14,9 +16,11 @@ class OrderItemEntity extends Equatable {
     required this.itemId,
     required this.quantity,
     required this.unitPrice,
+    required this.unitCost, // مطلوبة لتجنب المبيعات بدون تكلفة
     this.notes,
   });
 
   @override
-  List<Object?> get props => [id, orderId, itemId, quantity, unitPrice, notes];
+  // [Refactored]: تحديث قائمة الخصائص
+  List<Object?> get props => [id, orderId, itemId, quantity, unitPrice, unitCost, notes];
 }
