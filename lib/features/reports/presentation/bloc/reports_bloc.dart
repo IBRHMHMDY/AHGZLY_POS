@@ -47,7 +47,7 @@ class ReportsBloc extends Bloc<ReportsEvent, ReportsState> {
       }
 
       emit(ReportsLoaded(
-        summary: summaryResult.getOrElse(() => const ReportSummaryEntity(totalSales: 0, totalExpenses: 0, ordersCount: 0)),
+        summary: summaryResult.getOrElse(() =>  ReportSummaryEntity(totalSales: 0, totalExpenses: 0, ordersCount: 0, totalCogs: 0.0)),
         itemSales: itemSalesResult.getOrElse(() => []),
         startDate: event.startDate,
         endDate: event.endDate,

@@ -5,6 +5,7 @@ class ReportSummaryModel extends ReportSummaryEntity {
   const ReportSummaryModel({
     required super.totalSales,
     required super.totalExpenses,
+    required super.totalCogs, // 🪄 [Refactored]: تمرير تكلفة البضاعة للكيان
     required super.ordersCount,
   });
 }

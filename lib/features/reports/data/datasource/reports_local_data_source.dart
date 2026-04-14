@@ -14,13 +14,12 @@ class ReportsLocalDataSourceImpl implements ReportsLocalDataSource {
 
   @override
   Future<ReportSummaryModel> getSummaryReport(DateTime startDate, DateTime endDate) async {
-    final salesSum = appDatabase.orders.total.sum();
-    final countExp = appDatabase.orders.id.count();
-
-    // 🪄 [الإصلاح]: تحويل التاريخ إلى نص قياسي ISO8601 ليتمكن SQLite من مقارنته كنص
     final startStr = startDate.toIso8601String();
     final endStr = endDate.toIso8601String();
 
+    // 1. استعلام المبيعات والطلبات
+    final salesSum = appDatabase.orders.total.sum();
+    final countExp = appDatabase.orders.id.count();
     final salesQuery = appDatabase.selectOnly(appDatabase.orders)
       ..addColumns([salesSum, countExp])
       ..where(appDatabase.orders.createdAt.isBetweenValues(startStr, endStr));
@@ -29,6 +28,7 @@ class ReportsLocalDataSourceImpl implements ReportsLocalDataSource {
     final totalSalesCents = salesResult.read(salesSum) ?? 0;
     final ordersCount = salesResult.read(countExp) ?? 0;
 
+    // 2. استعلام المصروفات التشغيلية
     final expSum = appDatabase.expenses.amount.sum();
     final expQuery = appDatabase.selectOnly(appDatabase.expenses)
       ..addColumns([expSum])
@@ -37,9 +37,24 @@ class ReportsLocalDataSourceImpl implements ReportsLocalDataSource {
     final expResult = await expQuery.getSingle();
     final totalExpensesCents = expResult.read(expSum) ?? 0;
 
+    // 3. 🪄 [Refactored]: استعلام تكلفة البضاعة المباعة (COGS)
+    // ضرب الكمية في تكلفة الوحدة لكل عنصر تم بيعه خلال هذه الفترة
+    final cogsSum = (appDatabase.orderItems.quantity * appDatabase.orderItems.unitCost).sum();
+    final cogsQuery = appDatabase.selectOnly(appDatabase.orderItems)
+      ..addColumns([cogsSum])
+      ..join([
+        // الربط مع جدول الطلبات لفلترة التاريخ
+        innerJoin(appDatabase.orders, appDatabase.orders.id.equalsExp(appDatabase.orderItems.orderId)),
+      ])
+      ..where(appDatabase.orders.createdAt.isBetweenValues(startStr, endStr));
+      
+    final cogsResult = await cogsQuery.getSingle();
+    final totalCogsCents = cogsResult.read(cogsSum) ?? 0;
+
     return ReportSummaryModel(
       totalSales: totalSalesCents / 100.0, 
       totalExpenses: totalExpensesCents / 100.0,
+      totalCogs: totalCogsCents / 100.0, // 🪄 [Refactored]: إضافة التكلفة للنموذج
       ordersCount: ordersCount,
     );
   }
@@ -48,8 +63,6 @@ class ReportsLocalDataSourceImpl implements ReportsLocalDataSource {
   Future<List<ItemSalesModel>> getItemSalesReport(DateTime startDate, DateTime endDate) async {
     final qtySum = appDatabase.orderItems.quantity.sum();
     final revSum = (appDatabase.orderItems.quantity * appDatabase.orderItems.unitPrice).sum();
-
-    // 🪄 [الإصلاح]: تحويل التاريخ إلى نص قياسي ISO8601
     final startStr = startDate.toIso8601String();
     final endStr = endDate.toIso8601String();
 
