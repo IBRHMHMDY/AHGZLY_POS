@@ -1,3 +1,4 @@
+import 'package:ahgzly_pos/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:ahgzly_pos/core/di/dependency_injection.dart' as di;
@@ -16,6 +17,7 @@ class AhgzlyPOS extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+  final authBloc = di.sl<AuthBloc>();
     return AppProviders(
       child: MaterialApp.router(
         title: 'احجزلي - نقطة بيع',
@@ -32,7 +34,7 @@ class AhgzlyPOS extends StatelessWidget {
         ],
         supportedLocales: const [Locale('ar', 'EG')],
         locale: const Locale('ar', 'EG'),
-        routerConfig: AppRouter.getRouter(),
+        routerConfig: AppRouter.getRouter(authBloc),
       ),
     );
   }
