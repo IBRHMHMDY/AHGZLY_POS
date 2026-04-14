@@ -18,9 +18,8 @@ class PosLocalDataSourceImpl implements PosLocalDataSource {
 
   @override
   Future<int> saveOrder(OrderModel order) async {
-    // [Refactored]: تمت إزالة كتلة try-catch بالكامل من هنا.
     // مبدأ Clean Architecture: الـ Data Source يجب أن يرمي الخطأ كما هو (Raw Exception)، 
-    // والـ Repository هو المسؤول عن التقاطه، عمل Logging له، وتحويله إلى Failure مفهوم للمستخدم.
+    // والـ Repository هو المسؤول عن التقاطه، عمل Logging له، وتحويله إلى Failure مفهوم.
     
     return await appDatabase.transaction(() async {
       
@@ -54,19 +53,29 @@ class PosLocalDataSourceImpl implements PosLocalDataSource {
 
       for (var item in order.items) {
         final itemModel = item as OrderItemModel;
+        
+        // 🪄 [Refactored]: الخطوة 6.3 - سحب التكلفة المحدثة مباشرة من قاعدة البيانات
+        // هذا يمنع أي تضارب بين واجهة المستخدم وقاعدة البيانات ويضمن دقة التقارير.
+        final currentProduct = await (appDatabase.select(appDatabase.items)
+              ..where((tbl) => tbl.id.equals(itemModel.itemId)))
+            .getSingleOrNull();
+            
+        // في حال تم مسح المنتج أثناء البيع لسبب ما، نعتمد على القيمة القادمة من الـ Model كـ Fallback
+        final actualCost = currentProduct?.cost ?? itemModel.unitCost;
+
         await appDatabase.into(appDatabase.orderItems).insert(
           OrderItemsCompanion.insert(
             orderId: orderId,
             itemId: itemModel.itemId,
             quantity: itemModel.quantity,
             unitPrice: itemModel.unitPrice,
+            // [Refactored]: حفظ التكلفة (Snapshot) بشكل دائم داخل الفاتورة
+            unitCost: Value(actualCost), 
             notes: Value(itemModel.notes),
           ),
         );
       }
 
-      // [ملاحظة هامة]: إذا كان status في جدول shifts هو Enum، 
-      // يجب تغييره هنا من 'active' إلى ShiftStatus.active مثلاً (حسب كيف عرفته في قاعدة البيانات).
       final shift = await (appDatabase.select(appDatabase.shifts)
             ..where((t) => t.id.equals(order.shiftId!) & t.status.equals('active')))
           .getSingleOrNull();
