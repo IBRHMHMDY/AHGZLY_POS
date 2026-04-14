@@ -1,5 +1,5 @@
 import 'dart:io';
-import 'package:ahgzly_pos/core/common/enums/enums_data.dart';
+import 'package:ahgzly_pos/core/utils/enums/enums_data.dart';
 import 'package:ahgzly_pos/core/database/types_converter.dart';
 import 'package:ahgzly_pos/core/utils/hash_util.dart';
 import 'package:drift/drift.dart';

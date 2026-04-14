@@ -1,4 +1,4 @@
-import 'package:ahgzly_pos/core/common/enums/enums_data.dart';
+import 'package:ahgzly_pos/core/utils/enums/enums_data.dart';
 import 'package:ahgzly_pos/core/common/users/entities/user_entity.dart';
 import 'package:dartz/dartz.dart';
 import 'package:ahgzly_pos/core/error/failures.dart';

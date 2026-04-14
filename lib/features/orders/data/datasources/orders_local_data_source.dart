@@ -1,7 +1,7 @@
 import 'package:ahgzly_pos/core/database/app_database.dart';
 import 'package:ahgzly_pos/core/error/exceptions.dart';
 import 'package:ahgzly_pos/features/orders/data/models/order_history_model.dart';
-import 'package:ahgzly_pos/core/common/enums/enums_data.dart'; // استيراد الـ Enum
+import 'package:ahgzly_pos/core/utils/enums/enums_data.dart'; // استيراد الـ Enum
 
 import 'package:drift/drift.dart';
 

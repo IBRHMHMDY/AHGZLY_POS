@@ -1,6 +1,6 @@
 // مسار الملف: lib/features/shift/data/models/shift_model.dart
 
-import 'package:ahgzly_pos/core/common/enums/enums_data.dart';
+import 'package:ahgzly_pos/core/utils/enums/enums_data.dart';
 import 'package:ahgzly_pos/core/database/app_database.dart'; // [Added] لاستخدام ShiftData
 import '../../domain/entities/shift_entity.dart';
 

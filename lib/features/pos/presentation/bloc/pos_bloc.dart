@@ -1,4 +1,5 @@
-import 'package:ahgzly_pos/core/common/enums/enums_data.dart';
+import 'package:ahgzly_pos/core/utils/enums/enums_data.dart';
+import 'package:ahgzly_pos/core/services/order_calculator_service.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:ahgzly_pos/core/usecases/usecase.dart'; 
 import 'package:ahgzly_pos/features/pos/domain/usecases/save_order_usecase.dart';
@@ -7,25 +8,23 @@ import 'package:ahgzly_pos/features/pos/presentation/bloc/pos_event.dart';
 import 'package:ahgzly_pos/features/pos/presentation/bloc/pos_state.dart';
 import 'package:ahgzly_pos/features/pos/domain/entities/order_entity.dart';
 import 'package:ahgzly_pos/features/pos/domain/entities/order_item_entity.dart';
+import 'package:ahgzly_pos/features/settings/domain/entities/app_settings_entity.dart';
 
 class PosBloc extends Bloc<PosEvent, PosState> {
   final SaveOrderUseCase saveOrderUseCase;
   final GetSettingsUseCase getSettingsUseCase;
+  final OrderCalculatorService calculatorService; // ✅ حقن خدمة الحسابات
 
   final List<CartItem> _cartItems = [];
-  OrderType _orderType = OrderType.takeaway; // القيمة الافتراضية الموحدة
+  OrderType _orderType = OrderType.takeaway;
   int _discountAmount = 0;
   
-  double _taxRate = 0.0;
-  double _serviceRate = 0.0;
-  int _deliveryFee = 0;
-  String _restaurantName = '';
-  String _taxNumber = '';
-  PrintMode _printMode = PrintMode.ask;
+  AppSettingsEntity? _appSettings; // ✅ تجميع الإعدادات في كائن واحد بدلاً من تشتيتها
 
   PosBloc({
     required this.saveOrderUseCase,
     required this.getSettingsUseCase,
+    required this.calculatorService,
   }) : super(PosInitial()) {
     on<ReloadSettingsEvent>(_onReloadSettings);
     on<AddItemToCartEvent>(_onAddItem);
@@ -35,7 +34,7 @@ class PosBloc extends Bloc<PosEvent, PosState> {
     on<ApplyDiscountEvent>(_onApplyDiscount);
     on<ClearCartEvent>(_onClearCart);
     on<SubmitOrderEvent>(_onSubmitOrder);
-    on<SaveOrderEvent>(_onSaveOrderLegacy); 
+    // ❌ [Refactored]: تم إزالة الحدث القديم _onSaveOrderLegacy لتنظيف الكود
 
     add(ReloadSettingsEvent());
   }
@@ -45,17 +44,10 @@ class PosBloc extends Bloc<PosEvent, PosState> {
     
     result.fold(
       (failure) {
-        // ✅ [Refactored]: عدم تجاهل الأخطاء. يجب إبلاغ الواجهة لكي تمنع الكاشير من البيع بإعدادات خاطئة
-        emit(PosError('فشل في تحميل إعدادات النظام (الضرائب والرسوم). يرجى التأكد من ضبط الإعدادات أولاً.'));
+        emit(PosError('فشل في تحميل إعدادات النظام. يرجى التأكد من ضبط الإعدادات أولاً.'));
       },
       (settings) {
-        _taxRate = settings.taxRate;
-        _serviceRate = settings.serviceRate;
-        _deliveryFee = settings.deliveryFee;
-        _restaurantName = settings.restaurantName;
-        _taxNumber = settings.taxNumber;
-        _printMode = settings.printMode;
-        
+        _appSettings = settings; // حفظ الإعدادات كاملة
         _emitUpdatedState(emit); 
       },
     );
@@ -108,30 +100,28 @@ class PosBloc extends Bloc<PosEvent, PosState> {
   }
 
   void _emitUpdatedState(Emitter<PosState> emit) {
-    int subTotal = _cartItems.fold(0, (sum, item) => sum + (item.item.price * item.quantity));
-    
-    int afterDiscount = subTotal - _discountAmount;
-    if (afterDiscount < 0) afterDiscount = 0;
+    if (_appSettings == null) return; // منع التحديث إذا لم تكن الإعدادات محملة
 
-    int taxAmount = (afterDiscount * _taxRate).round(); 
-    // الاعتماد بأمان على الـ Enums بدلاً من النصوص 
-    int serviceFee = _orderType == OrderType.dineIn ? (afterDiscount * _serviceRate).round() : 0;
-    int deliveryFee = _orderType == OrderType.delivery ? _deliveryFee : 0;
-    
-    int total = subTotal - _discountAmount + taxAmount + serviceFee + deliveryFee;
+    // ✅ الاعتماد على الـ Service للحسابات (Clean Architecture)
+    final totals = calculatorService.calculate(
+      cartItems: _cartItems,
+      orderType: _orderType,
+      discountAmount: _discountAmount,
+      settings: _appSettings!,
+    );
 
     emit(PosUpdated(
       cartItems: List.from(_cartItems), 
       orderType: _orderType,
-      subTotal: subTotal,
-      discountAmount: _discountAmount,
-      taxAmount: taxAmount,
-      serviceFee: serviceFee,
-      deliveryFee: deliveryFee,
-      total: total,
-      restaurantName: _restaurantName,
-      taxNumber: _taxNumber,
-      printMode: _printMode,
+      subTotal: totals.subTotal,
+      discountAmount: totals.discount,
+      taxAmount: totals.taxAmount,
+      serviceFee: totals.serviceFee,
+      deliveryFee: totals.deliveryFee,
+      total: totals.total,
+      restaurantName: _appSettings!.restaurantName,
+      taxNumber: _appSettings!.taxNumber,
+      printMode: _appSettings!.printMode,
     ));
   }
 
@@ -181,19 +171,9 @@ class PosBloc extends Bloc<PosEvent, PosState> {
         emit(PosCheckoutSuccess(orderId));
         _cartItems.clear();
         _discountAmount = 0;
-        // [Fixed]: توحيد القيمة الافتراضية بعد الطلب مع القيمة الموجودة في _onClearCart
         _orderType = OrderType.takeaway; 
         _emitUpdatedState(emit);
       },
-    );
-  }
-
-  Future<void> _onSaveOrderLegacy(SaveOrderEvent event, Emitter<PosState> emit) async {
-    emit(PosLoading());
-    final result = await saveOrderUseCase(SaveOrderParams(order: event.order));
-    result.fold(
-      (error) => emit(PosError(error.message)),
-      (id) => emit(PosCheckoutSuccess(id)),
     );
   }
 }

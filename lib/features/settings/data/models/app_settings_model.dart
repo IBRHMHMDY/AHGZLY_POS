@@ -1,5 +1,5 @@
 import 'package:ahgzly_pos/core/database/app_database.dart';
-import 'package:ahgzly_pos/core/extensions/print_mode.dart';
+import 'package:ahgzly_pos/core/utils/extensions/print_mode.dart';
 import 'package:ahgzly_pos/features/settings/domain/entities/app_settings_entity.dart';
 
 class AppSettingsModel extends AppSettingsEntity {

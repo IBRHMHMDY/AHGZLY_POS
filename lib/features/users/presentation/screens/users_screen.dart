@@ -1,4 +1,4 @@
-import 'package:ahgzly_pos/core/extensions/user_role.dart';
+import 'package:ahgzly_pos/core/utils/extensions/user_role.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:ahgzly_pos/features/users/presentation/bloc/users_bloc.dart';

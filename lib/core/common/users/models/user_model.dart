@@ -1,6 +1,6 @@
 import 'package:ahgzly_pos/core/database/app_database.dart'; // [Added]
 import 'package:ahgzly_pos/core/common/users/entities/user_entity.dart';
-import 'package:ahgzly_pos/core/extensions/user_role.dart';
+import 'package:ahgzly_pos/core/utils/extensions/user_role.dart';
 
 class UserModel extends User {
   const UserModel({

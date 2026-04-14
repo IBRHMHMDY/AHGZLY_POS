@@ -1,4 +1,5 @@
 import 'package:ahgzly_pos/core/database/app_database.dart';
+import 'package:ahgzly_pos/core/services/order_calculator_service.dart';
 import 'package:ahgzly_pos/features/auth/domain/usecases/unlock_usecase.dart';
 import 'package:ahgzly_pos/features/reports/data/datasource/reports_local_data_source.dart';
 import 'package:ahgzly_pos/features/reports/data/repositories/reports_repository_impl.dart';
@@ -144,6 +145,7 @@ void _initCore() {
     () => DeviceSecurityService(sl()),
   );
   sl.registerLazySingleton<TimeGuardService>(() => TimeGuardService(sl()));
+  sl.registerLazySingleton(() => OrderCalculatorService());
 }
 
 // ==========================================
@@ -235,7 +237,7 @@ void _initPos() {
     () => SaveOrderUseCase(posRepository: sl(), checkActiveShiftUseCase: sl()),
   );
   sl.registerFactory(
-    () => PosBloc(saveOrderUseCase: sl(), getSettingsUseCase: sl()),
+    () => PosBloc(saveOrderUseCase: sl(), getSettingsUseCase: sl(), calculatorService: sl(),),
   );
 }
 

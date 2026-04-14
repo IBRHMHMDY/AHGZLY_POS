@@ -4,7 +4,7 @@ import 'package:ahgzly_pos/core/database/app_database.dart';
 import 'package:ahgzly_pos/core/error/exceptions.dart';
 import 'package:ahgzly_pos/features/pos/data/models/order_model.dart';
 import 'package:ahgzly_pos/features/pos/data/models/order_item_model.dart';
-import 'package:ahgzly_pos/core/common/enums/enums_data.dart'; 
+import 'package:ahgzly_pos/core/utils/enums/enums_data.dart'; 
 import 'package:drift/drift.dart';
 
 abstract class PosLocalDataSource {

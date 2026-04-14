@@ -1,8 +1,8 @@
-import 'package:ahgzly_pos/core/common/enums/enums_data.dart';
+import 'package:ahgzly_pos/core/utils/enums/enums_data.dart';
 import 'package:ahgzly_pos/core/common/users/models/user_model.dart';
 import 'package:ahgzly_pos/core/database/app_database.dart'; 
 import 'package:ahgzly_pos/core/error/exceptions.dart';
-import 'package:ahgzly_pos/core/extensions/user_role.dart'; 
+import 'package:ahgzly_pos/core/utils/extensions/user_role.dart'; 
 import 'package:drift/drift.dart'; 
 
 abstract class UsersLocalDataSource {

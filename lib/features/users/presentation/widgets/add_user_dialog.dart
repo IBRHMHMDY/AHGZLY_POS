@@ -1,5 +1,5 @@
-import 'package:ahgzly_pos/core/common/enums/enums_data.dart';
-import 'package:ahgzly_pos/core/extensions/user_role.dart';
+import 'package:ahgzly_pos/core/utils/enums/enums_data.dart';
+import 'package:ahgzly_pos/core/utils/extensions/user_role.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';

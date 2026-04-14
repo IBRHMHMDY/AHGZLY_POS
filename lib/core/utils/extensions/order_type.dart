@@ -1,6 +1,6 @@
 
 
-import 'package:ahgzly_pos/core/common/enums/enums_data.dart';
+import 'package:ahgzly_pos/core/utils/enums/enums_data.dart';
 
 extension OrderTypeExtension on OrderType {
   // للحفظ في قاعدة البيانات

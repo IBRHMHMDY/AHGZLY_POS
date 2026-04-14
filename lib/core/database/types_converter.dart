@@ -1,8 +1,8 @@
-import 'package:ahgzly_pos/core/common/enums/enums_data.dart';
+import 'package:ahgzly_pos/core/utils/enums/enums_data.dart';
 import 'package:drift/drift.dart';
-import 'package:ahgzly_pos/core/extensions/order_status.dart';
-import 'package:ahgzly_pos/core/extensions/order_type.dart';
-import 'package:ahgzly_pos/core/extensions/payment_method.dart';
+import 'package:ahgzly_pos/core/utils/extensions/order_status.dart';
+import 'package:ahgzly_pos/core/utils/extensions/order_type.dart';
+import 'package:ahgzly_pos/core/utils/extensions/payment_method.dart';
 
 // ==========================================
 // 🔄 Type Converters (Clean Code Approach)

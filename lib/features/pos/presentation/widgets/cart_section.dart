@@ -1,8 +1,8 @@
 // مسار الملف: lib/features/pos/presentation/widgets/cart_section.dart
 
-import 'package:ahgzly_pos/core/common/enums/enums_data.dart';
-import 'package:ahgzly_pos/core/extensions/order_type.dart';
-import 'package:ahgzly_pos/core/extensions/payment_method.dart';
+import 'package:ahgzly_pos/core/utils/enums/enums_data.dart';
+import 'package:ahgzly_pos/core/utils/extensions/order_type.dart';
+import 'package:ahgzly_pos/core/utils/extensions/payment_method.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
