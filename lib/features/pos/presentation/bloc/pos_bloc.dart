@@ -165,6 +165,7 @@ class PosBloc extends Bloc<PosEvent, PosState> {
         itemId: c.item.id!,
         quantity: c.quantity,
         unitPrice: c.item.price,
+        unitCost: c.item.cost,
         notes: c.notes,
       )).toList(),
     );

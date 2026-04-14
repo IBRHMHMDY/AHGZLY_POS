@@ -1,3 +1,5 @@
+// مسار الملف: lib/features/menu/presentation/widgets/item_dialog.dart
+
 import 'package:ahgzly_pos/core/utils/money_formatter.dart';
 import 'package:ahgzly_pos/features/menu/domain/entities/category_entity.dart';
 import 'package:flutter/material.dart';
@@ -23,13 +25,23 @@ class _ItemDialogState extends State<ItemDialog> {
   final _formKey = GlobalKey<FormState>();
   late TextEditingController _nameController;
   late TextEditingController _priceController;
+  // [Refactored]: إضافة متحكم التكلفة
+  late TextEditingController _costController; 
   late int _selectedCategoryId;
 
   @override
   void initState() {
     super.initState();
     _nameController = TextEditingController(text: widget.item?.name ?? '');
-    _priceController = TextEditingController(text: widget.item != null ? MoneyFormatter.format(widget.item!.price) : '');
+    
+    // استخدام MoneyFormatter لعرض السعر والتكلفة بشكل صحيح من Cents إلى Double
+    _priceController = TextEditingController(
+        text: widget.item != null ? MoneyFormatter.format(widget.item!.price) : '');
+    
+    // [Refactored]: تهيئة متحكم التكلفة باستخدام MoneyFormatter
+    _costController = TextEditingController(
+        text: widget.item != null ? MoneyFormatter.format(widget.item!.cost) : '');
+        
     _selectedCategoryId = widget.item?.categoryId ?? widget.initialCategoryId;
   }
 
@@ -37,18 +49,24 @@ class _ItemDialogState extends State<ItemDialog> {
   void dispose() {
     _nameController.dispose();
     _priceController.dispose();
+    // [Refactored]: تنظيف الذاكرة
+    _costController.dispose(); 
     super.dispose();
   }
 
   void _submit() {
     if (_formKey.currentState!.validate()) {
       final priceDouble = double.tryParse(_priceController.text.trim()) ?? 0.0;
+      // [Refactored]: استخراج قيمة التكلفة بشكل آمن
+      final costDouble = double.tryParse(_costController.text.trim()) ?? 0.0; 
       
       final newItem = ItemEntity(
         id: widget.item?.id,
         categoryId: _selectedCategoryId,
         name: _nameController.text.trim(),
+        // [Refactored]: استخدام MoneyFormatter للتحويل إلى Cents
         price: MoneyFormatter.toCents(priceDouble),
+        cost: MoneyFormatter.toCents(costDouble), 
         createdAt: widget.item?.createdAt ?? DateTime.now(),
         updatedAt: DateTime.now(),
       );
@@ -93,7 +111,14 @@ class _ItemDialogState extends State<ItemDialog> {
                   const SizedBox(height: 20),
                   
                   // 🪄 3. سعر الصنف
-                  _buildPriceInput(),
+                  Row(
+                    children: [
+                      Expanded(child: _buildPriceInput()),
+                      const SizedBox(width: 16),
+                      // 🪄 4. تكلفة الصنف (مبنية بنفس أسلوب تصميمك الموحد)
+                      Expanded(child: _buildCostInput()),
+                    ],
+                  ),
                 ],
               ),
             ),
@@ -141,12 +166,30 @@ class _ItemDialogState extends State<ItemDialog> {
       controller: _priceController,
       keyboardType: const TextInputType.numberWithOptions(decimal: true),
       style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900, color: Colors.teal.shade800),
-      decoration: _inputDecoration(label: 'سعر الصنف', icon: Icons.attach_money).copyWith(
+      decoration: _inputDecoration(label: 'سعر البيع', icon: Icons.attach_money).copyWith(
         suffixText: 'ج.م',
         suffixStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.grey),
       ),
       validator: (value) {
         if (value == null || value.trim().isEmpty) return 'يرجى إدخال السعر';
+        if (double.tryParse(value.trim()) == null) return 'رقم غير صحيح';
+        return null;
+      },
+    );
+  }
+
+  // [Refactored]: تمت إضافة الدالة بشكل مطابق تماماً لـ _buildPriceInput للحفاظ على التناسق 
+  Widget _buildCostInput() {
+    return TextFormField(
+      controller: _costController,
+      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+      style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900, color: Colors.red.shade800), // تمييز لون التكلفة لتجنب الخطأ
+      decoration: _inputDecoration(label: 'سعر التكلفة', icon: Icons.money_off).copyWith(
+        suffixText: 'ج.م',
+        suffixStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.grey),
+      ),
+      validator: (value) {
+        if (value == null || value.trim().isEmpty) return 'يرجى إدخال التكلفة';
         if (double.tryParse(value.trim()) == null) return 'رقم غير صحيح';
         return null;
       },
@@ -172,6 +215,7 @@ class _ItemDialogState extends State<ItemDialog> {
   }
 }
 
+// ... باقي الكود (_DialogHeader و _DialogActions) كما هي تماماً بدون مساس ...
 class _DialogHeader extends StatelessWidget {
   final String title;
   final IconData icon;
