@@ -1,4 +1,5 @@
 import 'package:ahgzly_pos/core/database/app_database.dart';
+import 'package:ahgzly_pos/features/auth/domain/usecases/unlock_usecase.dart';
 import 'package:ahgzly_pos/features/shift/domain/usecases/check_active_shift_usecase.dart';
 import 'package:ahgzly_pos/features/shift/domain/usecases/open_shift_usecase.dart';
 import 'package:get_it/get_it.dart';
@@ -147,6 +148,7 @@ void _initAuth() {
   sl.registerLazySingleton<AuthRepository>(() => AuthRepositoryImpl(localDataSource: sl()));
   sl.registerLazySingleton(() => LoginUseCase(sl()));
   sl.registerLazySingleton(() => LogoutUseCase(sl()));
+  sl.registerLazySingleton(() => UnlockUseCase(sl()));
   sl.registerLazySingleton(() => AuthBloc(loginUseCase: sl(), logoutUseCase: sl(), unlockUseCase: sl()));
 }
 

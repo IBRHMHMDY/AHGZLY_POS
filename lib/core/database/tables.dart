@@ -63,7 +63,7 @@ class Shifts extends Table {
   IntColumn get totalExpenses => integer().withDefault(const Constant(0))();
   IntColumn get expectedCash => integer().withDefault(const Constant(0))();
   IntColumn get actualCash => integer().withDefault(const Constant(0))();
-  TextColumn get status => text()(); // إذا كان هناك ShiftStatus Enum في المستقبل، سنضيف له Converter
+  TextColumn get status => text()();
 }
 
 // 5. جدول الأقسام

@@ -490,7 +490,6 @@ class ZReportReceiptWidget extends StatelessWidget {
         ? 'عجز في الدرج:'
         : (shift.shortageOrOverage > 0 ? 'زيادة في الدرج:' : 'مطابقة تامة:');
 
-    // تنسيق التواريخ بشكل مقروء وأنيق (مثال: 2023-10-25 04:30 PM)
     final dateFormat = intlDateTime.DateFormat('yyyy-MM-dd hh:mm a');
     final startTimeFormatted = dateFormat.format(shift.startTime);
     final endTimeFormatted = shift.endTime != null
@@ -501,249 +500,131 @@ class ZReportReceiptWidget extends StatelessWidget {
         ? 'ملخص مبيعات الوردية (X-Report)'
         : 'تقرير إغلاق الوردية (Z-Report)';
 
-    return Container(
-      width: 350,
+    // 🪄 تغليف الكود بـ Material يمنع تحطم ScreenshotController عند تحويل الـ Widget لصورة
+    return Material(
       color: Colors.white,
-      padding: const EdgeInsets.all(16.0),
-      child: Directionality(
-        textDirection: TextDirection.rtl,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Text(
-              restaurantName,
-              style: const TextStyle(
-                fontSize: 28,
-                fontWeight: FontWeight.bold,
-                color: Colors.black,
+      child: Container(
+        width: 350,
+        padding: const EdgeInsets.all(16.0),
+        child: Directionality(
+          textDirection: TextDirection.rtl,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Text(
+                restaurantName,
+                style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.black),
               ),
-            ),
-            const SizedBox(height: 10),
-            Text(
-              reportTitle,
-              style: const TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: Colors.black,
+              const SizedBox(height: 10),
+              Text(
+                reportTitle,
+                style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black),
               ),
-            ),
-            const Divider(color: Colors.black, thickness: 2),
+              const Divider(color: Colors.black, thickness: 2),
 
-            // توثيق الأوقات
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text(
-                  'بداية الوردية:',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black,
-                  ),
-                ),
-                Text(
-                  startTimeFormatted,
-                  style: const TextStyle(fontSize: 16, color: Colors.black),
-                ),
-              ],
-            ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text('بداية الوردية:', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black)),
+                  Text(startTimeFormatted, style: const TextStyle(fontSize: 16, color: Colors.black)),
+                ],
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(isXReport ? 'وقت الطباعة:' : 'نهاية الوردية:', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black)),
+                  Text(endTimeFormatted, style: const TextStyle(fontSize: 16, color: Colors.black)),
+                ],
+              ),
 
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  isXReport ? 'وقت الطباعه:' : 'نهاية الوردية:',
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black,
-                  ),
-                ),
-                Text(
-                  endTimeFormatted,
-                  style: const TextStyle(fontSize: 16, color: Colors.black),
-                ),
-              ],
-            ),
+              const Divider(color: Colors.black, thickness: 2),
+              _buildRow('العهدة الافتتاحية:', shift.startingCash),
+              _buildRow('إجمالي المبيعات:', shift.totalSales),
+              _buildRow('مبيعات الكاش:', shift.totalCash),
+              _buildRow('مبيعات الفيزا:', shift.totalVisa),
+              _buildRow('مبيعات إنستاباي:', shift.totalInstapay),
+              const Divider(color: Colors.black, thickness: 1),
+              
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text('عدد طلبات المرتجع:', style: TextStyle(fontSize: 16, color: Colors.black)),
+                  // 🪄 تم إصلاح الخطأ المنطقي: استخدام refundedOrdersCount بدلاً من totalOrders
+                  Text('${shift.refundedOrdersCount}', style: const TextStyle(fontSize: 16, color: Colors.black)),
+                ],
+              ),
+              _buildRow('إجمالي المرتجعات:', shift.totalRefunds),
+              const Divider(color: Colors.black, thickness: 1),
+              _buildRow('إجمالي المصروفات:', shift.totalExpenses),
+              const Divider(color: Colors.black, thickness: 2),
 
-            const Divider(color: Colors.black, thickness: 2),
-            _buildRow('العهدة الافتتاحية:', shift.startingCash),
-            _buildRow('إجمالي المبيعات:', shift.totalSales),
-            _buildRow('مبيعات الكاش:', shift.totalCash),
-            _buildRow('مبيعات الفيزا:', shift.totalVisa),
-            _buildRow('مبيعات إنستاباي:', shift.totalInstapay),
-            const Divider(color: Colors.black, thickness: 1),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text(
-                  'عدد طلبات المرتجع:',
-                  style: TextStyle(fontSize: 16, color: Colors.black),
-                ),
-                Text(
-                  '${shift.totalOrders}',
-                  style: const TextStyle(fontSize: 16, color: Colors.black),
-                ),
-              ],
-            ),
-            _buildRow('إجمالي المرتجعات:', shift.totalRefunds),
-            const Divider(color: Colors.black, thickness: 1),
-            _buildRow('إجمالي المصروفات:', shift.totalExpenses),
-            const Divider(color: Colors.black, thickness: 2),
-
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Expanded(
-                  child: Text(
-                    'النقدية المتوقعة:',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black,
-                    ),
-                  ),
-                ),
-                FittedBox(
-                  fit: BoxFit.scaleDown,
-                  child: Text(
-                    '${MoneyFormatter.format(shift.expectedCash)} ج.م',
-                    style: const TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-
-            // 🪄 التعديل الجوهري (Refactoring): إخفاء النقدية الفعلية والعجز في حالة الـ X-Report
-            if (!isXReport) ...[
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   const Expanded(
-                    child: Text(
-                      'النقدية الفعلية:',
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black,
-                      ),
-                    ),
+                    child: Text('النقدية المتوقعة:', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black)),
                   ),
                   FittedBox(
                     fit: BoxFit.scaleDown,
-                    child: Text(
-                      '${MoneyFormatter.format(shift.actualCash)} ج.م',
-                      style: const TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black,
-                      ),
-                    ),
+                    child: Text('${MoneyFormatter.format(shift.expectedCash)} ج.م', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black)),
                   ),
                 ],
               ),
+
+              if (!isXReport) ...[
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Expanded(
+                      child: Text('النقدية الفعلية:', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black)),
+                    ),
+                    FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text('${MoneyFormatter.format(shift.actualCash)} ج.م', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black)),
+                    ),
+                  ],
+                ),
+                const Divider(color: Colors.black, thickness: 2),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                      child: Text(diffLabel, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black)),
+                    ),
+                    FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text('${MoneyFormatter.format(shift.shortageOrOverage.abs())} ج.م', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black)),
+                    ),
+                  ],
+                ),
+              ],
+
               const Divider(color: Colors.black, thickness: 2),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Expanded(
-                    child: Text(
-                      diffLabel,
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black,
-                      ),
-                    ),
-                  ),
-                  FittedBox(
-                    fit: BoxFit.scaleDown,
-                    child: Text(
-                      '${MoneyFormatter.format(shift.shortageOrOverage.abs())} ج.م',
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black,
-                      ),
-                    ),
-                  ),
+                  const Text('إجمالي عدد الطلبات:', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black)),
+                  Text('${shift.totalOrders}', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black)),
                 ],
               ),
+              const SizedBox(height: 20),
+              Padding(
+                padding: const EdgeInsets.all(15),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text('الكاشير:', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black)),
+                    Text(cashierName, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black)),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 15),
+              const Text('توقيع المـديـر: ..................................', style: TextStyle(fontSize: 16, color: Colors.black)),
+              const SizedBox(height: 20),
+              Text('طُبع في: ${dateFormat.format(DateTime.now())}', style: const TextStyle(fontSize: 14, color: Colors.black)),
             ],
-
-            const Divider(color: Colors.black, thickness: 2),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text(
-                  'إجمالي عدد الطلبات:',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black,
-                  ),
-                ),
-                Text(
-                  '${shift.totalOrders}',
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 20),
-            Padding(
-              padding: const EdgeInsets.all(15),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    'الكاشير:',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black,
-                    ),
-                  ),
-                  Text(
-                    cashierName,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 15),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                const Text(
-                  'توقيع المـديـر: ..................................',
-                  style: TextStyle(fontSize: 16, color: Colors.black),
-                ),
-              ],
-            ),
-            const SizedBox(height: 20),
-            Text(
-              'طُبع في: ${dateFormat.format(DateTime.now())}',
-              style: const TextStyle(fontSize: 14, color: Colors.black),
-            ),
-            const SizedBox(height: 10),
-            Text(
-              'مع تحيات Ibrahim Hamdy',
-              style: TextStyle(fontSize: 12, color: Colors.black),
-            ),
-          ],
+          ),
         ),
       ),
     );

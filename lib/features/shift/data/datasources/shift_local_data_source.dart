@@ -1,5 +1,4 @@
-// مسار الملف: lib/features/shift/data/datasources/shift_local_data_source.dart
-
+import 'package:ahgzly_pos/core/common/enums/enums_data.dart'; // 🪄 استيراد الـ Enum
 import 'package:ahgzly_pos/core/database/app_database.dart'; 
 import 'package:ahgzly_pos/core/error/exceptions.dart';
 import 'package:ahgzly_pos/features/shift/data/models/shift_model.dart';
@@ -20,16 +19,15 @@ class ShiftLocalDataSourceImpl implements ShiftLocalDataSource {
   Future<ShiftModel?> getActiveShift() async {
     try {
       final shift = await (appDatabase.select(appDatabase.shifts)
-            ..where((t) => t.status.equals('active')))
+            ..where((t) => t.status.equals(ShiftStatus.active.name))) // 🪄 استخدام الـ Enum
           .getSingleOrNull();
 
       if (shift != null) {
-        // [Refactor]: تمرير الكائن مباشرة للـ Factory
         return ShiftModel.fromDrift(shift);
       }
       return null;
     } catch (e) {
-      throw CacheException('فشل في جلب الوردية النشطة: $e'); // توحيد نوع الـ Exception
+      throw CacheException('فشل في جلب الوردية النشطة: $e'); 
     }
   }
 
@@ -39,11 +37,10 @@ class ShiftLocalDataSourceImpl implements ShiftLocalDataSource {
       final id = await appDatabase.into(appDatabase.shifts).insert(
             ShiftsCompanion.insert(
               cashierId: Value(cashierId),
-              // [Refactor]: تمرير DateTime مباشرة وليس نص
               startTime: DateTime.now(), 
               startingCash: Value(startingCash),
               expectedCash: Value(startingCash), 
-              status: 'active', 
+              status: ShiftStatus.active.name, // 🪄 استخدام الـ Enum
             ),
           );
 
@@ -64,10 +61,9 @@ class ShiftLocalDataSourceImpl implements ShiftLocalDataSource {
             ..where((t) => t.id.equals(shiftId)))
           .write(
         ShiftsCompanion(
-          // [Refactor]: تمرير DateTime مباشرة وليس نص
           endTime: Value(DateTime.now()),
           actualCash: Value(actualCash),
-          status: const Value('closed'),
+          status: Value(ShiftStatus.closed.name),
         ),
       );
 

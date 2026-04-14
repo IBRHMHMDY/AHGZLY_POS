@@ -7,3 +7,5 @@ enum PaymentMethod { cash, visa, wallet, unpaid } // wallet for InstaPay/Vodafon
 enum PrintMode { ask, customer, kitchen, both }
 
 enum UserRole { admin, cashier }
+
+enum ShiftStatus { active, closed }

@@ -1,5 +1,6 @@
 // مسار الملف: lib/features/shift/domain/entities/shift.dart
 
+import 'package:ahgzly_pos/core/common/enums/enums_data.dart';
 import 'package:equatable/equatable.dart';
 
 class ShiftEntity extends Equatable {
@@ -22,7 +23,7 @@ class ShiftEntity extends Equatable {
   
   final int expectedCash; // Refactored: int (Cents)
   final int actualCash; // Refactored: int (Cents)
-  final String status;
+  final ShiftStatus status;
 
   const ShiftEntity({
     required this.id,

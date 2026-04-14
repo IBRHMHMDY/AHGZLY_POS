@@ -4,9 +4,6 @@ import 'package:ahgzly_pos/core/extensions/order_status.dart';
 import 'package:ahgzly_pos/core/extensions/order_type.dart';
 import 'package:ahgzly_pos/core/extensions/payment_method.dart';
 
-
-
-
 // ==========================================
 // 🔄 Type Converters (Clean Code Approach)
 // ==========================================
@@ -58,3 +55,19 @@ class PaymentMethodConverter extends TypeConverter<PaymentMethod, String> {
   @override
   String toSql(PaymentMethod value) => value.toValue();
 }
+
+// 5. محول خاص بحالة الوردية (ShiftStatus)
+class ShiftStatusConverter extends TypeConverter<ShiftStatus, String> {
+  const ShiftStatusConverter();
+
+  @override
+  ShiftStatus fromSql(String fromDb) {
+    return ShiftStatus.values.firstWhere((e) => e.name == fromDb, orElse: () => ShiftStatus.closed);
+  }
+
+  @override
+  String toSql(ShiftStatus value) {
+    return value.name;
+  }
+}
+

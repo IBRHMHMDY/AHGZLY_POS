@@ -1,5 +1,6 @@
 // مسار الملف: lib/features/shift/data/models/shift_model.dart
 
+import 'package:ahgzly_pos/core/common/enums/enums_data.dart';
 import 'package:ahgzly_pos/core/database/app_database.dart'; // [Added] لاستخدام ShiftData
 import '../../domain/entities/shift_entity.dart';
 
@@ -23,7 +24,6 @@ class ShiftModel extends ShiftEntity {
     required super.status,
   });
 
-  // [Refactor]: قراءة البيانات مباشرة من Drift بدون الحاجة لـ Map أو DateTime.parse
   factory ShiftModel.fromDrift(ShiftData data) {
     return ShiftModel(
       id: data.id,
@@ -41,7 +41,7 @@ class ShiftModel extends ShiftEntity {
       totalExpenses: data.totalExpenses,
       expectedCash: data.expectedCash,
       actualCash: data.actualCash,
-      status: data.status,
+      status: ShiftStatus.values.firstWhere((e) => e.name == data.status, orElse: () => ShiftStatus.closed),
     );
   }
 }
