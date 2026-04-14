@@ -1,3 +1,4 @@
+import 'package:ahgzly_pos/features/reports/presentation/bloc/reports_bloc.dart';
 import 'package:ahgzly_pos/features/users/presentation/bloc/users_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -31,6 +32,7 @@ class AppProviders extends StatelessWidget {
         BlocProvider(create: (_) => di.sl<OrdersBloc>()),
         BlocProvider(create: (_) => di.sl<ExpensesBloc>()),
         BlocProvider(create: (_) => di.sl<UsersBloc>()),
+        BlocProvider(create: (_) => di.sl<ReportsBloc>()),
       ],
       child: child,
     );

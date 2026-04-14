@@ -1,5 +1,8 @@
 // المسار: lib/features/admin_dashboard/presentation/screens/admin_dashboard_screen.dart
 
+import 'package:ahgzly_pos/features/reports/presentation/bloc/reports_bloc.dart';
+import 'package:ahgzly_pos/features/reports/presentation/bloc/reports_event.dart';
+import 'package:ahgzly_pos/features/reports/presentation/screens/reports_dashboard_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -25,11 +28,12 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
 
   // [Refactored]: ترتيب الشاشات المعروضة في لوحة الإدارة
   final List<Widget> _screens = const [
-    PosScreen(),       // 0: نقطة البيع
-    MenuScreen(),      // 1: إدارة المنيو
-    ExpensesScreen(),  // 2: المصروفات
-    UsersScreen(),     // 3: المستخدمين
-    SettingsScreen(),  // 4: الإعدادات
+    ReportsDashboardScreen(), // 0: التقارير
+    PosScreen(),       // 1: نقطة البيع
+    MenuScreen(),      // 2: إدارة المنيو
+    ExpensesScreen(),  // 3: المصروفات
+    UsersScreen(),     // 4: المستخدمين
+    SettingsScreen(),  // 5: الإعدادات
   ];
 
   @override
@@ -44,9 +48,17 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               setState(() {
                 _selectedIndex = index;
               });
+              if (index == 0) {
+                 context.read<ReportsBloc>().add(RefreshReportsEvent());
+              }
             },
             labelType: NavigationRailLabelType.all,
             destinations: const [
+              NavigationRailDestination(
+                icon: Icon(Icons.dashboard_outlined),
+                selectedIcon: Icon(Icons.dashboard),
+                label: Text('التقارير'),
+              ),
               NavigationRailDestination(
                 icon: Icon(Icons.point_of_sale_outlined),
                 selectedIcon: Icon(Icons.point_of_sale),
