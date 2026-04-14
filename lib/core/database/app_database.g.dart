@@ -21,18 +21,18 @@ class $LicenseTable extends License with TableInfo<$LicenseTable, LicenseData> {
       'PRIMARY KEY AUTOINCREMENT',
     ),
   );
-  static const VerificationMeta _isActivatedMeta = const VerificationMeta(
-    'isActivated',
+  static const VerificationMeta _isValidMeta = const VerificationMeta(
+    'isValid',
   );
   @override
-  late final GeneratedColumn<bool> isActivated = GeneratedColumn<bool>(
-    'is_activated',
+  late final GeneratedColumn<bool> isValid = GeneratedColumn<bool>(
+    'is_valid',
     aliasedName,
     false,
     type: DriftSqlType.bool,
     requiredDuringInsert: false,
     defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'CHECK ("is_activated" IN (0, 1))',
+      'CHECK ("is_valid" IN (0, 1))',
     ),
     defaultValue: const Constant(false),
   );
@@ -49,21 +49,32 @@ class $LicenseTable extends License with TableInfo<$LicenseTable, LicenseData> {
     defaultValue: const Constant(""),
   );
   @override
-  late final GeneratedColumnWithTypeConverter<DateTime, String> trialStartDate =
+  late final GeneratedColumnWithTypeConverter<DateTime?, String> expiryDate =
       GeneratedColumn<String>(
-        'trial_start_date',
+        'expiry_date',
         aliasedName,
-        false,
+        true,
         type: DriftSqlType.string,
         requiredDuringInsert: false,
-        defaultValue: const Constant("1970-01-01T00:00:00.000"),
-      ).withConverter<DateTime>($LicenseTable.$convertertrialStartDate);
+      ).withConverter<DateTime?>($LicenseTable.$converterexpiryDaten);
+  static const VerificationMeta _deviceIdMeta = const VerificationMeta(
+    'deviceId',
+  );
+  @override
+  late final GeneratedColumn<String> deviceId = GeneratedColumn<String>(
+    'device_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
-    isActivated,
+    isValid,
     licenseKey,
-    trialStartDate,
+    expiryDate,
+    deviceId,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -80,19 +91,22 @@ class $LicenseTable extends License with TableInfo<$LicenseTable, LicenseData> {
     if (data.containsKey('id')) {
       context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
     }
-    if (data.containsKey('is_activated')) {
+    if (data.containsKey('is_valid')) {
       context.handle(
-        _isActivatedMeta,
-        isActivated.isAcceptableOrUnknown(
-          data['is_activated']!,
-          _isActivatedMeta,
-        ),
+        _isValidMeta,
+        isValid.isAcceptableOrUnknown(data['is_valid']!, _isValidMeta),
       );
     }
     if (data.containsKey('license_key')) {
       context.handle(
         _licenseKeyMeta,
         licenseKey.isAcceptableOrUnknown(data['license_key']!, _licenseKeyMeta),
+      );
+    }
+    if (data.containsKey('device_id')) {
+      context.handle(
+        _deviceIdMeta,
+        deviceId.isAcceptableOrUnknown(data['device_id']!, _deviceIdMeta),
       );
     }
     return context;
@@ -108,19 +122,23 @@ class $LicenseTable extends License with TableInfo<$LicenseTable, LicenseData> {
         DriftSqlType.int,
         data['${effectivePrefix}id'],
       )!,
-      isActivated: attachedDatabase.typeMapping.read(
+      isValid: attachedDatabase.typeMapping.read(
         DriftSqlType.bool,
-        data['${effectivePrefix}is_activated'],
+        data['${effectivePrefix}is_valid'],
       )!,
       licenseKey: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}license_key'],
       )!,
-      trialStartDate: $LicenseTable.$convertertrialStartDate.fromSql(
+      expiryDate: $LicenseTable.$converterexpiryDaten.fromSql(
         attachedDatabase.typeMapping.read(
           DriftSqlType.string,
-          data['${effectivePrefix}trial_start_date'],
-        )!,
+          data['${effectivePrefix}expiry_date'],
+        ),
+      ),
+      deviceId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}device_id'],
       ),
     );
   }
@@ -130,31 +148,38 @@ class $LicenseTable extends License with TableInfo<$LicenseTable, LicenseData> {
     return $LicenseTable(attachedDatabase, alias);
   }
 
-  static TypeConverter<DateTime, String> $convertertrialStartDate =
+  static TypeConverter<DateTime, String> $converterexpiryDate =
       const DateTimeConverter();
+  static TypeConverter<DateTime?, String?> $converterexpiryDaten =
+      NullAwareTypeConverter.wrap($converterexpiryDate);
 }
 
 class LicenseData extends DataClass implements Insertable<LicenseData> {
   final int id;
-  final bool isActivated;
+  final bool isValid;
   final String licenseKey;
-  final DateTime trialStartDate;
+  final DateTime? expiryDate;
+  final String? deviceId;
   const LicenseData({
     required this.id,
-    required this.isActivated,
+    required this.isValid,
     required this.licenseKey,
-    required this.trialStartDate,
+    this.expiryDate,
+    this.deviceId,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     map['id'] = Variable<int>(id);
-    map['is_activated'] = Variable<bool>(isActivated);
+    map['is_valid'] = Variable<bool>(isValid);
     map['license_key'] = Variable<String>(licenseKey);
-    {
-      map['trial_start_date'] = Variable<String>(
-        $LicenseTable.$convertertrialStartDate.toSql(trialStartDate),
+    if (!nullToAbsent || expiryDate != null) {
+      map['expiry_date'] = Variable<String>(
+        $LicenseTable.$converterexpiryDaten.toSql(expiryDate),
       );
+    }
+    if (!nullToAbsent || deviceId != null) {
+      map['device_id'] = Variable<String>(deviceId);
     }
     return map;
   }
@@ -162,9 +187,14 @@ class LicenseData extends DataClass implements Insertable<LicenseData> {
   LicenseCompanion toCompanion(bool nullToAbsent) {
     return LicenseCompanion(
       id: Value(id),
-      isActivated: Value(isActivated),
+      isValid: Value(isValid),
       licenseKey: Value(licenseKey),
-      trialStartDate: Value(trialStartDate),
+      expiryDate: expiryDate == null && nullToAbsent
+          ? const Value.absent()
+          : Value(expiryDate),
+      deviceId: deviceId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deviceId),
     );
   }
 
@@ -175,9 +205,10 @@ class LicenseData extends DataClass implements Insertable<LicenseData> {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return LicenseData(
       id: serializer.fromJson<int>(json['id']),
-      isActivated: serializer.fromJson<bool>(json['isActivated']),
+      isValid: serializer.fromJson<bool>(json['isValid']),
       licenseKey: serializer.fromJson<String>(json['licenseKey']),
-      trialStartDate: serializer.fromJson<DateTime>(json['trialStartDate']),
+      expiryDate: serializer.fromJson<DateTime?>(json['expiryDate']),
+      deviceId: serializer.fromJson<String?>(json['deviceId']),
     );
   }
   @override
@@ -185,35 +216,37 @@ class LicenseData extends DataClass implements Insertable<LicenseData> {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
       'id': serializer.toJson<int>(id),
-      'isActivated': serializer.toJson<bool>(isActivated),
+      'isValid': serializer.toJson<bool>(isValid),
       'licenseKey': serializer.toJson<String>(licenseKey),
-      'trialStartDate': serializer.toJson<DateTime>(trialStartDate),
+      'expiryDate': serializer.toJson<DateTime?>(expiryDate),
+      'deviceId': serializer.toJson<String?>(deviceId),
     };
   }
 
   LicenseData copyWith({
     int? id,
-    bool? isActivated,
+    bool? isValid,
     String? licenseKey,
-    DateTime? trialStartDate,
+    Value<DateTime?> expiryDate = const Value.absent(),
+    Value<String?> deviceId = const Value.absent(),
   }) => LicenseData(
     id: id ?? this.id,
-    isActivated: isActivated ?? this.isActivated,
+    isValid: isValid ?? this.isValid,
     licenseKey: licenseKey ?? this.licenseKey,
-    trialStartDate: trialStartDate ?? this.trialStartDate,
+    expiryDate: expiryDate.present ? expiryDate.value : this.expiryDate,
+    deviceId: deviceId.present ? deviceId.value : this.deviceId,
   );
   LicenseData copyWithCompanion(LicenseCompanion data) {
     return LicenseData(
       id: data.id.present ? data.id.value : this.id,
-      isActivated: data.isActivated.present
-          ? data.isActivated.value
-          : this.isActivated,
+      isValid: data.isValid.present ? data.isValid.value : this.isValid,
       licenseKey: data.licenseKey.present
           ? data.licenseKey.value
           : this.licenseKey,
-      trialStartDate: data.trialStartDate.present
-          ? data.trialStartDate.value
-          : this.trialStartDate,
+      expiryDate: data.expiryDate.present
+          ? data.expiryDate.value
+          : this.expiryDate,
+      deviceId: data.deviceId.present ? data.deviceId.value : this.deviceId,
     );
   }
 
@@ -221,67 +254,77 @@ class LicenseData extends DataClass implements Insertable<LicenseData> {
   String toString() {
     return (StringBuffer('LicenseData(')
           ..write('id: $id, ')
-          ..write('isActivated: $isActivated, ')
+          ..write('isValid: $isValid, ')
           ..write('licenseKey: $licenseKey, ')
-          ..write('trialStartDate: $trialStartDate')
+          ..write('expiryDate: $expiryDate, ')
+          ..write('deviceId: $deviceId')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(id, isActivated, licenseKey, trialStartDate);
+  int get hashCode =>
+      Object.hash(id, isValid, licenseKey, expiryDate, deviceId);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is LicenseData &&
           other.id == this.id &&
-          other.isActivated == this.isActivated &&
+          other.isValid == this.isValid &&
           other.licenseKey == this.licenseKey &&
-          other.trialStartDate == this.trialStartDate);
+          other.expiryDate == this.expiryDate &&
+          other.deviceId == this.deviceId);
 }
 
 class LicenseCompanion extends UpdateCompanion<LicenseData> {
   final Value<int> id;
-  final Value<bool> isActivated;
+  final Value<bool> isValid;
   final Value<String> licenseKey;
-  final Value<DateTime> trialStartDate;
+  final Value<DateTime?> expiryDate;
+  final Value<String?> deviceId;
   const LicenseCompanion({
     this.id = const Value.absent(),
-    this.isActivated = const Value.absent(),
+    this.isValid = const Value.absent(),
     this.licenseKey = const Value.absent(),
-    this.trialStartDate = const Value.absent(),
+    this.expiryDate = const Value.absent(),
+    this.deviceId = const Value.absent(),
   });
   LicenseCompanion.insert({
     this.id = const Value.absent(),
-    this.isActivated = const Value.absent(),
+    this.isValid = const Value.absent(),
     this.licenseKey = const Value.absent(),
-    this.trialStartDate = const Value.absent(),
+    this.expiryDate = const Value.absent(),
+    this.deviceId = const Value.absent(),
   });
   static Insertable<LicenseData> custom({
     Expression<int>? id,
-    Expression<bool>? isActivated,
+    Expression<bool>? isValid,
     Expression<String>? licenseKey,
-    Expression<String>? trialStartDate,
+    Expression<String>? expiryDate,
+    Expression<String>? deviceId,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
-      if (isActivated != null) 'is_activated': isActivated,
+      if (isValid != null) 'is_valid': isValid,
       if (licenseKey != null) 'license_key': licenseKey,
-      if (trialStartDate != null) 'trial_start_date': trialStartDate,
+      if (expiryDate != null) 'expiry_date': expiryDate,
+      if (deviceId != null) 'device_id': deviceId,
     });
   }
 
   LicenseCompanion copyWith({
     Value<int>? id,
-    Value<bool>? isActivated,
+    Value<bool>? isValid,
     Value<String>? licenseKey,
-    Value<DateTime>? trialStartDate,
+    Value<DateTime?>? expiryDate,
+    Value<String?>? deviceId,
   }) {
     return LicenseCompanion(
       id: id ?? this.id,
-      isActivated: isActivated ?? this.isActivated,
+      isValid: isValid ?? this.isValid,
       licenseKey: licenseKey ?? this.licenseKey,
-      trialStartDate: trialStartDate ?? this.trialStartDate,
+      expiryDate: expiryDate ?? this.expiryDate,
+      deviceId: deviceId ?? this.deviceId,
     );
   }
 
@@ -291,16 +334,19 @@ class LicenseCompanion extends UpdateCompanion<LicenseData> {
     if (id.present) {
       map['id'] = Variable<int>(id.value);
     }
-    if (isActivated.present) {
-      map['is_activated'] = Variable<bool>(isActivated.value);
+    if (isValid.present) {
+      map['is_valid'] = Variable<bool>(isValid.value);
     }
     if (licenseKey.present) {
       map['license_key'] = Variable<String>(licenseKey.value);
     }
-    if (trialStartDate.present) {
-      map['trial_start_date'] = Variable<String>(
-        $LicenseTable.$convertertrialStartDate.toSql(trialStartDate.value),
+    if (expiryDate.present) {
+      map['expiry_date'] = Variable<String>(
+        $LicenseTable.$converterexpiryDaten.toSql(expiryDate.value),
       );
+    }
+    if (deviceId.present) {
+      map['device_id'] = Variable<String>(deviceId.value);
     }
     return map;
   }
@@ -309,9 +355,10 @@ class LicenseCompanion extends UpdateCompanion<LicenseData> {
   String toString() {
     return (StringBuffer('LicenseCompanion(')
           ..write('id: $id, ')
-          ..write('isActivated: $isActivated, ')
+          ..write('isValid: $isValid, ')
           ..write('licenseKey: $licenseKey, ')
-          ..write('trialStartDate: $trialStartDate')
+          ..write('expiryDate: $expiryDate, ')
+          ..write('deviceId: $deviceId')
           ..write(')'))
         .toString();
   }
@@ -4645,16 +4692,18 @@ abstract class _$AppDatabase extends GeneratedDatabase {
 typedef $$LicenseTableCreateCompanionBuilder =
     LicenseCompanion Function({
       Value<int> id,
-      Value<bool> isActivated,
+      Value<bool> isValid,
       Value<String> licenseKey,
-      Value<DateTime> trialStartDate,
+      Value<DateTime?> expiryDate,
+      Value<String?> deviceId,
     });
 typedef $$LicenseTableUpdateCompanionBuilder =
     LicenseCompanion Function({
       Value<int> id,
-      Value<bool> isActivated,
+      Value<bool> isValid,
       Value<String> licenseKey,
-      Value<DateTime> trialStartDate,
+      Value<DateTime?> expiryDate,
+      Value<String?> deviceId,
     });
 
 class $$LicenseTableFilterComposer
@@ -4671,8 +4720,8 @@ class $$LicenseTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
-  ColumnFilters<bool> get isActivated => $composableBuilder(
-    column: $table.isActivated,
+  ColumnFilters<bool> get isValid => $composableBuilder(
+    column: $table.isValid,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -4681,10 +4730,15 @@ class $$LicenseTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
-  ColumnWithTypeConverterFilters<DateTime, DateTime, String>
-  get trialStartDate => $composableBuilder(
-    column: $table.trialStartDate,
-    builder: (column) => ColumnWithTypeConverterFilters(column),
+  ColumnWithTypeConverterFilters<DateTime?, DateTime, String> get expiryDate =>
+      $composableBuilder(
+        column: $table.expiryDate,
+        builder: (column) => ColumnWithTypeConverterFilters(column),
+      );
+
+  ColumnFilters<String> get deviceId => $composableBuilder(
+    column: $table.deviceId,
+    builder: (column) => ColumnFilters(column),
   );
 }
 
@@ -4702,8 +4756,8 @@ class $$LicenseTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
-  ColumnOrderings<bool> get isActivated => $composableBuilder(
-    column: $table.isActivated,
+  ColumnOrderings<bool> get isValid => $composableBuilder(
+    column: $table.isValid,
     builder: (column) => ColumnOrderings(column),
   );
 
@@ -4712,8 +4766,13 @@ class $$LicenseTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
-  ColumnOrderings<String> get trialStartDate => $composableBuilder(
-    column: $table.trialStartDate,
+  ColumnOrderings<String> get expiryDate => $composableBuilder(
+    column: $table.expiryDate,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get deviceId => $composableBuilder(
+    column: $table.deviceId,
     builder: (column) => ColumnOrderings(column),
   );
 }
@@ -4730,21 +4789,22 @@ class $$LicenseTableAnnotationComposer
   GeneratedColumn<int> get id =>
       $composableBuilder(column: $table.id, builder: (column) => column);
 
-  GeneratedColumn<bool> get isActivated => $composableBuilder(
-    column: $table.isActivated,
-    builder: (column) => column,
-  );
+  GeneratedColumn<bool> get isValid =>
+      $composableBuilder(column: $table.isValid, builder: (column) => column);
 
   GeneratedColumn<String> get licenseKey => $composableBuilder(
     column: $table.licenseKey,
     builder: (column) => column,
   );
 
-  GeneratedColumnWithTypeConverter<DateTime, String> get trialStartDate =>
+  GeneratedColumnWithTypeConverter<DateTime?, String> get expiryDate =>
       $composableBuilder(
-        column: $table.trialStartDate,
+        column: $table.expiryDate,
         builder: (column) => column,
       );
+
+  GeneratedColumn<String> get deviceId =>
+      $composableBuilder(column: $table.deviceId, builder: (column) => column);
 }
 
 class $$LicenseTableTableManager
@@ -4779,26 +4839,30 @@ class $$LicenseTableTableManager
           updateCompanionCallback:
               ({
                 Value<int> id = const Value.absent(),
-                Value<bool> isActivated = const Value.absent(),
+                Value<bool> isValid = const Value.absent(),
                 Value<String> licenseKey = const Value.absent(),
-                Value<DateTime> trialStartDate = const Value.absent(),
+                Value<DateTime?> expiryDate = const Value.absent(),
+                Value<String?> deviceId = const Value.absent(),
               }) => LicenseCompanion(
                 id: id,
-                isActivated: isActivated,
+                isValid: isValid,
                 licenseKey: licenseKey,
-                trialStartDate: trialStartDate,
+                expiryDate: expiryDate,
+                deviceId: deviceId,
               ),
           createCompanionCallback:
               ({
                 Value<int> id = const Value.absent(),
-                Value<bool> isActivated = const Value.absent(),
+                Value<bool> isValid = const Value.absent(),
                 Value<String> licenseKey = const Value.absent(),
-                Value<DateTime> trialStartDate = const Value.absent(),
+                Value<DateTime?> expiryDate = const Value.absent(),
+                Value<String?> deviceId = const Value.absent(),
               }) => LicenseCompanion.insert(
                 id: id,
-                isActivated: isActivated,
+                isValid: isValid,
                 licenseKey: licenseKey,
-                trialStartDate: trialStartDate,
+                expiryDate: expiryDate,
+                deviceId: deviceId,
               ),
           withReferenceMapper: (p0) => p0
               .map((e) => (e.readTable(table), BaseReferences(db, table, e)))

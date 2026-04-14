@@ -1,3 +1,4 @@
+import 'package:ahgzly_pos/core/routing/app_router.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -50,7 +51,11 @@ class _LockScreenState extends State<LockScreen> {
           body: BlocConsumer<AuthBloc, AuthState>(
             listener: (context, state) {
               if (state is AuthUnlocked) {
-                context.pop(); 
+                if (state.user.isAdmin) {
+                  context.go(AppRouter.adminDashboardPath); // توجيه المدير للوحة التحكم
+                } else {
+                  context.go(AppRouter.posPath); // توجيه الكاشير لشاشة البيع
+                }
               } else if (state is AuthError) {
                 setState(() => _pin = '');
                 ScaffoldMessenger.of(context).showSnackBar(

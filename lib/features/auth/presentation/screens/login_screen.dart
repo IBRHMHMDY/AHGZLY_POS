@@ -79,6 +79,7 @@ class _LoginScreenState extends State<LoginScreen> {
         backgroundColor: Colors.teal.shade50, // 🪄 خلفية متناسقة مع الهوية
         floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
         floatingActionButton: FloatingActionButton.extended(
+          heroTag: 'exitbtn_fab',
           onPressed: _showExitConfirmation,
           backgroundColor: Colors.red.shade700,
           foregroundColor: Colors.white,
@@ -95,6 +96,13 @@ class _LoginScreenState extends State<LoginScreen> {
                 } else if (state is AuthError) {
                   setState(() => _pin = '');
                   ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(state.message), backgroundColor: Colors.red));
+                } else if (state is AuthAuthenticated) {
+                  // 🪄 [Refactored]: توجيه ديناميكي بناءً على دور المستخدم
+                  if (state.user.isAdmin) {
+                    context.go(AppRouter.adminDashboardPath); // توجيه المدير للوحة التحكم
+                  } else {
+                    context.go(AppRouter.posPath); // توجيه الكاشير لشاشة البيع
+                  }
                 }
               },
             ),

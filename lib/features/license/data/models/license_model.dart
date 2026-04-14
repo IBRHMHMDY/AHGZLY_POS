@@ -2,21 +2,28 @@ import 'package:ahgzly_pos/features/license/domain/entities/license_entity.dart'
 
 class LicenseModel extends LicenseEntity {
   const LicenseModel({
-    required super.isActivated,
-    required super.isTrialExpired,
-    required super.elapsedDays,
-    required super.trialStartDate,
+    required super.isValid,
+    super.expiryDate,
+    super.deviceId,
   });
 
-  factory LicenseModel.fromJson(Map<String, dynamic> json, int calculatedElapsedDays, bool calculatedIsTrialExpired) {
+  // 🪄 [Refactored]: قراءة البيانات من الـ JSON (الـ Payload بعد فك التشفير)
+  factory LicenseModel.fromJson(Map<String, dynamic> json) {
     return LicenseModel(
-      isActivated: json['is_activated'] == 1 || json['is_activated'] == true,
-      isTrialExpired: calculatedIsTrialExpired,
-      elapsedDays: calculatedElapsedDays,
-      // [Refactored]: التحويل الآمن إلى DateTime
-      trialStartDate: json['trial_start_date'] is String 
-          ? DateTime.tryParse(json['trial_start_date'] as String) ?? DateTime.now()
-          : (json['trial_start_date'] as DateTime? ?? DateTime.now()),
+      isValid: json['is_valid'] == 1 || json['is_valid'] == true || json['is_activated'] == true,
+      expiryDate: json['expiry_date'] != null 
+          ? DateTime.tryParse(json['expiry_date'] as String) 
+          : null,
+      deviceId: json['device_id'] as String?,
     );
+  }
+
+  // 🪄 [Refactored]: تحويل البيانات إذا لزم الأمر لحفظها محلياً
+  Map<String, dynamic> toJson() {
+    return {
+      'is_valid': isValid,
+      'expiry_date': expiryDate?.toIso8601String(),
+      'device_id': deviceId,
+    };
   }
 }

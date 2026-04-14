@@ -125,7 +125,7 @@ Future<void> init() async {
 void _initCore() {
   sl.registerLazySingleton<AppDatabase>(() => AppDatabase(openConnection('pos_sys_drift.db')));
   sl.registerLazySingleton<PrinterService>(() => PrinterService());
-  sl.registerLazySingleton<BackupService>(() => BackupService()); // 🪄 تم تسجيل الخدمة بنجاح
+  sl.registerLazySingleton<BackupService>(() => BackupService(appDatabase: sl()));
   sl.registerLazySingleton<FlutterSecureStorage>(() => const FlutterSecureStorage());
   sl.registerLazySingleton<CryptoService>(() => CryptoService());
   sl.registerLazySingleton<DeviceSecurityService>(() => DeviceSecurityService(sl()));
@@ -139,7 +139,7 @@ void _initLicense() {
   sl.registerLazySingleton<LicenseLocalDataSource>(() => LicenseLocalDataSourceImpl(secureStorage: sl()));
   sl.registerLazySingleton<LicenseRepository>(() => LicenseRepositoryImpl(localDataSource: sl()));
   sl.registerLazySingleton(() => CheckLicenseStatusUseCase(cryptoService: sl(), deviceSecurityService: sl(), repository: sl(), timeGuardService: sl()));
-  sl.registerLazySingleton(() => ActivateLicenseUseCase(sl()));
+  sl.registerLazySingleton(() => ActivateLicenseUseCase(cryptoService: sl(), deviceSecurityService: sl(), repository: sl()));
   sl.registerFactory(() => LicenseBloc(checkLicenseStatusUseCase: sl(), activateLicenseUseCase: sl()));
 }
 

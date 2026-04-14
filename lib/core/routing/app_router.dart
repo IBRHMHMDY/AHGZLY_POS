@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:ahgzly_pos/features/admin_dashboard/presentation/screens/admin_dashboard_screen.dart';
 import 'package:flutter/foundation.dart';
 import 'package:go_router/go_router.dart';
 
@@ -70,6 +71,7 @@ class AppRouter {
       refreshListenable: GoRouterRefreshStream(authBloc.stream),
       
       // [Refactored]: منطق الحماية وتوجيه المستخدمين (Route Guards)
+      // [Refactored]: منطق الحماية وتوجيه المستخدمين (Route Guards)
       redirect: (context, state) {
         final authState = authBloc.state;
         final currentPath = state.matchedLocation;
@@ -82,7 +84,7 @@ class AppRouter {
           if (!isSplashOrLicense && !isLoginOrLock) {
             return loginPath;
           }
-          return null; // اتركه يكمل للمسار المطلوب (سبلاش أو لوجن)
+          return null; 
         }
 
         // 2. إذا سجل الدخول بنجاح
@@ -90,13 +92,21 @@ class AppRouter {
           final user = authState.user;
           final isAdmin = user.isAdmin;
 
-          // إذا حاول الدخول لشاشة اللوجن وهو مسجل دخول، وجهه للشاشة الرئيسية الخاصة به
+          // توجيه تلقائي من شاشات البداية
           if (isSplashOrLicense || isLoginOrLock) {
             return isAdmin ? adminDashboardPath : posPath;
           }
 
-          // [Refactored] حماية مسارات الإدارة: منع الكاشير من الدخول إليها
-          if (!isAdmin) {
+          // 🪄 [الإصلاح الجديد]: توجيه المدير الصارم
+          if (isAdmin) {
+            // إذا كان المستخدم مديراً وحاول أي كود قديم توجيهه لمسار الكاشير المستقل، 
+            // نعترضه ونجبره على الدخول للوحة التحكم
+            if (currentPath == posPath) {
+               return adminDashboardPath;
+            }
+          } 
+          // 🪄 حماية مسارات الإدارة: منع الكاشير من الدخول إليها
+          else {
             const adminOnlyRoutes = [
               expensesPath,
               usersPath,
@@ -104,14 +114,12 @@ class AppRouter {
               adminDashboardPath,
             ];
             
-            // إذا كان المسار ضمن مسارات الإدارة، أرجعه لشاشة الـ POS
             if (adminOnlyRoutes.contains(currentPath)) {
               return posPath; 
             }
           }
         }
 
-        // لا توجد مشكلة، اسمح بالمرور
         return null; 
       },
       routes: [
@@ -188,11 +196,9 @@ class AppRouter {
           path: settingsPath,
           builder: (context, state) => const SettingsScreen(),
         ),
-        
-        // -- Admin Dashboard (مؤقت حتى بنائها في Sprint 2) --
         GoRoute(
           path: adminDashboardPath,
-          builder: (context, state) => const SettingsScreen(), // 🪄 سنستبدلها لاحقاً بـ AdminDashboardScreen
+          builder: (context, state) => const AdminDashboardScreen(), 
         ),
       ],
     );

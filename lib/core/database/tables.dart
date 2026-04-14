@@ -11,10 +11,11 @@ import 'package:drift/drift.dart';
 @DataClassName('LicenseData')
 class License extends Table {
   IntColumn get id => integer().autoIncrement()();
-  BoolColumn get isActivated => boolean().withDefault(const Constant(false))();
+  // 🪄 [Refactored]: تحديث الأعمدة لتطابق LicenseEntity و Payload
+  BoolColumn get isValid => boolean().withDefault(const Constant(false))();
   TextColumn get licenseKey => text().withDefault(const Constant(""))();
-  // [Refactored] تحويل النص إلى DateTime تلقائياً
-  TextColumn get trialStartDate => text().map(const DateTimeConverter()).withDefault(const Constant("1970-01-01T00:00:00.000"))();
+  TextColumn get expiryDate => text().map(const DateTimeConverter()).nullable()();
+  TextColumn get deviceId => text().nullable()();
 }
 
 // 2. جدول الإعدادات

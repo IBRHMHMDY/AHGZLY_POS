@@ -98,6 +98,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
         foregroundColor: Colors.white,
       ),
       floatingActionButton: FloatingActionButton.extended(
+        heroTag: 'expenses_fab',
         backgroundColor: Colors.teal,
         foregroundColor: Colors.white,
         icon: const Icon(Icons.add),

@@ -46,6 +46,7 @@ class _UsersScreenState extends State<UsersScreen> {
         foregroundColor: Colors.white,
       ),
       floatingActionButton: FloatingActionButton.extended(
+        heroTag: 'users_fab',
         onPressed: () => _showAddUserDialog(context),
         backgroundColor: Colors.teal,
         foregroundColor: Colors.white,

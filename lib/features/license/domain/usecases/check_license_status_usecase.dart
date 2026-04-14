@@ -1,13 +1,13 @@
 import 'package:dartz/dartz.dart';
 import '../../../../core/error/failures.dart';
-import '../../../../core/usecases/usecase.dart'; // ⬅️ إضافة هامة
+import '../../../../core/usecases/usecase.dart'; 
 import '../../../../core/services/security/crypto_service.dart';
 import '../../../../core/services/security/device_security_service.dart';
 import '../../../../core/services/security/time_guard_service.dart';
 import '../repositories/license_repository.dart';
+import '../entities/license_entity.dart';
 
-// Refactored: Implement UseCase Interface
-class CheckLicenseStatusUseCase implements UseCase<bool, NoParams> {
+class CheckLicenseStatusUseCase implements UseCase<LicenseEntity, NoParams> {
   final LicenseRepository repository;
   final CryptoService cryptoService;
   final DeviceSecurityService deviceSecurityService;
@@ -21,18 +21,21 @@ class CheckLicenseStatusUseCase implements UseCase<bool, NoParams> {
   });
 
   @override
-  Future<Either<Failure, bool>> call(NoParams params) async {
-    final isTampered = await timeGuardService.isTimeTampered();
-    if (isTampered) {
-      return const Left(SecurityFailure('تم اكتشاف تلاعب في وقت النظام. تم إيقاف الترخيص أمنياً.'));
-    }
-
+  Future<Either<Failure, LicenseEntity>> call(NoParams params) async {
     final encodedLicenseEither = await repository.getSavedLicense();
+    
     return encodedLicenseEither.fold(
       (failure) => Left(failure),
       (encodedLicense) async {
+        // 🪄 [Refactored]: التأكد من وجود ترخيص أولاً قبل فحص الوقت
         if (encodedLicense == null || encodedLicense.isEmpty) {
-          return const Right(false); 
+          return const Right(LicenseEntity(isValid: false)); 
+        }
+
+        // 🪄 [Refactored]: فحص التلاعب بالوقت يتم هنا للترخيص الفعال فقط
+        final isTampered = await timeGuardService.isTimeTampered();
+        if (isTampered) {
+          return const Left(SecurityFailure('تم اكتشاف تلاعب في وقت النظام. تم إيقاف الترخيص أمنياً.'));
         }
 
         final payload = cryptoService.decodeAndVerifyLicense(encodedLicense);
@@ -50,7 +53,11 @@ class CheckLicenseStatusUseCase implements UseCase<bool, NoParams> {
           return const Left(LicenseExpiredFailure('لقد انتهت صلاحية الترخيص الخاص بك. يرجى التجديد.'));
         }
 
-        return const Right(true);
+        return Right(LicenseEntity(
+          isValid: true,
+          expiryDate: expiryDate,
+          deviceId: payload['device_id'],
+        ));
       },
     );
   }

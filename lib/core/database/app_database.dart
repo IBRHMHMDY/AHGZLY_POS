@@ -31,8 +31,8 @@ class AppDatabase extends _$AppDatabase {
         // Insert default initial data
         await into(license).insert(
           LicenseCompanion.insert(
-            isActivated: const Value(false),
-            trialStartDate: Value(DateTime.now()),
+            isValid: const Value(false),
+            expiryDate: Value(DateTime.now()),
           ),
         );
 

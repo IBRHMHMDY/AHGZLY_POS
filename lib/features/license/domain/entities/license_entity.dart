@@ -1,18 +1,23 @@
 import 'package:equatable/equatable.dart';
 
 class LicenseEntity extends Equatable {
-  final bool isActivated;
-  final bool isTrialExpired;
-  final int elapsedDays;
-  final DateTime trialStartDate; // [Refactored]: تغيير إلى DateTime
+  final bool isValid;
+  final DateTime? expiryDate;
+  final String? deviceId;
 
   const LicenseEntity({
-    required this.isActivated,
-    required this.isTrialExpired,
-    required this.elapsedDays,
-    required this.trialStartDate,
+    required this.isValid,
+    this.expiryDate,
+    this.deviceId,
   });
 
+  // 🪄 [Refactored]: إضافة دالة مساعدة لحساب الأيام المتبقية للترخيص
+  int get remainingDays {
+    if (expiryDate == null) return 0;
+    final difference = expiryDate!.difference(DateTime.now()).inDays;
+    return difference > 0 ? difference : 0;
+  }
+
   @override
-  List<Object?> get props => [isActivated, isTrialExpired, elapsedDays, trialStartDate];
+  List<Object?> get props => [isValid, expiryDate, deviceId];
 }
