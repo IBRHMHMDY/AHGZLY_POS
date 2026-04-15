@@ -3471,6 +3471,18 @@ class $OrdersTable extends Orders with TableInfo<$OrdersTable, OrderData> {
     requiredDuringInsert: false,
     defaultValue: const Constant(0),
   );
+  static const VerificationMeta _netSalesMeta = const VerificationMeta(
+    'netSales',
+  );
+  @override
+  late final GeneratedColumn<int> netSales = GeneratedColumn<int>(
+    'net_sales',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
   static const VerificationMeta _taxAmountMeta = const VerificationMeta(
     'taxAmount',
   );
@@ -3503,6 +3515,18 @@ class $OrdersTable extends Orders with TableInfo<$OrdersTable, OrderData> {
     false,
     type: DriftSqlType.int,
     requiredDuringInsert: true,
+  );
+  static const VerificationMeta _totalCostMeta = const VerificationMeta(
+    'totalCost',
+  );
+  @override
+  late final GeneratedColumn<int> totalCost = GeneratedColumn<int>(
+    'total_cost',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
   );
   static const VerificationMeta _totalMeta = const VerificationMeta('total');
   @override
@@ -3584,9 +3608,11 @@ class $OrdersTable extends Orders with TableInfo<$OrdersTable, OrderData> {
     tableId,
     subTotal,
     discount,
+    netSales,
     taxAmount,
     serviceFee,
     deliveryFee,
+    totalCost,
     total,
     paymentMethod,
     status,
@@ -3638,6 +3664,12 @@ class $OrdersTable extends Orders with TableInfo<$OrdersTable, OrderData> {
         discount.isAcceptableOrUnknown(data['discount']!, _discountMeta),
       );
     }
+    if (data.containsKey('net_sales')) {
+      context.handle(
+        _netSalesMeta,
+        netSales.isAcceptableOrUnknown(data['net_sales']!, _netSalesMeta),
+      );
+    }
     if (data.containsKey('tax_amount')) {
       context.handle(
         _taxAmountMeta,
@@ -3664,6 +3696,12 @@ class $OrdersTable extends Orders with TableInfo<$OrdersTable, OrderData> {
       );
     } else if (isInserting) {
       context.missing(_deliveryFeeMeta);
+    }
+    if (data.containsKey('total_cost')) {
+      context.handle(
+        _totalCostMeta,
+        totalCost.isAcceptableOrUnknown(data['total_cost']!, _totalCostMeta),
+      );
     }
     if (data.containsKey('total')) {
       context.handle(
@@ -3735,6 +3773,10 @@ class $OrdersTable extends Orders with TableInfo<$OrdersTable, OrderData> {
         DriftSqlType.int,
         data['${effectivePrefix}discount'],
       )!,
+      netSales: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}net_sales'],
+      )!,
       taxAmount: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}tax_amount'],
@@ -3746,6 +3788,10 @@ class $OrdersTable extends Orders with TableInfo<$OrdersTable, OrderData> {
       deliveryFee: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}delivery_fee'],
+      )!,
+      totalCost: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}total_cost'],
       )!,
       total: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
@@ -3806,9 +3852,11 @@ class OrderData extends DataClass implements Insertable<OrderData> {
   final int? tableId;
   final int subTotal;
   final int discount;
+  final int netSales;
   final int taxAmount;
   final int serviceFee;
   final int deliveryFee;
+  final int totalCost;
   final int total;
   final PaymentMethod paymentMethod;
   final OrderStatus status;
@@ -3823,9 +3871,11 @@ class OrderData extends DataClass implements Insertable<OrderData> {
     this.tableId,
     required this.subTotal,
     required this.discount,
+    required this.netSales,
     required this.taxAmount,
     required this.serviceFee,
     required this.deliveryFee,
+    required this.totalCost,
     required this.total,
     required this.paymentMethod,
     required this.status,
@@ -3849,9 +3899,11 @@ class OrderData extends DataClass implements Insertable<OrderData> {
     }
     map['sub_total'] = Variable<int>(subTotal);
     map['discount'] = Variable<int>(discount);
+    map['net_sales'] = Variable<int>(netSales);
     map['tax_amount'] = Variable<int>(taxAmount);
     map['service_fee'] = Variable<int>(serviceFee);
     map['delivery_fee'] = Variable<int>(deliveryFee);
+    map['total_cost'] = Variable<int>(totalCost);
     map['total'] = Variable<int>(total);
     {
       map['payment_method'] = Variable<String>(
@@ -3884,9 +3936,11 @@ class OrderData extends DataClass implements Insertable<OrderData> {
           : Value(tableId),
       subTotal: Value(subTotal),
       discount: Value(discount),
+      netSales: Value(netSales),
       taxAmount: Value(taxAmount),
       serviceFee: Value(serviceFee),
       deliveryFee: Value(deliveryFee),
+      totalCost: Value(totalCost),
       total: Value(total),
       paymentMethod: Value(paymentMethod),
       status: Value(status),
@@ -3909,9 +3963,11 @@ class OrderData extends DataClass implements Insertable<OrderData> {
       tableId: serializer.fromJson<int?>(json['tableId']),
       subTotal: serializer.fromJson<int>(json['subTotal']),
       discount: serializer.fromJson<int>(json['discount']),
+      netSales: serializer.fromJson<int>(json['netSales']),
       taxAmount: serializer.fromJson<int>(json['taxAmount']),
       serviceFee: serializer.fromJson<int>(json['serviceFee']),
       deliveryFee: serializer.fromJson<int>(json['deliveryFee']),
+      totalCost: serializer.fromJson<int>(json['totalCost']),
       total: serializer.fromJson<int>(json['total']),
       paymentMethod: serializer.fromJson<PaymentMethod>(json['paymentMethod']),
       status: serializer.fromJson<OrderStatus>(json['status']),
@@ -3931,9 +3987,11 @@ class OrderData extends DataClass implements Insertable<OrderData> {
       'tableId': serializer.toJson<int?>(tableId),
       'subTotal': serializer.toJson<int>(subTotal),
       'discount': serializer.toJson<int>(discount),
+      'netSales': serializer.toJson<int>(netSales),
       'taxAmount': serializer.toJson<int>(taxAmount),
       'serviceFee': serializer.toJson<int>(serviceFee),
       'deliveryFee': serializer.toJson<int>(deliveryFee),
+      'totalCost': serializer.toJson<int>(totalCost),
       'total': serializer.toJson<int>(total),
       'paymentMethod': serializer.toJson<PaymentMethod>(paymentMethod),
       'status': serializer.toJson<OrderStatus>(status),
@@ -3951,9 +4009,11 @@ class OrderData extends DataClass implements Insertable<OrderData> {
     Value<int?> tableId = const Value.absent(),
     int? subTotal,
     int? discount,
+    int? netSales,
     int? taxAmount,
     int? serviceFee,
     int? deliveryFee,
+    int? totalCost,
     int? total,
     PaymentMethod? paymentMethod,
     OrderStatus? status,
@@ -3968,9 +4028,11 @@ class OrderData extends DataClass implements Insertable<OrderData> {
     tableId: tableId.present ? tableId.value : this.tableId,
     subTotal: subTotal ?? this.subTotal,
     discount: discount ?? this.discount,
+    netSales: netSales ?? this.netSales,
     taxAmount: taxAmount ?? this.taxAmount,
     serviceFee: serviceFee ?? this.serviceFee,
     deliveryFee: deliveryFee ?? this.deliveryFee,
+    totalCost: totalCost ?? this.totalCost,
     total: total ?? this.total,
     paymentMethod: paymentMethod ?? this.paymentMethod,
     status: status ?? this.status,
@@ -3987,6 +4049,7 @@ class OrderData extends DataClass implements Insertable<OrderData> {
       tableId: data.tableId.present ? data.tableId.value : this.tableId,
       subTotal: data.subTotal.present ? data.subTotal.value : this.subTotal,
       discount: data.discount.present ? data.discount.value : this.discount,
+      netSales: data.netSales.present ? data.netSales.value : this.netSales,
       taxAmount: data.taxAmount.present ? data.taxAmount.value : this.taxAmount,
       serviceFee: data.serviceFee.present
           ? data.serviceFee.value
@@ -3994,6 +4057,7 @@ class OrderData extends DataClass implements Insertable<OrderData> {
       deliveryFee: data.deliveryFee.present
           ? data.deliveryFee.value
           : this.deliveryFee,
+      totalCost: data.totalCost.present ? data.totalCost.value : this.totalCost,
       total: data.total.present ? data.total.value : this.total,
       paymentMethod: data.paymentMethod.present
           ? data.paymentMethod.value
@@ -4021,9 +4085,11 @@ class OrderData extends DataClass implements Insertable<OrderData> {
           ..write('tableId: $tableId, ')
           ..write('subTotal: $subTotal, ')
           ..write('discount: $discount, ')
+          ..write('netSales: $netSales, ')
           ..write('taxAmount: $taxAmount, ')
           ..write('serviceFee: $serviceFee, ')
           ..write('deliveryFee: $deliveryFee, ')
+          ..write('totalCost: $totalCost, ')
           ..write('total: $total, ')
           ..write('paymentMethod: $paymentMethod, ')
           ..write('status: $status, ')
@@ -4043,9 +4109,11 @@ class OrderData extends DataClass implements Insertable<OrderData> {
     tableId,
     subTotal,
     discount,
+    netSales,
     taxAmount,
     serviceFee,
     deliveryFee,
+    totalCost,
     total,
     paymentMethod,
     status,
@@ -4064,9 +4132,11 @@ class OrderData extends DataClass implements Insertable<OrderData> {
           other.tableId == this.tableId &&
           other.subTotal == this.subTotal &&
           other.discount == this.discount &&
+          other.netSales == this.netSales &&
           other.taxAmount == this.taxAmount &&
           other.serviceFee == this.serviceFee &&
           other.deliveryFee == this.deliveryFee &&
+          other.totalCost == this.totalCost &&
           other.total == this.total &&
           other.paymentMethod == this.paymentMethod &&
           other.status == this.status &&
@@ -4083,9 +4153,11 @@ class OrdersCompanion extends UpdateCompanion<OrderData> {
   final Value<int?> tableId;
   final Value<int> subTotal;
   final Value<int> discount;
+  final Value<int> netSales;
   final Value<int> taxAmount;
   final Value<int> serviceFee;
   final Value<int> deliveryFee;
+  final Value<int> totalCost;
   final Value<int> total;
   final Value<PaymentMethod> paymentMethod;
   final Value<OrderStatus> status;
@@ -4100,9 +4172,11 @@ class OrdersCompanion extends UpdateCompanion<OrderData> {
     this.tableId = const Value.absent(),
     this.subTotal = const Value.absent(),
     this.discount = const Value.absent(),
+    this.netSales = const Value.absent(),
     this.taxAmount = const Value.absent(),
     this.serviceFee = const Value.absent(),
     this.deliveryFee = const Value.absent(),
+    this.totalCost = const Value.absent(),
     this.total = const Value.absent(),
     this.paymentMethod = const Value.absent(),
     this.status = const Value.absent(),
@@ -4118,9 +4192,11 @@ class OrdersCompanion extends UpdateCompanion<OrderData> {
     this.tableId = const Value.absent(),
     required int subTotal,
     this.discount = const Value.absent(),
+    this.netSales = const Value.absent(),
     required int taxAmount,
     required int serviceFee,
     required int deliveryFee,
+    this.totalCost = const Value.absent(),
     required int total,
     required PaymentMethod paymentMethod,
     required OrderStatus status,
@@ -4145,9 +4221,11 @@ class OrdersCompanion extends UpdateCompanion<OrderData> {
     Expression<int>? tableId,
     Expression<int>? subTotal,
     Expression<int>? discount,
+    Expression<int>? netSales,
     Expression<int>? taxAmount,
     Expression<int>? serviceFee,
     Expression<int>? deliveryFee,
+    Expression<int>? totalCost,
     Expression<int>? total,
     Expression<String>? paymentMethod,
     Expression<String>? status,
@@ -4163,9 +4241,11 @@ class OrdersCompanion extends UpdateCompanion<OrderData> {
       if (tableId != null) 'table_id': tableId,
       if (subTotal != null) 'sub_total': subTotal,
       if (discount != null) 'discount': discount,
+      if (netSales != null) 'net_sales': netSales,
       if (taxAmount != null) 'tax_amount': taxAmount,
       if (serviceFee != null) 'service_fee': serviceFee,
       if (deliveryFee != null) 'delivery_fee': deliveryFee,
+      if (totalCost != null) 'total_cost': totalCost,
       if (total != null) 'total': total,
       if (paymentMethod != null) 'payment_method': paymentMethod,
       if (status != null) 'status': status,
@@ -4183,9 +4263,11 @@ class OrdersCompanion extends UpdateCompanion<OrderData> {
     Value<int?>? tableId,
     Value<int>? subTotal,
     Value<int>? discount,
+    Value<int>? netSales,
     Value<int>? taxAmount,
     Value<int>? serviceFee,
     Value<int>? deliveryFee,
+    Value<int>? totalCost,
     Value<int>? total,
     Value<PaymentMethod>? paymentMethod,
     Value<OrderStatus>? status,
@@ -4201,9 +4283,11 @@ class OrdersCompanion extends UpdateCompanion<OrderData> {
       tableId: tableId ?? this.tableId,
       subTotal: subTotal ?? this.subTotal,
       discount: discount ?? this.discount,
+      netSales: netSales ?? this.netSales,
       taxAmount: taxAmount ?? this.taxAmount,
       serviceFee: serviceFee ?? this.serviceFee,
       deliveryFee: deliveryFee ?? this.deliveryFee,
+      totalCost: totalCost ?? this.totalCost,
       total: total ?? this.total,
       paymentMethod: paymentMethod ?? this.paymentMethod,
       status: status ?? this.status,
@@ -4237,6 +4321,9 @@ class OrdersCompanion extends UpdateCompanion<OrderData> {
     if (discount.present) {
       map['discount'] = Variable<int>(discount.value);
     }
+    if (netSales.present) {
+      map['net_sales'] = Variable<int>(netSales.value);
+    }
     if (taxAmount.present) {
       map['tax_amount'] = Variable<int>(taxAmount.value);
     }
@@ -4245,6 +4332,9 @@ class OrdersCompanion extends UpdateCompanion<OrderData> {
     }
     if (deliveryFee.present) {
       map['delivery_fee'] = Variable<int>(deliveryFee.value);
+    }
+    if (totalCost.present) {
+      map['total_cost'] = Variable<int>(totalCost.value);
     }
     if (total.present) {
       map['total'] = Variable<int>(total.value);
@@ -4285,9 +4375,11 @@ class OrdersCompanion extends UpdateCompanion<OrderData> {
           ..write('tableId: $tableId, ')
           ..write('subTotal: $subTotal, ')
           ..write('discount: $discount, ')
+          ..write('netSales: $netSales, ')
           ..write('taxAmount: $taxAmount, ')
           ..write('serviceFee: $serviceFee, ')
           ..write('deliveryFee: $deliveryFee, ')
+          ..write('totalCost: $totalCost, ')
           ..write('total: $total, ')
           ..write('paymentMethod: $paymentMethod, ')
           ..write('status: $status, ')
@@ -7344,9 +7436,11 @@ typedef $$OrdersTableCreateCompanionBuilder =
       Value<int?> tableId,
       required int subTotal,
       Value<int> discount,
+      Value<int> netSales,
       required int taxAmount,
       required int serviceFee,
       required int deliveryFee,
+      Value<int> totalCost,
       required int total,
       required PaymentMethod paymentMethod,
       required OrderStatus status,
@@ -7363,9 +7457,11 @@ typedef $$OrdersTableUpdateCompanionBuilder =
       Value<int?> tableId,
       Value<int> subTotal,
       Value<int> discount,
+      Value<int> netSales,
       Value<int> taxAmount,
       Value<int> serviceFee,
       Value<int> deliveryFee,
+      Value<int> totalCost,
       Value<int> total,
       Value<PaymentMethod> paymentMethod,
       Value<OrderStatus> status,
@@ -7451,6 +7547,11 @@ class $$OrdersTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
+  ColumnFilters<int> get netSales => $composableBuilder(
+    column: $table.netSales,
+    builder: (column) => ColumnFilters(column),
+  );
+
   ColumnFilters<int> get taxAmount => $composableBuilder(
     column: $table.taxAmount,
     builder: (column) => ColumnFilters(column),
@@ -7463,6 +7564,11 @@ class $$OrdersTableFilterComposer
 
   ColumnFilters<int> get deliveryFee => $composableBuilder(
     column: $table.deliveryFee,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get totalCost => $composableBuilder(
+    column: $table.totalCost,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -7587,6 +7693,11 @@ class $$OrdersTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<int> get netSales => $composableBuilder(
+    column: $table.netSales,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<int> get taxAmount => $composableBuilder(
     column: $table.taxAmount,
     builder: (column) => ColumnOrderings(column),
@@ -7599,6 +7710,11 @@ class $$OrdersTableOrderingComposer
 
   ColumnOrderings<int> get deliveryFee => $composableBuilder(
     column: $table.deliveryFee,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get totalCost => $composableBuilder(
+    column: $table.totalCost,
     builder: (column) => ColumnOrderings(column),
   );
 
@@ -7685,6 +7801,9 @@ class $$OrdersTableAnnotationComposer
   GeneratedColumn<int> get discount =>
       $composableBuilder(column: $table.discount, builder: (column) => column);
 
+  GeneratedColumn<int> get netSales =>
+      $composableBuilder(column: $table.netSales, builder: (column) => column);
+
   GeneratedColumn<int> get taxAmount =>
       $composableBuilder(column: $table.taxAmount, builder: (column) => column);
 
@@ -7697,6 +7816,9 @@ class $$OrdersTableAnnotationComposer
     column: $table.deliveryFee,
     builder: (column) => column,
   );
+
+  GeneratedColumn<int> get totalCost =>
+      $composableBuilder(column: $table.totalCost, builder: (column) => column);
 
   GeneratedColumn<int> get total =>
       $composableBuilder(column: $table.total, builder: (column) => column);
@@ -7811,9 +7933,11 @@ class $$OrdersTableTableManager
                 Value<int?> tableId = const Value.absent(),
                 Value<int> subTotal = const Value.absent(),
                 Value<int> discount = const Value.absent(),
+                Value<int> netSales = const Value.absent(),
                 Value<int> taxAmount = const Value.absent(),
                 Value<int> serviceFee = const Value.absent(),
                 Value<int> deliveryFee = const Value.absent(),
+                Value<int> totalCost = const Value.absent(),
                 Value<int> total = const Value.absent(),
                 Value<PaymentMethod> paymentMethod = const Value.absent(),
                 Value<OrderStatus> status = const Value.absent(),
@@ -7828,9 +7952,11 @@ class $$OrdersTableTableManager
                 tableId: tableId,
                 subTotal: subTotal,
                 discount: discount,
+                netSales: netSales,
                 taxAmount: taxAmount,
                 serviceFee: serviceFee,
                 deliveryFee: deliveryFee,
+                totalCost: totalCost,
                 total: total,
                 paymentMethod: paymentMethod,
                 status: status,
@@ -7847,9 +7973,11 @@ class $$OrdersTableTableManager
                 Value<int?> tableId = const Value.absent(),
                 required int subTotal,
                 Value<int> discount = const Value.absent(),
+                Value<int> netSales = const Value.absent(),
                 required int taxAmount,
                 required int serviceFee,
                 required int deliveryFee,
+                Value<int> totalCost = const Value.absent(),
                 required int total,
                 required PaymentMethod paymentMethod,
                 required OrderStatus status,
@@ -7864,9 +7992,11 @@ class $$OrdersTableTableManager
                 tableId: tableId,
                 subTotal: subTotal,
                 discount: discount,
+                netSales: netSales,
                 taxAmount: taxAmount,
                 serviceFee: serviceFee,
                 deliveryFee: deliveryFee,
+                totalCost: totalCost,
                 total: total,
                 paymentMethod: paymentMethod,
                 status: status,

@@ -1,21 +1,29 @@
-// مسار الملف: lib/features/reports/domain/entities/report_summary_entity.dart
 import 'package:equatable/equatable.dart';
 
 class ReportSummaryEntity extends Equatable {
-  final double totalSales;
-  final double totalExpenses;
-  // 🪄 [Refactored]: إضافة تكلفة البضاعة المباعة (Cost of Goods Sold)
-  final double totalCogs; 
-  final double netProfit;
-  final int ordersCount;
+  final int netSales;       // المبيعات الصافية (إيراد المطعم الفعلي الخالي من الضرائب)
+  final int totalCollected; // إجمالي النقدية في الدرج (شاملة الضرائب والرسوم)
+  final int totalExpenses;  // المصروفات
+  final int totalCogs;      // تكلفة البضاعة المباعة (COGS)
+  final int netProfit;      // صافي الربح الفعلي
+  final int ordersCount;    // عدد الطلبات
 
   const ReportSummaryEntity({
-    required this.totalSales,
+    required this.netSales,
+    required this.totalCollected,
     required this.totalExpenses,
-    required this.totalCogs, // [Refactored]
+    required this.totalCogs,
     required this.ordersCount,
-  }) : netProfit = totalSales - totalCogs - totalExpenses; // 🪄 [Refactored]: تصحيح المعادلة المحاسبية لصافي الربح
+  }) : netProfit = netSales - totalCogs - totalExpenses; 
+  // المعادلة الدقيقة: الإيراد الفعلي - التكلفة - المصروفات
 
   @override
-  List<Object> get props => [totalSales, totalExpenses, totalCogs, netProfit, ordersCount];
+  List<Object> get props => [
+        netSales,
+        totalCollected,
+        totalExpenses,
+        totalCogs,
+        netProfit,
+        ordersCount,
+      ];
 }

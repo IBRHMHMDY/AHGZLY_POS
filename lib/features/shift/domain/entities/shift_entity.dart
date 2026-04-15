@@ -1,5 +1,3 @@
-// مسار الملف: lib/features/shift/domain/entities/shift.dart
-
 import 'package:ahgzly_pos/core/utils/enums/enums_data.dart';
 import 'package:equatable/equatable.dart';
 
@@ -8,21 +6,21 @@ class ShiftEntity extends Equatable {
   final int? cashierId;
   final DateTime startTime;
   final DateTime? endTime;
-  
-  final int startingCash; // Refactored: int (Cents)
+
+  final int startingCash;
   final int totalOrders;
-  final int totalSales; // Refactored: int (Cents)
-  final int totalCash; // Refactored: int (Cents)
-  final int totalVisa; // Refactored: int (Cents)
-  final int totalInstapay; // Refactored: int (Cents)
+  final int totalSales;
+  final int totalCash;
+  final int totalVisa;
+  final int totalInstapay;
 
   final int refundedOrdersCount;
   final int totalRefunds;
 
-  final int totalExpenses; // Refactored: int (Cents)
-  
-  final int expectedCash; // Refactored: int (Cents)
-  final int actualCash; // Refactored: int (Cents)
+  final int totalExpenses;
+
+  final int expectedCash;
+  final int actualCash;
   final ShiftStatus status;
 
   const ShiftEntity({
@@ -31,20 +29,20 @@ class ShiftEntity extends Equatable {
     required this.startTime,
     this.endTime,
     required this.startingCash,
-    required this.totalSales,
-    required this.totalCash,
-    required this.totalVisa,
-    required this.totalInstapay,
-    required this.totalRefunds,
-    required this.refundedOrdersCount,
-    required this.totalOrders,
-    required this.totalExpenses,
-    required this.expectedCash,
-    required this.actualCash,
+    this.totalSales = 0, // 🪄 [Refactored] قيم افتراضية آمنة
+    this.totalCash = 0,
+    this.totalVisa = 0,
+    this.totalInstapay = 0,
+    this.totalRefunds = 0,
+    this.refundedOrdersCount = 0,
+    this.totalOrders = 0,
+    this.totalExpenses = 0,
+    this.expectedCash = 0,
+    this.actualCash = 0,
     required this.status,
   });
 
-  // Refactored: العائد أصبح int
+  // العجز أو الزيادة في الدرج
   int get shortageOrOverage => actualCash - expectedCash;
 
   @override

@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-// 🪄 [Refactored]: استيراد دوال الـ Utils الخاصة بك لتطبيق مبدأ DRY
-import 'package:ahgzly_pos/core/utils/money_formatter.dart';
 import 'package:ahgzly_pos/core/utils/date_time_utils.dart';
-
+import 'package:ahgzly_pos/core/utils/money_formatter.dart'; // 🪄 [Refactored]: إضافة الـ Formatter
 import 'package:ahgzly_pos/features/reports/presentation/bloc/reports_bloc.dart';
 import 'package:ahgzly_pos/features/reports/presentation/bloc/reports_event.dart';
 import 'package:ahgzly_pos/features/reports/presentation/bloc/reports_state.dart';
@@ -27,24 +25,25 @@ class _ReportsDashboardScreenState extends State<ReportsDashboardScreen> {
   void _loadDataForFilter(String filter) {
     final now = DateTime.now();
     DateTime start;
-    DateTime end = DateTime(now.year, now.month, now.day, 23, 59, 59, 999);
+    
+    // 🪄 [Refactored]: استخدام الدوال المساعدة للتواريخ لضمان دقة الورديات
+    DateTime end = now.endOfDay;
 
     switch (filter) {
       case 'today':
-        start = DateTime(now.year, now.month, now.day);
+        start = now.startOfDay;
         break;
       case 'week':
-        start = now.subtract(Duration(days: now.weekday - 1));
-        start = DateTime(start.year, start.month, start.day);
+        start = now.subtract(Duration(days: now.weekday - 1)).startOfDay;
         break;
       case 'month':
-        start = DateTime(now.year, now.month, 1);
+        start = DateTime(now.year, now.month, 1).startOfDay;
         break;
       case 'year':
-        start = DateTime(now.year, 1, 1);
+        start = DateTime(now.year, 1, 1).startOfDay;
         break;
       default:
-        start = DateTime(now.year, now.month, now.day);
+        start = now.startOfDay;
     }
 
     context.read<ReportsBloc>().add(
@@ -145,7 +144,6 @@ class _ReportsDashboardScreenState extends State<ReportsDashboardScreen> {
             return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // 🪄 [Refactored]: استخدام date_time_utils لعرض فترة التقرير بدقة
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
                   child: Text(
@@ -173,38 +171,34 @@ class _ReportsDashboardScreenState extends State<ReportsDashboardScreen> {
                               mainAxisSpacing: 16,
                               childAspectRatio: 1.5,
                               children: [
+                                // 🪄 [Refactored]: تم استخدام netSales والغياب التام لـ toCents() لأن القيم مجهزة كـ int 
                                 _StatCard(
-                                  title: 'إجمالي المبيعات',
-                                  value: state.summary.totalSales
-                                      .toCents()
-                                      .toFormattedMoney(currency: 'ج.م'),
-                                  icon: Icons.attach_money,
+                                  title: 'صافي إيراد المطعم',
+                                  value: state.summary.netSales.toFormattedMoney(currency: 'ج.م'),
+                                  icon: Icons.storefront,
                                   color: Colors.blue,
                                 ),
-
-                                // 🪄 [Refactored]: إضافة بطاقة تكلفة البضاعة المباعة (COGS)
+                                _StatCard(
+                                  title: 'النقدية بالدرج (شامل الضرائب)',
+                                  value: state.summary.totalCollected.toFormattedMoney(currency: 'ج.م'),
+                                  icon: Icons.point_of_sale,
+                                  color: Colors.indigo,
+                                ),
                                 _StatCard(
                                   title: 'تكلفة البضاعة',
-                                  value: state.summary.totalCogs
-                                      .toCents()
-                                      .toFormattedMoney(currency: 'ج.م'),
+                                  value: state.summary.totalCogs.toFormattedMoney(currency: 'ج.م'),
                                   icon: Icons.inventory_2_outlined,
                                   color: Colors.teal,
                                 ),
-
                                 _StatCard(
                                   title: 'المصروفات',
-                                  value: state.summary.totalExpenses
-                                      .toCents()
-                                      .toFormattedMoney(currency: 'ج.م'),
+                                  value: state.summary.totalExpenses.toFormattedMoney(currency: 'ج.م'),
                                   icon: Icons.money_off,
                                   color: Colors.orange,
                                 ),
                                 _StatCard(
-                                  title: 'صافي الربح',
-                                  value: state.summary.netProfit
-                                      .toCents()
-                                      .toFormattedMoney(currency: 'ج.م'),
+                                  title: 'صافي الربح الفعلي',
+                                  value: state.summary.netProfit.toFormattedMoney(currency: 'ج.م'),
                                   icon: Icons.account_balance_wallet,
                                   color: state.summary.netProfit >= 0
                                       ? Colors.green
@@ -279,13 +273,9 @@ class _ReportsDashboardScreenState extends State<ReportsDashboardScreen> {
                                             subtitle: Text(
                                               'الكمية: ${item.quantitySold}',
                                             ),
-                                            // 🪄 [Refactored]: استخدام MoneyFormatterExtension
+                                            // 🪄 [Refactored]: حذفنا toCents لأن totalRevenue أصبحت int جاهزة
                                             trailing: Text(
-                                              item.totalRevenue
-                                                  .toCents()
-                                                  .toFormattedMoney(
-                                                    currency: 'ج.م',
-                                                  ),
+                                              item.totalRevenue.toFormattedMoney(currency: 'ج.م'),
                                               style: const TextStyle(
                                                 fontWeight: FontWeight.bold,
                                                 color: Colors.green,

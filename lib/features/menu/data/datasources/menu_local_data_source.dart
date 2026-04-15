@@ -76,6 +76,7 @@ class MenuLocalDataSourceImpl implements MenuLocalDataSource {
             categoryId: item.categoryId,
             name: item.name,
             price: item.price,
+            cost: Value(item.cost),
             createdAt: item.createdAt,
             updatedAt: item.updatedAt,
           ),
@@ -91,6 +92,7 @@ class MenuLocalDataSourceImpl implements MenuLocalDataSource {
         categoryId: Value(item.categoryId),
         name: Value(item.name),
         price: Value(item.price),
+        cost: Value(item.cost),
         updatedAt: Value(item.updatedAt),
       ),
     );

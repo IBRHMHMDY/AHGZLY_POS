@@ -1,5 +1,5 @@
 import 'package:ahgzly_pos/core/database/app_database.dart';
-import 'package:ahgzly_pos/features/reports/data/models/reports_model.dart';
+import 'package:ahgzly_pos/features/reports/data/models/reports_model.dart'; // تأكد أن الموديل يرث من Entity
 import 'package:drift/drift.dart';
 
 abstract class ReportsLocalDataSource {
@@ -14,18 +14,22 @@ class ReportsLocalDataSourceImpl implements ReportsLocalDataSource {
 
   @override
   Future<ReportSummaryModel> getSummaryReport(DateTime startDate, DateTime endDate) async {
-    final startStr = startDate.toIso8601String();
-    final endStr = endDate.toIso8601String();
+    // استخدمنا UTC لأننا وحدنا التوقيت في الخطوة 1.1 لضمان عدم تداخل الورديات
+    final startStr = startDate.toUtc().toIso8601String();
+    final endStr = endDate.toUtc().toIso8601String();
 
-    // 1. استعلام المبيعات والطلبات
-    final salesSum = appDatabase.orders.total.sum();
+    // 1. استعلام المبيعات (الصافي والنقدي)
+    final netSalesSum = appDatabase.orders.netSales.sum(); // إيراد المطعم
+    final totalSum = appDatabase.orders.total.sum();       // درج الكاشير
     final countExp = appDatabase.orders.id.count();
+
     final salesQuery = appDatabase.selectOnly(appDatabase.orders)
-      ..addColumns([salesSum, countExp])
+      ..addColumns([netSalesSum, totalSum, countExp])
       ..where(appDatabase.orders.createdAt.isBetweenValues(startStr, endStr));
 
     final salesResult = await salesQuery.getSingle();
-    final totalSalesCents = salesResult.read(salesSum) ?? 0;
+    final netSalesCents = salesResult.read(netSalesSum) ?? 0;
+    final totalCollectedCents = salesResult.read(totalSum) ?? 0;
     final ordersCount = salesResult.read(countExp) ?? 0;
 
     // 2. استعلام المصروفات التشغيلية
@@ -37,13 +41,11 @@ class ReportsLocalDataSourceImpl implements ReportsLocalDataSource {
     final expResult = await expQuery.getSingle();
     final totalExpensesCents = expResult.read(expSum) ?? 0;
 
-    // 3. 🪄 [Refactored]: استعلام تكلفة البضاعة المباعة (COGS)
-    // ضرب الكمية في تكلفة الوحدة لكل عنصر تم بيعه خلال هذه الفترة
+    // 3. استعلام تكلفة البضاعة المباعة (COGS) من جدول العناصر المرتبطة بطلبات هذه الفترة
     final cogsSum = (appDatabase.orderItems.quantity * appDatabase.orderItems.unitCost).sum();
     final cogsQuery = appDatabase.selectOnly(appDatabase.orderItems)
       ..addColumns([cogsSum])
       ..join([
-        // الربط مع جدول الطلبات لفلترة التاريخ
         innerJoin(appDatabase.orders, appDatabase.orders.id.equalsExp(appDatabase.orderItems.orderId)),
       ])
       ..where(appDatabase.orders.createdAt.isBetweenValues(startStr, endStr));
@@ -52,9 +54,10 @@ class ReportsLocalDataSourceImpl implements ReportsLocalDataSource {
     final totalCogsCents = cogsResult.read(cogsSum) ?? 0;
 
     return ReportSummaryModel(
-      totalSales: totalSalesCents / 100.0, 
-      totalExpenses: totalExpensesCents / 100.0,
-      totalCogs: totalCogsCents / 100.0, // 🪄 [Refactored]: إضافة التكلفة للنموذج
+      netSales: netSalesCents,
+      totalCollected: totalCollectedCents,
+      totalExpenses: totalExpensesCents,
+      totalCogs: totalCogsCents,
       ordersCount: ordersCount,
     );
   }
@@ -63,8 +66,9 @@ class ReportsLocalDataSourceImpl implements ReportsLocalDataSource {
   Future<List<ItemSalesModel>> getItemSalesReport(DateTime startDate, DateTime endDate) async {
     final qtySum = appDatabase.orderItems.quantity.sum();
     final revSum = (appDatabase.orderItems.quantity * appDatabase.orderItems.unitPrice).sum();
-    final startStr = startDate.toIso8601String();
-    final endStr = endDate.toIso8601String();
+    
+    final startStr = startDate.toUtc().toIso8601String();
+    final endStr = endDate.toUtc().toIso8601String();
 
     final query = appDatabase.selectOnly(appDatabase.orderItems)
       ..addColumns([appDatabase.items.name, qtySum, revSum])
@@ -82,7 +86,7 @@ class ReportsLocalDataSourceImpl implements ReportsLocalDataSource {
       return ItemSalesModel(
         itemName: row.read(appDatabase.items.name) ?? 'غير معروف',
         quantitySold: row.read(qtySum) ?? 0,
-        totalRevenue: (row.read(revSum) ?? 0) / 100.0, 
+        totalRevenue: row.read(revSum) ?? 0, // نمررها كقروش ونستخدم MoneyFormatterExtension في الواجهة
       );
     }).toList();
   }

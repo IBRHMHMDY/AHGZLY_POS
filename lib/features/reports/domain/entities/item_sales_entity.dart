@@ -3,7 +3,7 @@ import 'package:equatable/equatable.dart';
 class ItemSalesEntity extends Equatable {
   final String itemName;
   final int quantitySold;
-  final double totalRevenue;
+  final int totalRevenue; 
 
   const ItemSalesEntity({
     required this.itemName,

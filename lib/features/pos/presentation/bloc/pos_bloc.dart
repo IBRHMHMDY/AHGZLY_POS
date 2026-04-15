@@ -104,7 +104,7 @@ class PosBloc extends Bloc<PosEvent, PosState> {
 
     // ✅ الاعتماد على الـ Service للحسابات (Clean Architecture)
     final totals = calculatorService.calculate(
-      cartItems: _cartItems,
+      items: _cartItems,
       orderType: _orderType,
       discountAmount: _discountAmount,
       settings: _appSettings!,

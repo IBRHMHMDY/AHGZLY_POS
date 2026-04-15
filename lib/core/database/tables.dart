@@ -11,7 +11,6 @@ import 'package:drift/drift.dart';
 @DataClassName('LicenseData')
 class License extends Table {
   IntColumn get id => integer().autoIncrement()();
-  // 🪄 [Refactored]: تحديث الأعمدة لتطابق LicenseEntity و Payload
   BoolColumn get isValid => boolean().withDefault(const Constant(false))();
   TextColumn get licenseKey => text().withDefault(const Constant(""))();
   TextColumn get expiryDate => text().map(const DateTimeConverter()).nullable()();
@@ -24,7 +23,7 @@ class Settings extends Table {
   IntColumn get id => integer().autoIncrement()();
   RealColumn get taxRate => real()();
   RealColumn get serviceRate => real()();
-  IntColumn get deliveryFee => integer()(); // بالسنت
+  IntColumn get deliveryFee => integer()();
   TextColumn get printerName => text()();
   TextColumn get restaurantName => text()();
   TextColumn get taxNumber => text()();
@@ -41,7 +40,6 @@ class Users extends Table {
   TextColumn get role => text()();
   BoolColumn get isActive => boolean().withDefault(const Constant(true))();
   IntColumn get failedAttempts => integer().withDefault(const Constant(0))();
-  // [Refactored] تحويل النص إلى DateTime تلقائياً
   TextColumn get lockoutUntil => text().map(const DateTimeConverter()).nullable()();
 }
 
@@ -50,7 +48,6 @@ class Users extends Table {
 class Shifts extends Table {
   IntColumn get id => integer().autoIncrement()();
   IntColumn get cashierId => integer().nullable().references(Users, #id)();
-  // [Refactored] تحويل الأوقات إلى DateTime
   TextColumn get startTime => text().map(const DateTimeConverter())();
   TextColumn get endTime => text().map(const DateTimeConverter()).nullable()();
   IntColumn get startingCash => integer().withDefault(const Constant(0))();
@@ -72,7 +69,6 @@ class Shifts extends Table {
 class Categories extends Table {
   IntColumn get id => integer().autoIncrement()();
   TextColumn get name => text()();
-  // [Refactored] تحويل التواريخ
   TextColumn get createdAt => text().map(const DateTimeConverter())();
   TextColumn get updatedAt => text().map(const DateTimeConverter())();
 }
@@ -108,19 +104,19 @@ class Orders extends Table {
   // [Refactored] ربط الـ Enums مباشرة بالأعمدة
   TextColumn get orderType => text().map(const OrderTypeConverter())();
   IntColumn get tableId => integer().nullable()();
-  IntColumn get subTotal => integer()(); 
-  IntColumn get discount => integer().withDefault(const Constant(0))(); 
-  IntColumn get taxAmount => integer()(); 
-  IntColumn get serviceFee => integer()(); 
-  IntColumn get deliveryFee => integer()(); 
-  IntColumn get total => integer()(); 
-  // [Refactored] ربط الـ Enums مباشرة بالأعمدة
+  IntColumn get subTotal => integer()();
+  IntColumn get discount => integer().withDefault(const Constant(0))();
+  IntColumn get netSales => integer().withDefault(const Constant(0))(); 
+  IntColumn get taxAmount => integer()();
+  IntColumn get serviceFee => integer()();
+  IntColumn get deliveryFee => integer()();
+  IntColumn get totalCost => integer().withDefault(const Constant(0))(); 
+  IntColumn get total => integer()();
   TextColumn get paymentMethod => text().map(const PaymentMethodConverter())();
   TextColumn get status => text().map(const OrderStatusConverter())();
   TextColumn get customerName => text().withDefault(const Constant(""))();
   TextColumn get customerPhone => text().withDefault(const Constant(""))();
   TextColumn get customerAddress => text().withDefault(const Constant(""))();
-  // [Refactored] تحويل التواريخ
   TextColumn get createdAt => text().map(const DateTimeConverter())();
 }
 
@@ -132,7 +128,6 @@ class OrderItems extends Table {
   IntColumn get itemId => integer().references(Items, #id)();
   IntColumn get quantity => integer()();
   IntColumn get unitPrice => integer()(); 
-  // [Refactored]: حفظ التكلفة وقت البيع كقيمة ثابتة لضمان دقة التقارير التاريخية
-  IntColumn get unitCost => integer().withDefault(const Constant(0))(); 
+  IntColumn get unitCost => integer().withDefault(const Constant(0))();
   TextColumn get notes => text().nullable()();
 }
