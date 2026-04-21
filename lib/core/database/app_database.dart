@@ -20,7 +20,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase(super.e);
 
   @override
-  int get schemaVersion => 15; 
+  int get schemaVersion => 16; 
 
   @override
   MigrationStrategy get migration {
@@ -72,6 +72,9 @@ class AppDatabase extends _$AppDatabase {
             isActive: const Value(true),
           ),
         );
+
+        await into(paymentMethods).insert(PaymentMethodsCompanion.insert(name: 'كاش'));
+        await into(paymentMethods).insert(PaymentMethodsCompanion.insert(name: 'بطاقة إئتمان (فيزا / مدى)'));
       },
       onUpgrade: (Migrator m, int from, int to) async {
         if (from < 15) {
@@ -79,6 +82,24 @@ class AppDatabase extends _$AppDatabase {
           await m.addColumn(items, items.costPrice);
           await m.addColumn(orders, orders.totalCost);
           await m.addColumn(orderItems, orderItems.unitCostPrice);
+        }
+
+        if (from < 16) {
+          // 1. إنشاء الجداول الجديدة
+          await m.createTable(customers);
+          await m.createTable(zones);
+          await m.createTable(restaurantTables);
+          await m.createTable(paymentMethods);
+
+          // 2. إضافة الأعمدة الجديدة لجدول الطلبات القديم بأمان
+          await m.addColumn(orders, orders.customerId);
+          await m.addColumn(orders, orders.tableId);
+          await m.addColumn(orders, orders.orderType);
+          await m.addColumn(orders, orders.paymentMethodId);
+
+          // 3. حقن طرق الدفع الأساسية للعملاء الحاليين الذين يمتلكون النظام بالفعل
+          await into(paymentMethods).insert(PaymentMethodsCompanion.insert(name: 'كاش'));
+          await into(paymentMethods).insert(PaymentMethodsCompanion.insert(name: 'بطاقة إئتمان (فيزا / مدى)'));
         }
       },
       beforeOpen: (details) async {
