@@ -367,7 +367,7 @@ class _MenuItemsSection extends StatelessWidget {
                                         ),
                                         const SizedBox(height: 6),
                                         Text(
-                                          '${MoneyFormatter.format(item.price)} ج.م',
+                                          '${item.price.toFormattedMoney()} ج.م',
                                           style: const TextStyle(fontSize: 18, color: Colors.teal, fontWeight: FontWeight.w900),
                                         ),
                                       ],

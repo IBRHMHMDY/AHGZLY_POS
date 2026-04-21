@@ -20,7 +20,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase(super.e);
 
   @override
-  int get schemaVersion => 14; 
+  int get schemaVersion => 15; 
 
   @override
   MigrationStrategy get migration {
@@ -72,6 +72,14 @@ class AppDatabase extends _$AppDatabase {
             isActive: const Value(true),
           ),
         );
+      },
+      onUpgrade: (Migrator m, int from, int to) async {
+        if (from < 15) {
+          // إضافة الأعمدة الجديدة للجداول القديمة بدون مسح بيانات العميل
+          await m.addColumn(items, items.costPrice);
+          await m.addColumn(orders, orders.totalCost);
+          await m.addColumn(orderItems, orderItems.unitCostPrice);
+        }
       },
       beforeOpen: (details) async {
         // Enable Foreign Keys for relational integrity

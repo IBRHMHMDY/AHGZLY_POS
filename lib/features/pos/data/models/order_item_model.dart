@@ -7,6 +7,7 @@ class OrderItemModel extends OrderItemEntity {
     required super.itemId,
     required super.quantity,
     required super.unitPrice,
+    required super.unitCostPrice,
     super.notes,
   });
 
@@ -17,6 +18,7 @@ class OrderItemModel extends OrderItemEntity {
       itemId: entity.itemId,
       quantity: entity.quantity,
       unitPrice: entity.unitPrice,
+      unitCostPrice: entity.unitCostPrice,
       notes: entity.notes,
     );
   }

@@ -12,8 +12,9 @@ class PosBloc extends Bloc<PosEvent, PosState> {
   final SaveOrderUseCase saveOrderUseCase;
   final GetSettingsUseCase getSettingsUseCase;
 
+  // الحفاظ على حالة السلة خاصة (Private) لمنع التعديل الخارجي العشوائي
   final List<CartItem> _cartItems = [];
-  OrderType _orderType = OrderType.takeaway; // القيمة الافتراضية الموحدة
+  OrderType _orderType = OrderType.takeaway; 
   int _discountAmount = 0;
   
   double _taxRate = 0.0;
@@ -35,7 +36,6 @@ class PosBloc extends Bloc<PosEvent, PosState> {
     on<ApplyDiscountEvent>(_onApplyDiscount);
     on<ClearCartEvent>(_onClearCart);
     on<SubmitOrderEvent>(_onSubmitOrder);
-    on<SaveOrderEvent>(_onSaveOrderLegacy); 
 
     add(ReloadSettingsEvent());
   }
@@ -45,7 +45,6 @@ class PosBloc extends Bloc<PosEvent, PosState> {
     
     result.fold(
       (failure) {
-        // ✅ [Refactored]: عدم تجاهل الأخطاء. يجب إبلاغ الواجهة لكي تمنع الكاشير من البيع بإعدادات خاطئة
         emit(PosError('فشل في تحميل إعدادات النظام (الضرائب والرسوم). يرجى التأكد من ضبط الإعدادات أولاً.'));
       },
       (settings) {
@@ -92,43 +91,73 @@ class PosBloc extends Bloc<PosEvent, PosState> {
 
   void _onChangeType(ChangeOrderTypeEvent event, Emitter<PosState> emit) {
     _orderType = event.orderType;
+    // إعادة تعيين رسوم التوصيل أو الخدمات إذا تغير نوع الطلب يؤثر على الحسابات النهائية
     _emitUpdatedState(emit);
   }
 
   void _onApplyDiscount(ApplyDiscountEvent event, Emitter<PosState> emit) {
-    _discountAmount = event.discountAmount;
+    // التأكد من أن الخصم لا يكون بالسالب
+    _discountAmount = event.discountAmount >= 0 ? event.discountAmount : 0;
     _emitUpdatedState(emit);
   }
 
   void _onClearCart(ClearCartEvent event, Emitter<PosState> emit) {
-    _cartItems.clear();
-    _discountAmount = 0;
-    _orderType = OrderType.takeaway;
+    _resetCartState();
     _emitUpdatedState(emit);
   }
 
-  void _emitUpdatedState(Emitter<PosState> emit) {
-    int subTotal = _cartItems.fold(0, (sum, item) => sum + (item.item.price * item.quantity));
+  // دالة خاصة لحساب القيم وفصل المنطق الرياضي
+  Map<String, int> _calculateTotals() {
+    int subTotal = 0;
+    int totalCost = 0;
+
+    // 1. حساب الإجمالي الفرعي وتكلفة المنتجات
+    for (var cartItem in _cartItems) {
+      subTotal += (cartItem.item.price * cartItem.quantity);
+      totalCost += (cartItem.item.costPrice * cartItem.quantity); // [NEW] التكلفة
+    }
     
+    // 2. حساب الصافي بعد الخصم
     int afterDiscount = subTotal - _discountAmount;
     if (afterDiscount < 0) afterDiscount = 0;
 
-    int taxAmount = (afterDiscount * _taxRate).round(); 
-    // الاعتماد بأمان على الـ Enums بدلاً من النصوص 
+    // 3. رسوم الخدمة (للصالة فقط)
     int serviceFee = _orderType == OrderType.dineIn ? (afterDiscount * _serviceRate).round() : 0;
+    
+    // 4. [تعديل هام للسوق المصري]: الضريبة تُحسب على (المبلغ بعد الخصم + رسوم الخدمة)
+    int taxableAmount = afterDiscount + serviceFee;
+    int taxAmount = (taxableAmount * _taxRate).round(); 
+    
+    // 5. التوصيل
     int deliveryFee = _orderType == OrderType.delivery ? _deliveryFee : 0;
     
-    int total = subTotal - _discountAmount + taxAmount + serviceFee + deliveryFee;
+    // 6. الإجمالي النهائي
+    int total = afterDiscount + serviceFee + taxAmount + deliveryFee;
+
+    return {
+      'subTotal': subTotal,
+      'totalCost': totalCost, // إرجاع التكلفة
+      'taxAmount': taxAmount,
+      'serviceFee': serviceFee,
+      'deliveryFee': deliveryFee,
+      'total': total,
+    };
+  }
+
+  void _emitUpdatedState(Emitter<PosState> emit) {
+    // استدعاء دالة الحسابات النظيفة
+    final totals = _calculateTotals();
 
     emit(PosUpdated(
       cartItems: List.from(_cartItems), 
       orderType: _orderType,
-      subTotal: subTotal,
       discountAmount: _discountAmount,
-      taxAmount: taxAmount,
-      serviceFee: serviceFee,
-      deliveryFee: deliveryFee,
-      total: total,
+      subTotal: totals['subTotal']!,
+      totalCost: totals['totalCost']!, 
+      taxAmount: totals['taxAmount']!,
+      serviceFee: totals['serviceFee']!,
+      deliveryFee: totals['deliveryFee']!,
+      total: totals['total']!,
       restaurantName: _restaurantName,
       taxNumber: _taxNumber,
       printMode: _printMode,
@@ -147,6 +176,7 @@ class PosBloc extends Bloc<PosEvent, PosState> {
 
     emit(PosLoading());
 
+    // حفظ الفاتورة مع التكلفة المجمدة
     final order = OrderEntity(
       orderType: currentState.orderType,
       subTotal: currentState.subTotal,
@@ -155,6 +185,7 @@ class PosBloc extends Bloc<PosEvent, PosState> {
       serviceFee: currentState.serviceFee,
       deliveryFee: currentState.deliveryFee,
       total: currentState.total,
+      totalCost: currentState.totalCost, // الحفظ لتقارير الأرباح
       paymentMethod: event.paymentMethod,
       status: OrderStatus.completed,
       createdAt: DateTime.now(),
@@ -165,6 +196,7 @@ class PosBloc extends Bloc<PosEvent, PosState> {
         itemId: c.item.id!,
         quantity: c.quantity,
         unitPrice: c.item.price,
+        unitCostPrice: c.item.costPrice, // تجميد التكلفة
         notes: c.notes,
       )).toList(),
     );
@@ -180,19 +212,16 @@ class PosBloc extends Bloc<PosEvent, PosState> {
         emit(PosCheckoutSuccess(orderId));
         _cartItems.clear();
         _discountAmount = 0;
-        // [Fixed]: توحيد القيمة الافتراضية بعد الطلب مع القيمة الموجودة في _onClearCart
         _orderType = OrderType.takeaway; 
         _emitUpdatedState(emit);
       },
     );
   }
 
-  Future<void> _onSaveOrderLegacy(SaveOrderEvent event, Emitter<PosState> emit) async {
-    emit(PosLoading());
-    final result = await saveOrderUseCase(SaveOrderParams(order: event.order));
-    result.fold(
-      (error) => emit(PosError(error.message)),
-      (id) => emit(PosCheckoutSuccess(id)),
-    );
+  // دالة مساعدة لتنظيف السلة بالكامل للحد من التكرار
+  void _resetCartState() {
+    _cartItems.clear();
+    _discountAmount = 0;
+    _orderType = OrderType.takeaway;
   }
 }

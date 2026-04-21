@@ -170,7 +170,7 @@ class _ExpenseSummaryCard extends StatelessWidget {
             ],
           ),
           Text(
-            '${MoneyFormatter.format(totalExpenses)} ج.م',
+            '${totalExpenses.toFormattedMoney()} ج.م',
             style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.redAccent),
           ),
         ],
@@ -216,7 +216,7 @@ class _ExpenseList extends StatelessWidget {
             trailing: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text('${MoneyFormatter.format(expense.amount)} ج.م', style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 18, color: Colors.redAccent)),
+                Text('${expense.amount.toFormattedMoney()} ج.م', style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 18, color: Colors.redAccent)),
                 const SizedBox(width: 16),
                 IconButton(
                   icon: const Icon(Icons.delete_outline, color: Colors.red),

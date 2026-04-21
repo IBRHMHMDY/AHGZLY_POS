@@ -2603,6 +2603,18 @@ class $ItemsTable extends Items with TableInfo<$ItemsTable, ItemData> {
     type: DriftSqlType.int,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _costPriceMeta = const VerificationMeta(
+    'costPrice',
+  );
+  @override
+  late final GeneratedColumn<int> costPrice = GeneratedColumn<int>(
+    'cost_price',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
   @override
   late final GeneratedColumnWithTypeConverter<DateTime, String> createdAt =
       GeneratedColumn<String>(
@@ -2627,6 +2639,7 @@ class $ItemsTable extends Items with TableInfo<$ItemsTable, ItemData> {
     categoryId,
     name,
     price,
+    costPrice,
     createdAt,
     updatedAt,
   ];
@@ -2669,6 +2682,12 @@ class $ItemsTable extends Items with TableInfo<$ItemsTable, ItemData> {
     } else if (isInserting) {
       context.missing(_priceMeta);
     }
+    if (data.containsKey('cost_price')) {
+      context.handle(
+        _costPriceMeta,
+        costPrice.isAcceptableOrUnknown(data['cost_price']!, _costPriceMeta),
+      );
+    }
     return context;
   }
 
@@ -2693,6 +2712,10 @@ class $ItemsTable extends Items with TableInfo<$ItemsTable, ItemData> {
       price: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}price'],
+      )!,
+      costPrice: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}cost_price'],
       )!,
       createdAt: $ItemsTable.$convertercreatedAt.fromSql(
         attachedDatabase.typeMapping.read(
@@ -2725,6 +2748,7 @@ class ItemData extends DataClass implements Insertable<ItemData> {
   final int categoryId;
   final String name;
   final int price;
+  final int costPrice;
   final DateTime createdAt;
   final DateTime updatedAt;
   const ItemData({
@@ -2732,6 +2756,7 @@ class ItemData extends DataClass implements Insertable<ItemData> {
     required this.categoryId,
     required this.name,
     required this.price,
+    required this.costPrice,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -2742,6 +2767,7 @@ class ItemData extends DataClass implements Insertable<ItemData> {
     map['category_id'] = Variable<int>(categoryId);
     map['name'] = Variable<String>(name);
     map['price'] = Variable<int>(price);
+    map['cost_price'] = Variable<int>(costPrice);
     {
       map['created_at'] = Variable<String>(
         $ItemsTable.$convertercreatedAt.toSql(createdAt),
@@ -2761,6 +2787,7 @@ class ItemData extends DataClass implements Insertable<ItemData> {
       categoryId: Value(categoryId),
       name: Value(name),
       price: Value(price),
+      costPrice: Value(costPrice),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
     );
@@ -2776,6 +2803,7 @@ class ItemData extends DataClass implements Insertable<ItemData> {
       categoryId: serializer.fromJson<int>(json['categoryId']),
       name: serializer.fromJson<String>(json['name']),
       price: serializer.fromJson<int>(json['price']),
+      costPrice: serializer.fromJson<int>(json['costPrice']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
     );
@@ -2788,6 +2816,7 @@ class ItemData extends DataClass implements Insertable<ItemData> {
       'categoryId': serializer.toJson<int>(categoryId),
       'name': serializer.toJson<String>(name),
       'price': serializer.toJson<int>(price),
+      'costPrice': serializer.toJson<int>(costPrice),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
     };
@@ -2798,6 +2827,7 @@ class ItemData extends DataClass implements Insertable<ItemData> {
     int? categoryId,
     String? name,
     int? price,
+    int? costPrice,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) => ItemData(
@@ -2805,6 +2835,7 @@ class ItemData extends DataClass implements Insertable<ItemData> {
     categoryId: categoryId ?? this.categoryId,
     name: name ?? this.name,
     price: price ?? this.price,
+    costPrice: costPrice ?? this.costPrice,
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
   );
@@ -2816,6 +2847,7 @@ class ItemData extends DataClass implements Insertable<ItemData> {
           : this.categoryId,
       name: data.name.present ? data.name.value : this.name,
       price: data.price.present ? data.price.value : this.price,
+      costPrice: data.costPrice.present ? data.costPrice.value : this.costPrice,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
     );
@@ -2828,6 +2860,7 @@ class ItemData extends DataClass implements Insertable<ItemData> {
           ..write('categoryId: $categoryId, ')
           ..write('name: $name, ')
           ..write('price: $price, ')
+          ..write('costPrice: $costPrice, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt')
           ..write(')'))
@@ -2836,7 +2869,7 @@ class ItemData extends DataClass implements Insertable<ItemData> {
 
   @override
   int get hashCode =>
-      Object.hash(id, categoryId, name, price, createdAt, updatedAt);
+      Object.hash(id, categoryId, name, price, costPrice, createdAt, updatedAt);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -2845,6 +2878,7 @@ class ItemData extends DataClass implements Insertable<ItemData> {
           other.categoryId == this.categoryId &&
           other.name == this.name &&
           other.price == this.price &&
+          other.costPrice == this.costPrice &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt);
 }
@@ -2854,6 +2888,7 @@ class ItemsCompanion extends UpdateCompanion<ItemData> {
   final Value<int> categoryId;
   final Value<String> name;
   final Value<int> price;
+  final Value<int> costPrice;
   final Value<DateTime> createdAt;
   final Value<DateTime> updatedAt;
   const ItemsCompanion({
@@ -2861,6 +2896,7 @@ class ItemsCompanion extends UpdateCompanion<ItemData> {
     this.categoryId = const Value.absent(),
     this.name = const Value.absent(),
     this.price = const Value.absent(),
+    this.costPrice = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
   });
@@ -2869,6 +2905,7 @@ class ItemsCompanion extends UpdateCompanion<ItemData> {
     required int categoryId,
     required String name,
     required int price,
+    this.costPrice = const Value.absent(),
     required DateTime createdAt,
     required DateTime updatedAt,
   }) : categoryId = Value(categoryId),
@@ -2881,6 +2918,7 @@ class ItemsCompanion extends UpdateCompanion<ItemData> {
     Expression<int>? categoryId,
     Expression<String>? name,
     Expression<int>? price,
+    Expression<int>? costPrice,
     Expression<String>? createdAt,
     Expression<String>? updatedAt,
   }) {
@@ -2889,6 +2927,7 @@ class ItemsCompanion extends UpdateCompanion<ItemData> {
       if (categoryId != null) 'category_id': categoryId,
       if (name != null) 'name': name,
       if (price != null) 'price': price,
+      if (costPrice != null) 'cost_price': costPrice,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
     });
@@ -2899,6 +2938,7 @@ class ItemsCompanion extends UpdateCompanion<ItemData> {
     Value<int>? categoryId,
     Value<String>? name,
     Value<int>? price,
+    Value<int>? costPrice,
     Value<DateTime>? createdAt,
     Value<DateTime>? updatedAt,
   }) {
@@ -2907,6 +2947,7 @@ class ItemsCompanion extends UpdateCompanion<ItemData> {
       categoryId: categoryId ?? this.categoryId,
       name: name ?? this.name,
       price: price ?? this.price,
+      costPrice: costPrice ?? this.costPrice,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
@@ -2926,6 +2967,9 @@ class ItemsCompanion extends UpdateCompanion<ItemData> {
     }
     if (price.present) {
       map['price'] = Variable<int>(price.value);
+    }
+    if (costPrice.present) {
+      map['cost_price'] = Variable<int>(costPrice.value);
     }
     if (createdAt.present) {
       map['created_at'] = Variable<String>(
@@ -2947,6 +2991,7 @@ class ItemsCompanion extends UpdateCompanion<ItemData> {
           ..write('categoryId: $categoryId, ')
           ..write('name: $name, ')
           ..write('price: $price, ')
+          ..write('costPrice: $costPrice, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt')
           ..write(')'))
@@ -3423,6 +3468,18 @@ class $OrdersTable extends Orders with TableInfo<$OrdersTable, OrderData> {
     type: DriftSqlType.int,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _totalCostMeta = const VerificationMeta(
+    'totalCost',
+  );
+  @override
+  late final GeneratedColumn<int> totalCost = GeneratedColumn<int>(
+    'total_cost',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
   @override
   late final GeneratedColumnWithTypeConverter<PaymentMethod, String>
   paymentMethod = GeneratedColumn<String>(
@@ -3498,6 +3555,7 @@ class $OrdersTable extends Orders with TableInfo<$OrdersTable, OrderData> {
     serviceFee,
     deliveryFee,
     total,
+    totalCost,
     paymentMethod,
     status,
     customerName,
@@ -3583,6 +3641,12 @@ class $OrdersTable extends Orders with TableInfo<$OrdersTable, OrderData> {
     } else if (isInserting) {
       context.missing(_totalMeta);
     }
+    if (data.containsKey('total_cost')) {
+      context.handle(
+        _totalCostMeta,
+        totalCost.isAcceptableOrUnknown(data['total_cost']!, _totalCostMeta),
+      );
+    }
     if (data.containsKey('customer_name')) {
       context.handle(
         _customerNameMeta,
@@ -3661,6 +3725,10 @@ class $OrdersTable extends Orders with TableInfo<$OrdersTable, OrderData> {
         DriftSqlType.int,
         data['${effectivePrefix}total'],
       )!,
+      totalCost: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}total_cost'],
+      )!,
       paymentMethod: $OrdersTable.$converterpaymentMethod.fromSql(
         attachedDatabase.typeMapping.read(
           DriftSqlType.string,
@@ -3720,6 +3788,7 @@ class OrderData extends DataClass implements Insertable<OrderData> {
   final int serviceFee;
   final int deliveryFee;
   final int total;
+  final int totalCost;
   final PaymentMethod paymentMethod;
   final OrderStatus status;
   final String customerName;
@@ -3737,6 +3806,7 @@ class OrderData extends DataClass implements Insertable<OrderData> {
     required this.serviceFee,
     required this.deliveryFee,
     required this.total,
+    required this.totalCost,
     required this.paymentMethod,
     required this.status,
     required this.customerName,
@@ -3763,6 +3833,7 @@ class OrderData extends DataClass implements Insertable<OrderData> {
     map['service_fee'] = Variable<int>(serviceFee);
     map['delivery_fee'] = Variable<int>(deliveryFee);
     map['total'] = Variable<int>(total);
+    map['total_cost'] = Variable<int>(totalCost);
     {
       map['payment_method'] = Variable<String>(
         $OrdersTable.$converterpaymentMethod.toSql(paymentMethod),
@@ -3798,6 +3869,7 @@ class OrderData extends DataClass implements Insertable<OrderData> {
       serviceFee: Value(serviceFee),
       deliveryFee: Value(deliveryFee),
       total: Value(total),
+      totalCost: Value(totalCost),
       paymentMethod: Value(paymentMethod),
       status: Value(status),
       customerName: Value(customerName),
@@ -3823,6 +3895,7 @@ class OrderData extends DataClass implements Insertable<OrderData> {
       serviceFee: serializer.fromJson<int>(json['serviceFee']),
       deliveryFee: serializer.fromJson<int>(json['deliveryFee']),
       total: serializer.fromJson<int>(json['total']),
+      totalCost: serializer.fromJson<int>(json['totalCost']),
       paymentMethod: serializer.fromJson<PaymentMethod>(json['paymentMethod']),
       status: serializer.fromJson<OrderStatus>(json['status']),
       customerName: serializer.fromJson<String>(json['customerName']),
@@ -3845,6 +3918,7 @@ class OrderData extends DataClass implements Insertable<OrderData> {
       'serviceFee': serializer.toJson<int>(serviceFee),
       'deliveryFee': serializer.toJson<int>(deliveryFee),
       'total': serializer.toJson<int>(total),
+      'totalCost': serializer.toJson<int>(totalCost),
       'paymentMethod': serializer.toJson<PaymentMethod>(paymentMethod),
       'status': serializer.toJson<OrderStatus>(status),
       'customerName': serializer.toJson<String>(customerName),
@@ -3865,6 +3939,7 @@ class OrderData extends DataClass implements Insertable<OrderData> {
     int? serviceFee,
     int? deliveryFee,
     int? total,
+    int? totalCost,
     PaymentMethod? paymentMethod,
     OrderStatus? status,
     String? customerName,
@@ -3882,6 +3957,7 @@ class OrderData extends DataClass implements Insertable<OrderData> {
     serviceFee: serviceFee ?? this.serviceFee,
     deliveryFee: deliveryFee ?? this.deliveryFee,
     total: total ?? this.total,
+    totalCost: totalCost ?? this.totalCost,
     paymentMethod: paymentMethod ?? this.paymentMethod,
     status: status ?? this.status,
     customerName: customerName ?? this.customerName,
@@ -3905,6 +3981,7 @@ class OrderData extends DataClass implements Insertable<OrderData> {
           ? data.deliveryFee.value
           : this.deliveryFee,
       total: data.total.present ? data.total.value : this.total,
+      totalCost: data.totalCost.present ? data.totalCost.value : this.totalCost,
       paymentMethod: data.paymentMethod.present
           ? data.paymentMethod.value
           : this.paymentMethod,
@@ -3935,6 +4012,7 @@ class OrderData extends DataClass implements Insertable<OrderData> {
           ..write('serviceFee: $serviceFee, ')
           ..write('deliveryFee: $deliveryFee, ')
           ..write('total: $total, ')
+          ..write('totalCost: $totalCost, ')
           ..write('paymentMethod: $paymentMethod, ')
           ..write('status: $status, ')
           ..write('customerName: $customerName, ')
@@ -3957,6 +4035,7 @@ class OrderData extends DataClass implements Insertable<OrderData> {
     serviceFee,
     deliveryFee,
     total,
+    totalCost,
     paymentMethod,
     status,
     customerName,
@@ -3978,6 +4057,7 @@ class OrderData extends DataClass implements Insertable<OrderData> {
           other.serviceFee == this.serviceFee &&
           other.deliveryFee == this.deliveryFee &&
           other.total == this.total &&
+          other.totalCost == this.totalCost &&
           other.paymentMethod == this.paymentMethod &&
           other.status == this.status &&
           other.customerName == this.customerName &&
@@ -3997,6 +4077,7 @@ class OrdersCompanion extends UpdateCompanion<OrderData> {
   final Value<int> serviceFee;
   final Value<int> deliveryFee;
   final Value<int> total;
+  final Value<int> totalCost;
   final Value<PaymentMethod> paymentMethod;
   final Value<OrderStatus> status;
   final Value<String> customerName;
@@ -4014,6 +4095,7 @@ class OrdersCompanion extends UpdateCompanion<OrderData> {
     this.serviceFee = const Value.absent(),
     this.deliveryFee = const Value.absent(),
     this.total = const Value.absent(),
+    this.totalCost = const Value.absent(),
     this.paymentMethod = const Value.absent(),
     this.status = const Value.absent(),
     this.customerName = const Value.absent(),
@@ -4032,6 +4114,7 @@ class OrdersCompanion extends UpdateCompanion<OrderData> {
     required int serviceFee,
     required int deliveryFee,
     required int total,
+    this.totalCost = const Value.absent(),
     required PaymentMethod paymentMethod,
     required OrderStatus status,
     this.customerName = const Value.absent(),
@@ -4059,6 +4142,7 @@ class OrdersCompanion extends UpdateCompanion<OrderData> {
     Expression<int>? serviceFee,
     Expression<int>? deliveryFee,
     Expression<int>? total,
+    Expression<int>? totalCost,
     Expression<String>? paymentMethod,
     Expression<String>? status,
     Expression<String>? customerName,
@@ -4077,6 +4161,7 @@ class OrdersCompanion extends UpdateCompanion<OrderData> {
       if (serviceFee != null) 'service_fee': serviceFee,
       if (deliveryFee != null) 'delivery_fee': deliveryFee,
       if (total != null) 'total': total,
+      if (totalCost != null) 'total_cost': totalCost,
       if (paymentMethod != null) 'payment_method': paymentMethod,
       if (status != null) 'status': status,
       if (customerName != null) 'customer_name': customerName,
@@ -4097,6 +4182,7 @@ class OrdersCompanion extends UpdateCompanion<OrderData> {
     Value<int>? serviceFee,
     Value<int>? deliveryFee,
     Value<int>? total,
+    Value<int>? totalCost,
     Value<PaymentMethod>? paymentMethod,
     Value<OrderStatus>? status,
     Value<String>? customerName,
@@ -4115,6 +4201,7 @@ class OrdersCompanion extends UpdateCompanion<OrderData> {
       serviceFee: serviceFee ?? this.serviceFee,
       deliveryFee: deliveryFee ?? this.deliveryFee,
       total: total ?? this.total,
+      totalCost: totalCost ?? this.totalCost,
       paymentMethod: paymentMethod ?? this.paymentMethod,
       status: status ?? this.status,
       customerName: customerName ?? this.customerName,
@@ -4159,6 +4246,9 @@ class OrdersCompanion extends UpdateCompanion<OrderData> {
     if (total.present) {
       map['total'] = Variable<int>(total.value);
     }
+    if (totalCost.present) {
+      map['total_cost'] = Variable<int>(totalCost.value);
+    }
     if (paymentMethod.present) {
       map['payment_method'] = Variable<String>(
         $OrdersTable.$converterpaymentMethod.toSql(paymentMethod.value),
@@ -4199,6 +4289,7 @@ class OrdersCompanion extends UpdateCompanion<OrderData> {
           ..write('serviceFee: $serviceFee, ')
           ..write('deliveryFee: $deliveryFee, ')
           ..write('total: $total, ')
+          ..write('totalCost: $totalCost, ')
           ..write('paymentMethod: $paymentMethod, ')
           ..write('status: $status, ')
           ..write('customerName: $customerName, ')
@@ -4277,6 +4368,18 @@ class $OrderItemsTable extends OrderItems
     type: DriftSqlType.int,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _unitCostPriceMeta = const VerificationMeta(
+    'unitCostPrice',
+  );
+  @override
+  late final GeneratedColumn<int> unitCostPrice = GeneratedColumn<int>(
+    'unit_cost_price',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
   static const VerificationMeta _notesMeta = const VerificationMeta('notes');
   @override
   late final GeneratedColumn<String> notes = GeneratedColumn<String>(
@@ -4293,6 +4396,7 @@ class $OrderItemsTable extends OrderItems
     itemId,
     quantity,
     unitPrice,
+    unitCostPrice,
     notes,
   ];
   @override
@@ -4342,6 +4446,15 @@ class $OrderItemsTable extends OrderItems
     } else if (isInserting) {
       context.missing(_unitPriceMeta);
     }
+    if (data.containsKey('unit_cost_price')) {
+      context.handle(
+        _unitCostPriceMeta,
+        unitCostPrice.isAcceptableOrUnknown(
+          data['unit_cost_price']!,
+          _unitCostPriceMeta,
+        ),
+      );
+    }
     if (data.containsKey('notes')) {
       context.handle(
         _notesMeta,
@@ -4377,6 +4490,10 @@ class $OrderItemsTable extends OrderItems
         DriftSqlType.int,
         data['${effectivePrefix}unit_price'],
       )!,
+      unitCostPrice: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}unit_cost_price'],
+      )!,
       notes: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}notes'],
@@ -4396,6 +4513,7 @@ class OrderItemsData extends DataClass implements Insertable<OrderItemsData> {
   final int itemId;
   final int quantity;
   final int unitPrice;
+  final int unitCostPrice;
   final String? notes;
   const OrderItemsData({
     required this.id,
@@ -4403,6 +4521,7 @@ class OrderItemsData extends DataClass implements Insertable<OrderItemsData> {
     required this.itemId,
     required this.quantity,
     required this.unitPrice,
+    required this.unitCostPrice,
     this.notes,
   });
   @override
@@ -4413,6 +4532,7 @@ class OrderItemsData extends DataClass implements Insertable<OrderItemsData> {
     map['item_id'] = Variable<int>(itemId);
     map['quantity'] = Variable<int>(quantity);
     map['unit_price'] = Variable<int>(unitPrice);
+    map['unit_cost_price'] = Variable<int>(unitCostPrice);
     if (!nullToAbsent || notes != null) {
       map['notes'] = Variable<String>(notes);
     }
@@ -4426,6 +4546,7 @@ class OrderItemsData extends DataClass implements Insertable<OrderItemsData> {
       itemId: Value(itemId),
       quantity: Value(quantity),
       unitPrice: Value(unitPrice),
+      unitCostPrice: Value(unitCostPrice),
       notes: notes == null && nullToAbsent
           ? const Value.absent()
           : Value(notes),
@@ -4443,6 +4564,7 @@ class OrderItemsData extends DataClass implements Insertable<OrderItemsData> {
       itemId: serializer.fromJson<int>(json['itemId']),
       quantity: serializer.fromJson<int>(json['quantity']),
       unitPrice: serializer.fromJson<int>(json['unitPrice']),
+      unitCostPrice: serializer.fromJson<int>(json['unitCostPrice']),
       notes: serializer.fromJson<String?>(json['notes']),
     );
   }
@@ -4455,6 +4577,7 @@ class OrderItemsData extends DataClass implements Insertable<OrderItemsData> {
       'itemId': serializer.toJson<int>(itemId),
       'quantity': serializer.toJson<int>(quantity),
       'unitPrice': serializer.toJson<int>(unitPrice),
+      'unitCostPrice': serializer.toJson<int>(unitCostPrice),
       'notes': serializer.toJson<String?>(notes),
     };
   }
@@ -4465,6 +4588,7 @@ class OrderItemsData extends DataClass implements Insertable<OrderItemsData> {
     int? itemId,
     int? quantity,
     int? unitPrice,
+    int? unitCostPrice,
     Value<String?> notes = const Value.absent(),
   }) => OrderItemsData(
     id: id ?? this.id,
@@ -4472,6 +4596,7 @@ class OrderItemsData extends DataClass implements Insertable<OrderItemsData> {
     itemId: itemId ?? this.itemId,
     quantity: quantity ?? this.quantity,
     unitPrice: unitPrice ?? this.unitPrice,
+    unitCostPrice: unitCostPrice ?? this.unitCostPrice,
     notes: notes.present ? notes.value : this.notes,
   );
   OrderItemsData copyWithCompanion(OrderItemsCompanion data) {
@@ -4481,6 +4606,9 @@ class OrderItemsData extends DataClass implements Insertable<OrderItemsData> {
       itemId: data.itemId.present ? data.itemId.value : this.itemId,
       quantity: data.quantity.present ? data.quantity.value : this.quantity,
       unitPrice: data.unitPrice.present ? data.unitPrice.value : this.unitPrice,
+      unitCostPrice: data.unitCostPrice.present
+          ? data.unitCostPrice.value
+          : this.unitCostPrice,
       notes: data.notes.present ? data.notes.value : this.notes,
     );
   }
@@ -4493,14 +4621,22 @@ class OrderItemsData extends DataClass implements Insertable<OrderItemsData> {
           ..write('itemId: $itemId, ')
           ..write('quantity: $quantity, ')
           ..write('unitPrice: $unitPrice, ')
+          ..write('unitCostPrice: $unitCostPrice, ')
           ..write('notes: $notes')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode =>
-      Object.hash(id, orderId, itemId, quantity, unitPrice, notes);
+  int get hashCode => Object.hash(
+    id,
+    orderId,
+    itemId,
+    quantity,
+    unitPrice,
+    unitCostPrice,
+    notes,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -4510,6 +4646,7 @@ class OrderItemsData extends DataClass implements Insertable<OrderItemsData> {
           other.itemId == this.itemId &&
           other.quantity == this.quantity &&
           other.unitPrice == this.unitPrice &&
+          other.unitCostPrice == this.unitCostPrice &&
           other.notes == this.notes);
 }
 
@@ -4519,6 +4656,7 @@ class OrderItemsCompanion extends UpdateCompanion<OrderItemsData> {
   final Value<int> itemId;
   final Value<int> quantity;
   final Value<int> unitPrice;
+  final Value<int> unitCostPrice;
   final Value<String?> notes;
   const OrderItemsCompanion({
     this.id = const Value.absent(),
@@ -4526,6 +4664,7 @@ class OrderItemsCompanion extends UpdateCompanion<OrderItemsData> {
     this.itemId = const Value.absent(),
     this.quantity = const Value.absent(),
     this.unitPrice = const Value.absent(),
+    this.unitCostPrice = const Value.absent(),
     this.notes = const Value.absent(),
   });
   OrderItemsCompanion.insert({
@@ -4534,6 +4673,7 @@ class OrderItemsCompanion extends UpdateCompanion<OrderItemsData> {
     required int itemId,
     required int quantity,
     required int unitPrice,
+    this.unitCostPrice = const Value.absent(),
     this.notes = const Value.absent(),
   }) : orderId = Value(orderId),
        itemId = Value(itemId),
@@ -4545,6 +4685,7 @@ class OrderItemsCompanion extends UpdateCompanion<OrderItemsData> {
     Expression<int>? itemId,
     Expression<int>? quantity,
     Expression<int>? unitPrice,
+    Expression<int>? unitCostPrice,
     Expression<String>? notes,
   }) {
     return RawValuesInsertable({
@@ -4553,6 +4694,7 @@ class OrderItemsCompanion extends UpdateCompanion<OrderItemsData> {
       if (itemId != null) 'item_id': itemId,
       if (quantity != null) 'quantity': quantity,
       if (unitPrice != null) 'unit_price': unitPrice,
+      if (unitCostPrice != null) 'unit_cost_price': unitCostPrice,
       if (notes != null) 'notes': notes,
     });
   }
@@ -4563,6 +4705,7 @@ class OrderItemsCompanion extends UpdateCompanion<OrderItemsData> {
     Value<int>? itemId,
     Value<int>? quantity,
     Value<int>? unitPrice,
+    Value<int>? unitCostPrice,
     Value<String?>? notes,
   }) {
     return OrderItemsCompanion(
@@ -4571,6 +4714,7 @@ class OrderItemsCompanion extends UpdateCompanion<OrderItemsData> {
       itemId: itemId ?? this.itemId,
       quantity: quantity ?? this.quantity,
       unitPrice: unitPrice ?? this.unitPrice,
+      unitCostPrice: unitCostPrice ?? this.unitCostPrice,
       notes: notes ?? this.notes,
     );
   }
@@ -4593,6 +4737,9 @@ class OrderItemsCompanion extends UpdateCompanion<OrderItemsData> {
     if (unitPrice.present) {
       map['unit_price'] = Variable<int>(unitPrice.value);
     }
+    if (unitCostPrice.present) {
+      map['unit_cost_price'] = Variable<int>(unitCostPrice.value);
+    }
     if (notes.present) {
       map['notes'] = Variable<String>(notes.value);
     }
@@ -4607,6 +4754,7 @@ class OrderItemsCompanion extends UpdateCompanion<OrderItemsData> {
           ..write('itemId: $itemId, ')
           ..write('quantity: $quantity, ')
           ..write('unitPrice: $unitPrice, ')
+          ..write('unitCostPrice: $unitCostPrice, ')
           ..write('notes: $notes')
           ..write(')'))
         .toString();
@@ -6438,6 +6586,7 @@ typedef $$ItemsTableCreateCompanionBuilder =
       required int categoryId,
       required String name,
       required int price,
+      Value<int> costPrice,
       required DateTime createdAt,
       required DateTime updatedAt,
     });
@@ -6447,6 +6596,7 @@ typedef $$ItemsTableUpdateCompanionBuilder =
       Value<int> categoryId,
       Value<String> name,
       Value<int> price,
+      Value<int> costPrice,
       Value<DateTime> createdAt,
       Value<DateTime> updatedAt,
     });
@@ -6511,6 +6661,11 @@ class $$ItemsTableFilterComposer extends Composer<_$AppDatabase, $ItemsTable> {
 
   ColumnFilters<int> get price => $composableBuilder(
     column: $table.price,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get costPrice => $composableBuilder(
+    column: $table.costPrice,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -6599,6 +6754,11 @@ class $$ItemsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<int> get costPrice => $composableBuilder(
+    column: $table.costPrice,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get createdAt => $composableBuilder(
     column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
@@ -6650,6 +6810,9 @@ class $$ItemsTableAnnotationComposer
 
   GeneratedColumn<int> get price =>
       $composableBuilder(column: $table.price, builder: (column) => column);
+
+  GeneratedColumn<int> get costPrice =>
+      $composableBuilder(column: $table.costPrice, builder: (column) => column);
 
   GeneratedColumnWithTypeConverter<DateTime, String> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
@@ -6738,6 +6901,7 @@ class $$ItemsTableTableManager
                 Value<int> categoryId = const Value.absent(),
                 Value<String> name = const Value.absent(),
                 Value<int> price = const Value.absent(),
+                Value<int> costPrice = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
               }) => ItemsCompanion(
@@ -6745,6 +6909,7 @@ class $$ItemsTableTableManager
                 categoryId: categoryId,
                 name: name,
                 price: price,
+                costPrice: costPrice,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
               ),
@@ -6754,6 +6919,7 @@ class $$ItemsTableTableManager
                 required int categoryId,
                 required String name,
                 required int price,
+                Value<int> costPrice = const Value.absent(),
                 required DateTime createdAt,
                 required DateTime updatedAt,
               }) => ItemsCompanion.insert(
@@ -6761,6 +6927,7 @@ class $$ItemsTableTableManager
                 categoryId: categoryId,
                 name: name,
                 price: price,
+                costPrice: costPrice,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
               ),
@@ -7177,6 +7344,7 @@ typedef $$OrdersTableCreateCompanionBuilder =
       required int serviceFee,
       required int deliveryFee,
       required int total,
+      Value<int> totalCost,
       required PaymentMethod paymentMethod,
       required OrderStatus status,
       Value<String> customerName,
@@ -7196,6 +7364,7 @@ typedef $$OrdersTableUpdateCompanionBuilder =
       Value<int> serviceFee,
       Value<int> deliveryFee,
       Value<int> total,
+      Value<int> totalCost,
       Value<PaymentMethod> paymentMethod,
       Value<OrderStatus> status,
       Value<String> customerName,
@@ -7297,6 +7466,11 @@ class $$OrdersTableFilterComposer
 
   ColumnFilters<int> get total => $composableBuilder(
     column: $table.total,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get totalCost => $composableBuilder(
+    column: $table.totalCost,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -7436,6 +7610,11 @@ class $$OrdersTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<int> get totalCost => $composableBuilder(
+    column: $table.totalCost,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get paymentMethod => $composableBuilder(
     column: $table.paymentMethod,
     builder: (column) => ColumnOrderings(column),
@@ -7529,6 +7708,9 @@ class $$OrdersTableAnnotationComposer
 
   GeneratedColumn<int> get total =>
       $composableBuilder(column: $table.total, builder: (column) => column);
+
+  GeneratedColumn<int> get totalCost =>
+      $composableBuilder(column: $table.totalCost, builder: (column) => column);
 
   GeneratedColumnWithTypeConverter<PaymentMethod, String> get paymentMethod =>
       $composableBuilder(
@@ -7644,6 +7826,7 @@ class $$OrdersTableTableManager
                 Value<int> serviceFee = const Value.absent(),
                 Value<int> deliveryFee = const Value.absent(),
                 Value<int> total = const Value.absent(),
+                Value<int> totalCost = const Value.absent(),
                 Value<PaymentMethod> paymentMethod = const Value.absent(),
                 Value<OrderStatus> status = const Value.absent(),
                 Value<String> customerName = const Value.absent(),
@@ -7661,6 +7844,7 @@ class $$OrdersTableTableManager
                 serviceFee: serviceFee,
                 deliveryFee: deliveryFee,
                 total: total,
+                totalCost: totalCost,
                 paymentMethod: paymentMethod,
                 status: status,
                 customerName: customerName,
@@ -7680,6 +7864,7 @@ class $$OrdersTableTableManager
                 required int serviceFee,
                 required int deliveryFee,
                 required int total,
+                Value<int> totalCost = const Value.absent(),
                 required PaymentMethod paymentMethod,
                 required OrderStatus status,
                 Value<String> customerName = const Value.absent(),
@@ -7697,6 +7882,7 @@ class $$OrdersTableTableManager
                 serviceFee: serviceFee,
                 deliveryFee: deliveryFee,
                 total: total,
+                totalCost: totalCost,
                 paymentMethod: paymentMethod,
                 status: status,
                 customerName: customerName,
@@ -7792,6 +7978,7 @@ typedef $$OrderItemsTableCreateCompanionBuilder =
       required int itemId,
       required int quantity,
       required int unitPrice,
+      Value<int> unitCostPrice,
       Value<String?> notes,
     });
 typedef $$OrderItemsTableUpdateCompanionBuilder =
@@ -7801,6 +7988,7 @@ typedef $$OrderItemsTableUpdateCompanionBuilder =
       Value<int> itemId,
       Value<int> quantity,
       Value<int> unitPrice,
+      Value<int> unitCostPrice,
       Value<String?> notes,
     });
 
@@ -7866,6 +8054,11 @@ class $$OrderItemsTableFilterComposer
 
   ColumnFilters<int> get unitPrice => $composableBuilder(
     column: $table.unitPrice,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get unitCostPrice => $composableBuilder(
+    column: $table.unitCostPrice,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -7945,6 +8138,11 @@ class $$OrderItemsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<int> get unitCostPrice => $composableBuilder(
+    column: $table.unitCostPrice,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get notes => $composableBuilder(
     column: $table.notes,
     builder: (column) => ColumnOrderings(column),
@@ -8014,6 +8212,11 @@ class $$OrderItemsTableAnnotationComposer
 
   GeneratedColumn<int> get unitPrice =>
       $composableBuilder(column: $table.unitPrice, builder: (column) => column);
+
+  GeneratedColumn<int> get unitCostPrice => $composableBuilder(
+    column: $table.unitCostPrice,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<String> get notes =>
       $composableBuilder(column: $table.notes, builder: (column) => column);
@@ -8098,6 +8301,7 @@ class $$OrderItemsTableTableManager
                 Value<int> itemId = const Value.absent(),
                 Value<int> quantity = const Value.absent(),
                 Value<int> unitPrice = const Value.absent(),
+                Value<int> unitCostPrice = const Value.absent(),
                 Value<String?> notes = const Value.absent(),
               }) => OrderItemsCompanion(
                 id: id,
@@ -8105,6 +8309,7 @@ class $$OrderItemsTableTableManager
                 itemId: itemId,
                 quantity: quantity,
                 unitPrice: unitPrice,
+                unitCostPrice: unitCostPrice,
                 notes: notes,
               ),
           createCompanionCallback:
@@ -8114,6 +8319,7 @@ class $$OrderItemsTableTableManager
                 required int itemId,
                 required int quantity,
                 required int unitPrice,
+                Value<int> unitCostPrice = const Value.absent(),
                 Value<String?> notes = const Value.absent(),
               }) => OrderItemsCompanion.insert(
                 id: id,
@@ -8121,6 +8327,7 @@ class $$OrderItemsTableTableManager
                 itemId: itemId,
                 quantity: quantity,
                 unitPrice: unitPrice,
+                unitCostPrice: unitCostPrice,
                 notes: notes,
               ),
           withReferenceMapper: (p0) => p0

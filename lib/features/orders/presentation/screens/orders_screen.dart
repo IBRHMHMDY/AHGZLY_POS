@@ -151,7 +151,7 @@ class _OrderCard extends StatelessWidget {
           child: Text('#${order.id}', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: isRefunded ? Colors.red : Colors.teal)),
         ),
         title: Text(
-          'الإجمالي: ${MoneyFormatter.format(order.total)} ج.م', 
+          'الإجمالي: ${order.total.toFormattedMoney()} ج.م', 
           style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: isRefunded ? Colors.red : Colors.black87, decoration: isRefunded ? TextDecoration.lineThrough : null)
         ),
         subtitle: Padding(

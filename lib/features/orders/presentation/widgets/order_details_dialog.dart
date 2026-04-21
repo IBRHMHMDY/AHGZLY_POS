@@ -108,7 +108,7 @@ class _OrderSummary extends StatelessWidget {
         children: [
           Text('إجمالي الطلب:', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: isRefunded ? Colors.red.shade900 : Colors.teal.shade900)),
           Text(
-            '${MoneyFormatter.format(total)} ج.م',
+            '${total.toFormattedMoney()} ج.م',
             style: TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.w900,

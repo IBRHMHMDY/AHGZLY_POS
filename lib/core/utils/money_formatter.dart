@@ -26,8 +26,8 @@ extension DoubleToMoneyExtension on double {
   }
 }
 
-// تم الإبقاء على الكلاس القديم مع وضع علامة Deprecated لتجنب كسر الكود القديم 
-// حتى نقوم بتحديثه بالكامل في باقي الملفات (Safety Rule)
+// // تم الإبقاء على الكلاس القديم مع وضع علامة Deprecated لتجنب كسر الكود القديم 
+// // حتى نقوم بتحديثه بالكامل في باقي الملفات (Safety Rule)
 @Deprecated('Use MoneyFormatterExtension on int or double directly')
 class MoneyFormatter {
   static String format(int amountInCents) => amountInCents.toFormattedMoney();

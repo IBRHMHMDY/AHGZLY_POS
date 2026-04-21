@@ -27,78 +27,90 @@ class MenuBloc extends Bloc<MenuEvent, MenuState> {
     required this.deleteItem,
   }) : super(MenuInitial()) {
     
-    // Categories
-    on<FetchCategoriesEvent>((event, emit) async {
-      emit(MenuLoading());
-      final failureOrCategories = await getCategories(NoParams());
-      failureOrCategories.fold(
-        (failure) => emit(MenuError(failure.message)),
-        (categories) => emit(CategoriesLoaded(categories)),
-      );
-    });
+    // تسجيل أحداث الفئات (Categories)
+    on<FetchCategoriesEvent>(_onFetchCategories);
+    on<AddCategoryEvent>(_onAddCategory);
+    on<UpdateCategoryEvent>(_onUpdateCategory);
+    on<DeleteCategoryEvent>(_onDeleteCategory);
 
-    on<AddCategoryEvent>((event, emit) async {
-      emit(MenuLoading());
-      final failureOrSuccess = await addCategory(AddCategoryParams(category: event.category));
-      failureOrSuccess.fold(
-        (failure) => emit(MenuError(failure.message)),
-        (id) => emit(const MenuOperationSuccess('تمت إضافة الفئة بنجاح')),
-      );
-    });
+    // تسجيل أحداث الأصناف (Items)
+    on<FetchItemsEvent>(_onFetchItems);
+    on<AddItemEvent>(_onAddItem);
+    on<UpdateItemEvent>(_onUpdateItem);
+    on<DeleteItemEvent>(_onDeleteItem);
+  }
 
-    on<UpdateCategoryEvent>((event, emit) async {
-      emit(MenuLoading());
-      final failureOrSuccess = await updateCategory(UpdateCategoryParams(category: event.category));
-      failureOrSuccess.fold(
-        (failure) => emit(MenuError(failure.message)),
-        (_) => emit(const MenuOperationSuccess('تم تحديث الفئة بنجاح')),
-      );
-    });
+  // تم فصل العمليات (Handlers) لتقليل التعقيد داخل المُنشئ (Constructor) ولتطبيق مبدأ Single Responsibility
 
-    on<DeleteCategoryEvent>((event, emit) async {
-      emit(MenuLoading());
-      final failureOrSuccess = await deleteCategory(DeleteCategoryParams(id: event.id));
-      failureOrSuccess.fold(
-        (failure) => emit(MenuError(failure.message)),
-        (_) => emit(const MenuOperationSuccess('تم حذف الفئة بنجاح')),
-      );
-    });
+  Future<void> _onFetchCategories(FetchCategoriesEvent event, Emitter<MenuState> emit) async {
+    emit(MenuLoading());
+    final failureOrCategories = await getCategories(NoParams());
+    failureOrCategories.fold(
+      (failure) => emit(MenuError(failure.message)),
+      (categories) => emit(CategoriesLoaded(categories)),
+    );
+  }
 
-    // Items
-    on<FetchItemsEvent>((event, emit) async {
-      emit(MenuLoading());
-      final failureOrItems = await getItems(GetItemsParams(categoryId: event.categoryId));
-      failureOrItems.fold(
-        (failure) => emit(MenuError(failure.message)),
-        (items) => emit(ItemsLoaded(items)),
-      );
-    });
+  Future<void> _onAddCategory(AddCategoryEvent event, Emitter<MenuState> emit) async {
+    emit(MenuLoading());
+    final failureOrSuccess = await addCategory(AddCategoryParams(category: event.category));
+    failureOrSuccess.fold(
+      (failure) => emit(MenuError(failure.message)),
+      (_) => emit(const MenuOperationSuccess('تمت إضافة الفئة بنجاح')),
+    );
+  }
 
-    on<AddItemEvent>((event, emit) async {
-      emit(MenuLoading());
-      final failureOrSuccess = await addItem(AddItemParams(item: event.item));
-      failureOrSuccess.fold(
-        (failure) => emit(MenuError(failure.message)),
-        (id) => emit(const MenuOperationSuccess('تمت إضافة الصنف بنجاح')),
-      );
-    });
+  Future<void> _onUpdateCategory(UpdateCategoryEvent event, Emitter<MenuState> emit) async {
+    emit(MenuLoading());
+    final failureOrSuccess = await updateCategory(UpdateCategoryParams(category: event.category));
+    failureOrSuccess.fold(
+      (failure) => emit(MenuError(failure.message)),
+      (_) => emit(const MenuOperationSuccess('تم تحديث الفئة بنجاح')),
+    );
+  }
 
-    on<UpdateItemEvent>((event, emit) async {
-      emit(MenuLoading());
-      final failureOrSuccess = await updateItem(UpdateItemParams(item: event.item));
-      failureOrSuccess.fold(
-        (failure) => emit(MenuError(failure.message)),
-        (_) => emit(const MenuOperationSuccess('تم تحديث الصنف بنجاح')),
-      );
-    });
+  Future<void> _onDeleteCategory(DeleteCategoryEvent event, Emitter<MenuState> emit) async {
+    emit(MenuLoading());
+    final failureOrSuccess = await deleteCategory(DeleteCategoryParams(id: event.id));
+    failureOrSuccess.fold(
+      (failure) => emit(MenuError(failure.message)),
+      (_) => emit(const MenuOperationSuccess('تم حذف الفئة بنجاح')),
+    );
+  }
 
-    on<DeleteItemEvent>((event, emit) async {
-      emit(MenuLoading());
-      final failureOrSuccess = await deleteItem(DeleteItemParams(id: event.id));
-      failureOrSuccess.fold(
-        (failure) => emit(MenuError(failure.message)),
-        (_) => emit(const MenuOperationSuccess('تم حذف الصنف بنجاح')),
-      );
-    });
+  Future<void> _onFetchItems(FetchItemsEvent event, Emitter<MenuState> emit) async {
+    emit(MenuLoading());
+    final failureOrItems = await getItems(GetItemsParams(categoryId: event.categoryId));
+    failureOrItems.fold(
+      (failure) => emit(MenuError(failure.message)),
+      (items) => emit(ItemsLoaded(items)),
+    );
+  }
+
+  Future<void> _onAddItem(AddItemEvent event, Emitter<MenuState> emit) async {
+    emit(MenuLoading());
+    final failureOrSuccess = await addItem(AddItemParams(item: event.item));
+    failureOrSuccess.fold(
+      (failure) => emit(MenuError(failure.message)),
+      (_) => emit(const MenuOperationSuccess('تمت إضافة الصنف بنجاح')),
+    );
+  }
+
+  Future<void> _onUpdateItem(UpdateItemEvent event, Emitter<MenuState> emit) async {
+    emit(MenuLoading());
+    final failureOrSuccess = await updateItem(UpdateItemParams(item: event.item));
+    failureOrSuccess.fold(
+      (failure) => emit(MenuError(failure.message)),
+      (_) => emit(const MenuOperationSuccess('تم تحديث الصنف بنجاح')),
+    );
+  }
+
+  Future<void> _onDeleteItem(DeleteItemEvent event, Emitter<MenuState> emit) async {
+    emit(MenuLoading());
+    final failureOrSuccess = await deleteItem(DeleteItemParams(id: event.id));
+    failureOrSuccess.fold(
+      (failure) => emit(MenuError(failure.message)),
+      (_) => emit(const MenuOperationSuccess('تم حذف الصنف بنجاح')),
+    );
   }
 }

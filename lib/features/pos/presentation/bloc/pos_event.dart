@@ -1,5 +1,4 @@
 import 'package:ahgzly_pos/core/common/enums/enums_data.dart';
-import 'package:ahgzly_pos/features/pos/domain/entities/order_entity.dart';
 import 'package:equatable/equatable.dart';
 import 'package:ahgzly_pos/features/menu/domain/entities/item_entity.dart';
 
@@ -8,13 +7,6 @@ abstract class PosEvent extends Equatable {
 
   @override
   List<Object> get props => [];
-}
-
-class SaveOrderEvent extends PosEvent {
-  final OrderEntity order;
-  const SaveOrderEvent(this.order);
-  @override
-  List<Object> get props => [order];
 }
 
 class AddItemToCartEvent extends PosEvent {

@@ -31,18 +31,19 @@ class PosUpdated extends PosState {
   final int serviceFee;
   final int deliveryFee;
   final int total;
+  final int totalCost;
   final String restaurantName;
   final String taxNumber;
   final PrintMode printMode;
 
   PosUpdated({
     required this.cartItems, required this.orderType, required this.subTotal, required this.discountAmount,
-    required this.taxAmount, required this.serviceFee, required this.deliveryFee, required this.total,
+    required this.taxAmount, required this.serviceFee, required this.deliveryFee, required this.total, required this.totalCost,
     required this.restaurantName, required this.taxNumber, required this.printMode,
   });
 
   @override
-  List<Object> get props => [cartItems, orderType, subTotal, discountAmount, taxAmount, serviceFee, deliveryFee, total, restaurantName, taxNumber, printMode];
+  List<Object> get props => [cartItems, orderType, subTotal, discountAmount, taxAmount, serviceFee, deliveryFee, total, totalCost, restaurantName, taxNumber, printMode];
 }
 
 class PosCheckoutSuccess extends PosState {

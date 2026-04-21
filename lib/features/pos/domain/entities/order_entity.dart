@@ -13,7 +13,8 @@ class OrderEntity extends Equatable {
   final int taxAmount;   
   final int serviceFee;  
   final int deliveryFee; 
-  final int total;       
+  final int total;
+  final int totalCost; 
   final PaymentMethod paymentMethod; 
   final OrderStatus status; 
   final DateTime createdAt; 
@@ -31,7 +32,8 @@ class OrderEntity extends Equatable {
     required this.taxAmount,
     required this.serviceFee, 
     required this.deliveryFee, 
-    required this.total, 
+    required this.total,
+    required this.totalCost,
     required this.paymentMethod,
     required this.status, 
     required this.createdAt, 
@@ -41,10 +43,8 @@ class OrderEntity extends Equatable {
     required this.items,
   });
 
-  // [Refactored]: إضافة قاعدة عمل للتحقق من صحة الطلب داخل الـ Entity نفسه
-  // هذا يمنع إنشاء طلبات غير منطقية في أي مكان في التطبيق
-  bool get isValid => total >= 0 && items.isNotEmpty;
-
+  bool get isValid => total >= 0 && totalCost >= 0 && items.isNotEmpty;
+  int get netProfit => total - totalCost - taxAmount;
   // [Refactored]: دالة لإنشاء نسخة جديدة من الطلب مع ربط الوردية (Immutability)
   OrderEntity copyWithShift(int newShiftId) {
     return OrderEntity(
@@ -57,6 +57,7 @@ class OrderEntity extends Equatable {
       serviceFee: serviceFee,
       deliveryFee: deliveryFee,
       total: total,
+      totalCost: totalCost,
       paymentMethod: paymentMethod,
       status: status,
       createdAt: createdAt,
@@ -70,7 +71,7 @@ class OrderEntity extends Equatable {
   @override
   List<Object?> get props => [
     shiftId, tableId, orderType, subTotal, discount, taxAmount, serviceFee, 
-    deliveryFee, total, paymentMethod, status, createdAt, 
+    deliveryFee, total, totalCost, paymentMethod, status, createdAt, 
     customerName, customerPhone, customerAddress, items
   ];
 }

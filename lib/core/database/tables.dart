@@ -83,7 +83,7 @@ class Items extends Table {
   IntColumn get categoryId => integer().references(Categories, #id)();
   TextColumn get name => text()();
   IntColumn get price => integer()(); 
-  // [Refactored] تحويل التواريخ
+  IntColumn get costPrice => integer().withDefault(const Constant(0))(); 
   TextColumn get createdAt => text().map(const DateTimeConverter())();
   TextColumn get updatedAt => text().map(const DateTimeConverter())();
 }
@@ -113,7 +113,7 @@ class Orders extends Table {
   IntColumn get serviceFee => integer()(); 
   IntColumn get deliveryFee => integer()(); 
   IntColumn get total => integer()(); 
-  // [Refactored] ربط الـ Enums مباشرة بالأعمدة
+  IntColumn get totalCost => integer().withDefault(const Constant(0))();  
   TextColumn get paymentMethod => text().map(const PaymentMethodConverter())();
   TextColumn get status => text().map(const OrderStatusConverter())();
   TextColumn get customerName => text().withDefault(const Constant(""))();
@@ -131,5 +131,6 @@ class OrderItems extends Table {
   IntColumn get itemId => integer().references(Items, #id)();
   IntColumn get quantity => integer()();
   IntColumn get unitPrice => integer()(); 
+  IntColumn get unitCostPrice => integer().withDefault(const Constant(0))();
   TextColumn get notes => text().nullable()();
 }
