@@ -1,4 +1,3 @@
-import 'package:ahgzly_pos/core/common/enums/enums_data.dart';
 import 'package:ahgzly_pos/core/common/users/models/user_model.dart';
 import 'package:ahgzly_pos/core/database/app_database.dart'; 
 import 'package:ahgzly_pos/core/error/exceptions.dart';

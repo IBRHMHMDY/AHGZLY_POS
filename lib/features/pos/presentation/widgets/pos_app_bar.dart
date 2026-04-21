@@ -7,7 +7,7 @@ import 'package:ahgzly_pos/features/auth/presentation/bloc/auth_state.dart';
 import 'package:ahgzly_pos/features/menu/presentation/bloc/menu_bloc.dart';
 import 'package:ahgzly_pos/features/menu/presentation/bloc/menu_event.dart';
 import 'package:ahgzly_pos/features/pos/presentation/bloc/pos_bloc.dart';
-import 'package:ahgzly_pos/features/pos/presentation/bloc/pos_event.dart';
+import 'package:ahgzly_pos/features/pos/presentation/bloc/pos_event.dart'; // 🚀 [استيراد الأحداث]
 
 class PosAppBar extends StatelessWidget implements PreferredSizeWidget {
   const PosAppBar({super.key});
@@ -15,7 +15,6 @@ class PosAppBar extends StatelessWidget implements PreferredSizeWidget {
   @override
   Size get preferredSize => const Size.fromHeight(kToolbarHeight);
 
-  // تم نقل دالة الإغلاق هنا لتقليل الاعتماديات في الشاشة الرئيسية
   void _showExitConfirmation(BuildContext context) {
     showDialog(
       context: context,
@@ -35,14 +34,10 @@ class PosAppBar extends StatelessWidget implements PreferredSizeWidget {
             child: const Text('إلغاء', style: TextStyle(color: Colors.grey, fontSize: 16, fontWeight: FontWeight.bold)),
           ),
           ElevatedButton.icon(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            ),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
             icon: const Icon(Icons.exit_to_app),
             label: const Text('تأكيد الإغلاق', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-            onPressed: () => exit(0), // تنويه: مستقبلاً يجب استبدالها بـ windowManager.close() لإغلاق آمن
+            onPressed: () => exit(0), 
           ),
         ],
       ),
@@ -57,10 +52,7 @@ class PosAppBar extends StatelessWidget implements PreferredSizeWidget {
         children: [
           Icon(Icons.point_of_sale, size: 28),
           SizedBox(width: 8),
-          Text(
-            'نقطة البيع (POS)',
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22),
-          ),
+          Text('نقطة البيع (POS)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22)),
         ],
       ),
       backgroundColor: Colors.teal,
@@ -81,7 +73,8 @@ class PosAppBar extends StatelessWidget implements PreferredSizeWidget {
                   }),
                   IconButton(icon: const Icon(Icons.settings), tooltip: 'إعدادات النظام', onPressed: () async {
                     await context.push('/settings');
-                    if (context.mounted) context.read<PosBloc>().add(ReloadSettingsEvent());
+                    // 🚀 [تصحيح]: استخدام LoadPosDataEvent بدلاً من ReloadSettingsEvent الخاطئ
+                    if (context.mounted) context.read<PosBloc>().add(LoadPosDataEvent());
                   }),
                 ],
                 IconButton(icon: const Icon(Icons.history), tooltip: 'سجل الطلبات', onPressed: () => context.push('/orders')),

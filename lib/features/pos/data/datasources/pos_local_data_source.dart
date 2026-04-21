@@ -1,14 +1,18 @@
-// مسار الملف: lib/features/pos/data/datasources/pos_local_data_source.dart
-
-import 'package:ahgzly_pos/core/database/app_database.dart'; 
+import 'package:ahgzly_pos/core/database/app_database.dart';
+import 'package:ahgzly_pos/core/database/app_database_extentions.dart'; 
 import 'package:ahgzly_pos/core/error/exceptions.dart';
 import 'package:ahgzly_pos/features/pos/data/models/order_model.dart';
 import 'package:ahgzly_pos/features/pos/data/models/order_item_model.dart';
-import 'package:ahgzly_pos/core/common/enums/enums_data.dart'; 
 import 'package:drift/drift.dart';
 
+// 🚀 [Fix]: إكمال العقد (Contract) ليتوافق مع الـ Repository
 abstract class PosLocalDataSource {
   Future<int> saveOrder(OrderModel order);
+  Future<List<CustomerData>> getCustomers();
+  Future<List<ZoneData>> getZones();
+  Future<List<RestaurantTableData>> getTablesByZone(int zoneId);
+  Future<List<PaymentMethodData>> getPaymentMethods();
+  Future<int> addCustomer(CustomersCompanion customer);
 }
 
 class PosLocalDataSourceImpl implements PosLocalDataSource {
@@ -18,10 +22,6 @@ class PosLocalDataSourceImpl implements PosLocalDataSource {
 
   @override
   Future<int> saveOrder(OrderModel order) async {
-    // [Refactored]: تمت إزالة كتلة try-catch بالكامل من هنا.
-    // مبدأ Clean Architecture: الـ Data Source يجب أن يرمي الخطأ كما هو (Raw Exception)، 
-    // والـ Repository هو المسؤول عن التقاطه، عمل Logging له، وتحويله إلى Failure مفهوم للمستخدم.
-    
     return await appDatabase.transaction(() async {
       
       if (order.shiftId == null || order.shiftId == 0) {
@@ -36,14 +36,14 @@ class PosLocalDataSourceImpl implements PosLocalDataSource {
         OrdersCompanion.insert(
           shiftId: order.shiftId!,
           tableId: Value(order.tableId),
-          orderType: order.orderType,       
+          orderType: Value(order.orderType),       
           subTotal: order.subTotal,
           discount: Value(order.discount),
           taxAmount: order.taxAmount,
           serviceFee: order.serviceFee,
           deliveryFee: order.deliveryFee,
           total: order.total,
-          paymentMethod: order.paymentMethod, 
+          paymentMethodId: Value(order.paymentMethodId), 
           status: order.status,               
           customerName: Value(order.customerName),
           customerPhone: Value(order.customerPhone),
@@ -65,8 +65,6 @@ class PosLocalDataSourceImpl implements PosLocalDataSource {
         );
       }
 
-      // [ملاحظة هامة]: إذا كان status في جدول shifts هو Enum، 
-      // يجب تغييره هنا من 'active' إلى ShiftStatus.active مثلاً (حسب كيف عرفته في قاعدة البيانات).
       final shift = await (appDatabase.select(appDatabase.shifts)
             ..where((t) => t.id.equals(order.shiftId!) & t.status.equals('active')))
           .getSingleOrNull();
@@ -75,9 +73,19 @@ class PosLocalDataSourceImpl implements PosLocalDataSource {
          throw CacheException('الوردية الحالية غير نشطة أو تم إغلاقها.');
       }
 
-      final isVisa = order.paymentMethod == PaymentMethod.visa;
-      final isInstapay = order.paymentMethod == PaymentMethod.wallet;
-      final isCash = order.paymentMethod == PaymentMethod.cash;
+      // 🚀 [Fix Critical Bug]: التخلص من الـ Enum نهائياً.
+      // نقوم بالبحث عن اسم طريقة الدفع في قاعدة البيانات باستخدام الـ ID
+      String methodName = '';
+      if (order.paymentMethodId != null) {
+        final methodData = await (appDatabase.select(appDatabase.paymentMethods)
+              ..where((t) => t.id.equals(order.paymentMethodId!)))
+            .getSingleOrNull();
+        methodName = methodData?.name ?? '';
+      }
+
+      final isCash = methodName.contains('كاش');
+      final isVisa = methodName.contains('فيزا') || methodName.contains('بطاقة');
+      final isInstapay = methodName.contains('محفظة') || methodName.contains('انستا') || methodName.contains('فودافون');
 
       final updatedShift = shift.copyWith(
         totalSales: shift.totalSales + order.total,
@@ -92,5 +100,33 @@ class PosLocalDataSourceImpl implements PosLocalDataSource {
 
       return orderId;
     });
+  }
+
+  // ==========================================
+  // 🚀 [Fix]: تنفيذ الدوال المساعدة لجلب البيانات
+  // ==========================================
+  @override
+  Future<List<CustomerData>> getCustomers() async {
+    return await appDatabase.getAllCustomers();
+  }
+
+  @override
+  Future<List<ZoneData>> getZones() async {
+    return await appDatabase.getAllZones();
+  }
+
+  @override
+  Future<List<RestaurantTableData>> getTablesByZone(int zoneId) async {
+    return await appDatabase.getTablesByZoneId(zoneId);
+  }
+
+  @override
+  Future<List<PaymentMethodData>> getPaymentMethods() async {
+    return await appDatabase.getAllPaymentMethods();
+  }
+
+  @override
+  Future<int> addCustomer(CustomersCompanion customer) async {
+    return await appDatabase.insertCustomer(customer);
   }
 }

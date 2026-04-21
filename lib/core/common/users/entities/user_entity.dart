@@ -1,4 +1,4 @@
-import 'package:ahgzly_pos/core/common/enums/enums_data.dart';
+import 'package:ahgzly_pos/core/extensions/user_role.dart';
 import 'package:equatable/equatable.dart';
 
 class User extends Equatable {

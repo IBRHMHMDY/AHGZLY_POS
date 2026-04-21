@@ -1,4 +1,4 @@
-import 'package:ahgzly_pos/core/common/enums/enums_data.dart';
+enum UserRole { admin, cashier }
 
 extension UserRoleExtension on UserRole {
   String toValue() => name;

@@ -1,16 +1,14 @@
-import 'package:ahgzly_pos/core/common/enums/enums_data.dart';
 import 'package:ahgzly_pos/core/extensions/order_type.dart';
 import 'package:ahgzly_pos/core/utils/date_time_utils.dart';
 import 'package:ahgzly_pos/core/utils/money_formatter.dart';
+import 'package:ahgzly_pos/features/pos/domain/entities/order_item_entity.dart';
 import 'package:ahgzly_pos/features/shift/domain/entities/shift_entity.dart';
 import 'package:flutter/material.dart';
-import 'package:ahgzly_pos/features/pos/presentation/bloc/pos_state.dart';
 import 'package:ahgzly_pos/features/orders/domain/entities/order_history_entity.dart';
 // ignore: library_prefixes
 import 'package:intl/intl.dart' as intlDateTime;
 
 Widget _buildRow(String title, int valueInCents) {
-  // Refactored: int
   final formattedValue = MoneyFormatter.format(valueInCents);
   return Row(
     mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -27,7 +25,7 @@ Widget _buildRow(String title, int valueInCents) {
 class CustomerReceiptWidget extends StatelessWidget {
   final int orderId;
   final OrderType orderType;
-  final List<CartItem> items;
+  final List<OrderItemEntity> items; // 🚀 [Fix]: استخدام الكيان الصحيح
   final int subTotal;
   final int discountAmount;
   final int taxAmount;
@@ -116,7 +114,6 @@ class CustomerReceiptWidget extends StatelessWidget {
                   ),
                 ),
                 Text(
-                  // [Refactor] استخدام دالة العرض المخصصة للـ Enum
                   'النوع: ${orderType.toDisplayName()}',
                   style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black),
                 ),
@@ -127,28 +124,37 @@ class CustomerReceiptWidget extends StatelessWidget {
               style: TextStyle(color: Colors.black),
             ),
             ...items.map(
-              (c) => Padding(
-                padding: const EdgeInsets.symmetric(vertical: 4.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Expanded(
-                      child: Text(
-                        '${c.item.name} (x${c.quantity})',
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black,
+              (c) {
+                // 🪄 تجهيز اسم الصنف مع المقاس للإيصال
+                String itemNameDisplay = c.itemName;
+                if (c.selectedVariant != null) {
+                  itemNameDisplay += ' (${c.selectedVariant!.name})';
+                }
+
+                return Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 4.0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          '$itemNameDisplay (x${c.quantity})',
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black,
+                          ),
                         ),
                       ),
-                    ),
-                    Text(
-                      '${MoneyFormatter.format(c.item.price * c.quantity)} ج.م',
-                      style: const TextStyle(fontSize: 16, color: Colors.black),
-                    ),
-                  ],
-                ),
-              ),
+                      Text(
+                        // 🚀 [Fix]: استخدام totalPrice الجاهز من الكيان بدلاً من العملية الحسابية اليدوية
+                        '${MoneyFormatter.format(c.totalPrice)} ج.م',
+                        style: const TextStyle(fontSize: 16, color: Colors.black),
+                      ),
+                    ],
+                  ),
+                );
+              }
             ),
             const Text(
               '----------------------------------------',
@@ -242,7 +248,7 @@ class CustomerReceiptWidget extends StatelessWidget {
 class KitchenReceiptWidget extends StatelessWidget {
   final int orderId;
   final OrderType orderType;
-  final List<CartItem> items;
+  final List<OrderItemEntity> items; // 🚀 [Fix]: استبدال CartItems بـ OrderItemEntity
 
   const KitchenReceiptWidget({
     super.key,
@@ -293,32 +299,46 @@ class KitchenReceiptWidget extends StatelessWidget {
               style: TextStyle(fontSize: 20, color: Colors.black),
             ),
             ...items.map(
-              (c) => Padding(
-                padding: const EdgeInsets.symmetric(vertical: 8.0),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      '[ ${c.quantity} ]  ',
-                      style: const TextStyle(
-                        fontSize: 26,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black,
-                      ),
-                    ),
-                    Expanded(
-                      child: Text(
-                        c.item.name,
+              (c) {
+                // 🪄 [UX Feature]: إظهار المقاس والإضافات والملاحظات بشكل بارز للمطبخ
+                String kitchenDetails = c.itemName;
+                if (c.selectedVariant != null) {
+                  kitchenDetails += ' (${c.selectedVariant!.name})';
+                }
+                if (c.selectedAddons.isNotEmpty) {
+                  kitchenDetails += '\n+ الإضافات: ${c.selectedAddons.map((a) => a.name).join('، ')}';
+                }
+                if (c.notes != null && c.notes!.isNotEmpty) {
+                  kitchenDetails += '\n* ملاحظة: ${c.notes}';
+                }
+
+                return Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8.0),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '[ ${c.quantity} ]  ',
                         style: const TextStyle(
-                          fontSize: 24,
+                          fontSize: 26,
                           fontWeight: FontWeight.bold,
                           color: Colors.black,
                         ),
                       ),
-                    ),
-                  ],
-                ),
-              ),
+                      Expanded(
+                        child: Text(
+                          kitchenDetails, // 🚀 [Fix]: استبدال c.item.name بـ String مجهز للمطبخ
+                          style: const TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }
             ),
             const Text(
               '====================',
@@ -490,7 +510,6 @@ class ZReportReceiptWidget extends StatelessWidget {
         ? 'عجز في الدرج:'
         : (shift.shortageOrOverage > 0 ? 'زيادة في الدرج:' : 'مطابقة تامة:');
 
-    // تنسيق التواريخ بشكل مقروء وأنيق (مثال: 2023-10-25 04:30 PM)
     final dateFormat = intlDateTime.DateFormat('yyyy-MM-dd hh:mm a');
     final startTimeFormatted = dateFormat.format(shift.startTime);
     final endTimeFormatted = shift.endTime != null
@@ -530,7 +549,6 @@ class ZReportReceiptWidget extends StatelessWidget {
             ),
             const Divider(color: Colors.black, thickness: 2),
 
-            // توثيق الأوقات
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -619,7 +637,6 @@ class ZReportReceiptWidget extends StatelessWidget {
               ],
             ),
 
-            // 🪄 التعديل الجوهري (Refactoring): إخفاء النقدية الفعلية والعجز في حالة الـ X-Report
             if (!isXReport) ...[
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -739,7 +756,7 @@ class ZReportReceiptWidget extends StatelessWidget {
               style: const TextStyle(fontSize: 14, color: Colors.black),
             ),
             const SizedBox(height: 10),
-            Text(
+            const Text(
               'مع تحيات Ibrahim Hamdy',
               style: TextStyle(fontSize: 12, color: Colors.black),
             ),

@@ -1,18 +1,18 @@
-// مسار الملف: lib/features/orders/domain/entities/order_history_entity.dart
-
-import 'package:ahgzly_pos/core/common/enums/enums_data.dart';
+import 'package:ahgzly_pos/core/extensions/order_status.dart';
+import 'package:ahgzly_pos/core/extensions/order_type.dart';
 import 'package:equatable/equatable.dart';
 
 
 class OrderHistoryEntity extends Equatable {
   final int id;
-  final OrderType orderType; // [Refactored] String -> Enum
+  final OrderType orderType;
   final int subTotal;
   final int discount;
   final int total;
-  final PaymentMethod paymentMethod; // [Refactored] String -> Enum
-  final DateTime createdAt; // [Refactored] String -> DateTime
-  final OrderStatus status; // [Refactored] String -> Enum
+  final int? paymentMethodId;
+  final String paymentMethodName;
+  final DateTime createdAt;
+  final OrderStatus status;
   final List<OrderItemHistoryEntity> items;
 
   const OrderHistoryEntity({
@@ -21,7 +21,8 @@ class OrderHistoryEntity extends Equatable {
     required this.subTotal,
     required this.discount,
     required this.total,
-    required this.paymentMethod,
+    required this.paymentMethodId,
+    required this.paymentMethodName,
     required this.createdAt,
     required this.status,
     required this.items,
@@ -30,7 +31,7 @@ class OrderHistoryEntity extends Equatable {
   @override
   List<Object?> get props => [
     id, orderType, subTotal, discount, total, 
-    paymentMethod, createdAt, status, items
+    paymentMethodId, paymentMethodName, createdAt, status, items
   ];
 }
 

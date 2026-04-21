@@ -1,19 +1,18 @@
-// مسار الملف: lib/features/pos/presentation/widgets/checkout_dialog.dart
-
-import 'package:ahgzly_pos/core/common/enums/enums_data.dart';
-
-import 'package:ahgzly_pos/core/extensions/payment_method.dart';
+import 'package:ahgzly_pos/core/common/entities/payment_method_entity.dart';
+import 'package:ahgzly_pos/core/extensions/order_type.dart';
 import 'package:ahgzly_pos/core/utils/money_formatter.dart';
 import 'package:flutter/material.dart';
 
 class CheckoutDialog extends StatefulWidget {
   final int totalAmount;
   final OrderType orderType;
+  final List<PaymentMethodEntity> paymentMethods; // 🚀 [Fix]: استقبال طرق الدفع من الـ DB
 
   const CheckoutDialog({
     super.key,
     required this.totalAmount,
     required this.orderType,
+    required this.paymentMethods,
   });
 
   @override
@@ -23,8 +22,7 @@ class CheckoutDialog extends StatefulWidget {
 class _CheckoutDialogState extends State<CheckoutDialog> {
   final _formKey = GlobalKey<FormState>();
   
-  // 🪄 [Refactored]: استخدام الـ Enum بشكل مباشر بدلاً من النصوص
-  PaymentMethod _selectedMethod = PaymentMethod.cash; 
+  late PaymentMethodEntity _selectedMethod; 
   
   late TextEditingController _paidController;
   late TextEditingController _nameController;
@@ -37,6 +35,11 @@ class _CheckoutDialogState extends State<CheckoutDialog> {
   @override
   void initState() {
     super.initState();
+    // 🚀 اختيار "كاش" كافتراضي إذا كان موجوداً
+    _selectedMethod = widget.paymentMethods.isNotEmpty 
+        ? widget.paymentMethods.first 
+        : const PaymentMethodEntity(id: 1, name: 'كاش');
+
     _paidController = TextEditingController(text: MoneyFormatter.format(widget.totalAmount));
     _nameController = TextEditingController();
     _phoneController = TextEditingController();
@@ -64,13 +67,13 @@ class _CheckoutDialogState extends State<CheckoutDialog> {
 
   void _submit() {
     if (_formKey.currentState!.validate()) {
-      // [Refactored]: التحقق عبر الـ Enum
-      if (_selectedMethod == PaymentMethod.cash && _change < 0) return; 
+      // 🚀 التحقق من الدفع نقداً
+      if (_selectedMethod.name.contains('كاش') && _change < 0) return; 
 
       setState(() => _isProcessing = true);
 
       Navigator.pop(context, {
-        'method': _selectedMethod, // 🪄 [Refactored]: إرجاع كائن Enum الآن وليس String!
+        'methodId': _selectedMethod.id ?? 1, // 🚀 إرجاع ID للـ Database
         'name': _nameController.text.trim(),
         'phone': _phoneController.text.trim(),
         'address': _addressController.text.trim(),
@@ -81,6 +84,7 @@ class _CheckoutDialogState extends State<CheckoutDialog> {
   @override
   Widget build(BuildContext context) {
     final isDelivery = widget.orderType == OrderType.delivery;
+    final isCash = _selectedMethod.name.contains('كاش');
 
     return Directionality(
       textDirection: TextDirection.rtl,
@@ -110,13 +114,13 @@ class _CheckoutDialogState extends State<CheckoutDialog> {
                     const SizedBox(height: 24),
                   ],
 
-                  // 🪄 تمرير الكائن بدلاً من النصوص
                   _PaymentMethodSelector(
+                    methods: widget.paymentMethods,
                     selectedMethod: _selectedMethod,
                     onMethodChanged: (val) {
                       setState(() {
                         _selectedMethod = val;
-                        if (val != PaymentMethod.cash) {
+                        if (!val.name.contains('كاش')) {
                           _paidController.text = MoneyFormatter.format(widget.totalAmount);
                         }
                       });
@@ -124,8 +128,7 @@ class _CheckoutDialogState extends State<CheckoutDialog> {
                   ),
                   const SizedBox(height: 20),
 
-                  // 🪄 التحقق عبر الكائن
-                  if (_selectedMethod == PaymentMethod.cash)
+                  if (isCash)
                     _CashPaymentSection(
                       paidController: _paidController,
                       totalAmount: widget.totalAmount,
@@ -140,8 +143,7 @@ class _CheckoutDialogState extends State<CheckoutDialog> {
         actions: [
           _DialogActions(
             isProcessing: _isProcessing,
-            // 🪄 التحقق عبر الكائن
-            canSubmit: !(_selectedMethod == PaymentMethod.cash && _change < 0),
+            canSubmit: !(isCash && _change < 0),
             onSubmit: _submit,
             onCancel: () => Navigator.pop(context),
           ),
@@ -280,10 +282,11 @@ class _DeliveryDetailsForm extends StatelessWidget {
 }
 
 class _PaymentMethodSelector extends StatelessWidget {
-  final PaymentMethod selectedMethod; // 🪄 أصبح يستقبل Enum
-  final ValueChanged<PaymentMethod> onMethodChanged; // 🪄 أصبح يرجع Enum
+  final List<PaymentMethodEntity> methods;
+  final PaymentMethodEntity selectedMethod; 
+  final ValueChanged<PaymentMethodEntity> onMethodChanged; 
 
-  const _PaymentMethodSelector({required this.selectedMethod, required this.onMethodChanged});
+  const _PaymentMethodSelector({required this.methods, required this.selectedMethod, required this.onMethodChanged});
 
   @override
   Widget build(BuildContext context) {
@@ -293,9 +296,8 @@ class _PaymentMethodSelector extends StatelessWidget {
         const Text('طريقة الدفع', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.black87)),
         const SizedBox(height: 8),
         Row(
-          // 🪄 توليد الأزرار بناءً على قيم الـ Enum بشكل آلي
-          children: PaymentMethod.values.map((method) {
-            final isSelected = selectedMethod == method;
+          children: methods.map((method) {
+            final isSelected = selectedMethod.id == method.id;
             return Expanded(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 4.0),
@@ -312,7 +314,7 @@ class _PaymentMethodSelector extends StatelessWidget {
                     ),
                     alignment: Alignment.center,
                     child: Text(
-                      method.toDisplayName(), 
+                      method.name, 
                       style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: isSelected ? Colors.white : Colors.black87),
                     ),
                   ),
@@ -437,3 +439,4 @@ class _DialogActions extends StatelessWidget {
     );
   }
 }
+

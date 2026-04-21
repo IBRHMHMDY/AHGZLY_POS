@@ -1,4 +1,4 @@
-import 'package:ahgzly_pos/core/common/enums/enums_data.dart';
+enum OrderStatus { pending, completed, cancelled, refunded }
 
 extension OrderStatusExtension on OrderStatus {
   // تُستخدم لحفظ القيمة في قاعدة البيانات بشكل آمن (بدلاً من حفظ الـ index الذي قد يتغير)

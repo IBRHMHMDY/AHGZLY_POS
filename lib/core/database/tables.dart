@@ -14,7 +14,9 @@ class License extends Table {
   BoolColumn get isActivated => boolean().withDefault(const Constant(false))();
   TextColumn get licenseKey => text().withDefault(const Constant(""))();
   // [Refactored] تحويل النص إلى DateTime تلقائياً
-  TextColumn get trialStartDate => text().map(const DateTimeConverter()).withDefault(const Constant("1970-01-01T00:00:00.000"))();
+  TextColumn get trialStartDate => text()
+      .map(const DateTimeConverter())
+      .withDefault(const Constant("1970-01-01T00:00:00.000"))();
 }
 
 /// Settings Table
@@ -40,7 +42,8 @@ class Users extends Table {
   TextColumn get role => text()();
   BoolColumn get isActive => boolean().withDefault(const Constant(true))();
   IntColumn get failedAttempts => integer().withDefault(const Constant(0))();
-  TextColumn get lockoutUntil => text().map(const DateTimeConverter()).nullable()();
+  TextColumn get lockoutUntil =>
+      text().map(const DateTimeConverter()).nullable()();
 }
 
 /// Shifts Table
@@ -57,11 +60,13 @@ class Shifts extends Table {
   IntColumn get totalInstapay => integer().withDefault(const Constant(0))();
   IntColumn get totalOrders => integer().withDefault(const Constant(0))();
   IntColumn get totalRefunds => integer().withDefault(const Constant(0))();
-  IntColumn get refundedOrdersCount => integer().withDefault(const Constant(0))();
+  IntColumn get refundedOrdersCount =>
+      integer().withDefault(const Constant(0))();
   IntColumn get totalExpenses => integer().withDefault(const Constant(0))();
   IntColumn get expectedCash => integer().withDefault(const Constant(0))();
   IntColumn get actualCash => integer().withDefault(const Constant(0))();
-  TextColumn get status => text()(); // إذا كان هناك ShiftStatus Enum في المستقبل، سنضيف له Converter
+  TextColumn get status =>
+      text()(); // إذا كان هناك ShiftStatus Enum في المستقبل، سنضيف له Converter
 }
 
 /// Categories Table
@@ -80,8 +85,8 @@ class Items extends Table {
   IntColumn get id => integer().autoIncrement()();
   IntColumn get categoryId => integer().references(Categories, #id)();
   TextColumn get name => text()();
-  IntColumn get price => integer()(); 
-  IntColumn get costPrice => integer().withDefault(const Constant(0))(); 
+  IntColumn get price => integer()();
+  IntColumn get costPrice => integer().withDefault(const Constant(0))();
   TextColumn get createdAt => text().map(const DateTimeConverter())();
   TextColumn get updatedAt => text().map(const DateTimeConverter())();
 }
@@ -91,7 +96,7 @@ class Items extends Table {
 class Expenses extends Table {
   IntColumn get id => integer().autoIncrement()();
   IntColumn get shiftId => integer().references(Shifts, #id)();
-  IntColumn get amount => integer()(); 
+  IntColumn get amount => integer()();
   TextColumn get reason => text()();
   // [Refactored] تحويل التواريخ
   TextColumn get createdAt => text().map(const DateTimeConverter())();
@@ -102,17 +107,20 @@ class Expenses extends Table {
 class Orders extends Table {
   IntColumn get id => integer().autoIncrement()();
   // نوع الطلب: 'dine_in' (صالة), 'takeaway' (تيك أواي), 'delivery' (دليفري)
-  TextColumn get orderType => text().withDefault(const Constant('takeaway'))(); 
+  TextColumn get orderType => text().map(const OrderTypeConverter()).withDefault(const Constant('takeaway'))();
   IntColumn get shiftId => integer().references(Shifts, #id)();
   IntColumn get customerId => integer().nullable().references(Customers, #id)();
-  IntColumn get tableId => integer().nullable().references(RestaurantTables, #id)();  IntColumn get subTotal => integer()(); 
-  IntColumn get discount => integer().withDefault(const Constant(0))(); 
-  IntColumn get taxAmount => integer()(); 
-  IntColumn get serviceFee => integer()(); 
-  IntColumn get deliveryFee => integer()(); 
-  IntColumn get total => integer()(); 
+  IntColumn get tableId =>
+      integer().nullable().references(RestaurantTables, #id)();
+  IntColumn get subTotal => integer()();
+  IntColumn get discount => integer().withDefault(const Constant(0))();
+  IntColumn get taxAmount => integer()();
+  IntColumn get serviceFee => integer()();
+  IntColumn get deliveryFee => integer()();
+  IntColumn get total => integer()();
   IntColumn get totalCost => integer().withDefault(const Constant(0))();
-  IntColumn get paymentMethodId => integer().nullable().references(PaymentMethods, #id)();
+  IntColumn get paymentMethodId =>
+      integer().nullable().references(PaymentMethods, #id)();
   TextColumn get status => text().map(const OrderStatusConverter())();
   TextColumn get customerName => text().withDefault(const Constant(""))();
   TextColumn get customerPhone => text().withDefault(const Constant(""))();
@@ -124,13 +132,14 @@ class Orders extends Table {
 @DataClassName('OrderItemsData')
 class OrderItems extends Table {
   IntColumn get id => integer().autoIncrement()();
-  IntColumn get orderId => integer().references(Orders, #id)(); 
+  IntColumn get orderId => integer().references(Orders, #id)();
   IntColumn get itemId => integer().references(Items, #id)();
   IntColumn get quantity => integer()();
-  IntColumn get unitPrice => integer()(); 
+  IntColumn get unitPrice => integer()();
   IntColumn get unitCostPrice => integer().withDefault(const Constant(0))();
   TextColumn get notes => text().nullable()();
 }
+
 /// Customers Table
 @DataClassName('CustomerData')
 class Customers extends Table {
@@ -140,12 +149,15 @@ class Customers extends Table {
   TextColumn get address => text().nullable()();
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
 }
+
 /// Zones Table
-@DataClassName('ZonesData')
+@DataClassName('ZoneData')
 class Zones extends Table {
   IntColumn get id => integer().autoIncrement()();
-  TextColumn get name => text().withLength(min: 2, max: 50)(); // مثال: صالة 1، التراس، الحديقة
+  TextColumn get name =>
+      text().withLength(min: 2, max: 50)(); // مثال: صالة 1، التراس، الحديقة
 }
+
 /// RestaurantTables Table
 @DataClassName('RestaurantTableData')
 class RestaurantTables extends Table {
@@ -153,12 +165,58 @@ class RestaurantTables extends Table {
   IntColumn get zoneId => integer().references(Zones, #id)();
   TextColumn get tableNumber => text().withLength(min: 1, max: 10)();
   IntColumn get capacity => integer().withDefault(const Constant(4))();
-  TextColumn get status => text().withDefault(const Constant('available'))(); // available, occupied, reserved
+  TextColumn get status => text().withDefault(
+    const Constant('available'),
+  )(); // available, occupied, reserved
 }
+
 /// PaymentMethod Table
 @DataClassName('PaymentMethodData')
 class PaymentMethods extends Table {
   IntColumn get id => integer().autoIncrement()();
-  TextColumn get name => text().withLength(min: 2, max: 50)(); // كاش، فيزا، فودافون كاش
+  TextColumn get name =>
+      text().withLength(min: 2, max: 50)(); // كاش، فيزا، فودافون كاش
   BoolColumn get isActive => boolean().withDefault(const Constant(true))();
+}
+
+/// ItemVariants Table
+@DataClassName('ItemVariantData')
+class ItemVariants extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  IntColumn get itemId => integer().references(Items, #id)();
+  TextColumn get name => text().withLength(min: 1, max: 50)();
+  // 💰 الأموال تم تحويلها إلى Integer
+  IntColumn get price => integer()();
+  IntColumn get costPrice => integer().withDefault(const Constant(0))();
+}
+
+/// Addons Table
+@DataClassName('AddonData')
+class Addons extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  TextColumn get name => text().withLength(min: 1, max: 50)();
+  IntColumn get price => integer()();
+  IntColumn get costPrice => integer().withDefault(const Constant(0))();
+}
+
+/// InventoryItems Table
+@DataClassName('InventoryItemData')
+class InventoryItems extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  TextColumn get name => text().withLength(min: 2, max: 100)();
+  TextColumn get unit => text().withLength(min: 1, max: 20)(); // جم، مل، قطعة
+  RealColumn get stockQuantity =>
+      real().withDefault(const Constant(0.0))(); // الكميات تبقى Real
+  IntColumn get costPerUnit => integer().withDefault(const Constant(0))();
+}
+
+/// Recipes Table
+@DataClassName('RecipeData')
+class Recipes extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  IntColumn get itemId => integer().nullable().references(Items, #id)();
+  IntColumn get variantId =>
+      integer().nullable().references(ItemVariants, #id)();
+  IntColumn get inventoryItemId => integer().references(InventoryItems, #id)();
+  RealColumn get quantityNeeded => real()();
 }

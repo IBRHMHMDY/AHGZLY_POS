@@ -1,4 +1,4 @@
-import 'package:ahgzly_pos/core/common/enums/enums_data.dart';
+import 'package:ahgzly_pos/core/extensions/print_mode.dart';
 import 'package:equatable/equatable.dart';
 
 class AppSettingsEntity extends Equatable {

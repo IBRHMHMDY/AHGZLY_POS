@@ -1,36 +1,51 @@
-import 'package:ahgzly_pos/core/common/enums/enums_data.dart';
+import 'package:ahgzly_pos/core/extensions/order_type.dart';
+import 'package:ahgzly_pos/features/pos/domain/entities/order_item_entity.dart';
 import 'package:equatable/equatable.dart';
-import 'package:ahgzly_pos/features/menu/domain/entities/item_entity.dart';
 
 abstract class PosEvent extends Equatable {
   const PosEvent();
 
   @override
-  List<Object> get props => [];
+  List<Object?> get props => [];
 }
 
+// تحميل البيانات الأولية (أقسام، أصناف، عملاء، طاولات)
+class LoadPosDataEvent extends PosEvent {}
+
+// تغيير القسم المختار في الواجهة
+class ChangeCategoryEvent extends PosEvent {
+  final int categoryId;
+  const ChangeCategoryEvent(this.categoryId);
+  @override
+  List<Object> get props => [categoryId];
+}
+
+// 🚀 [Sprint 3] إضافة صنف للسلة (شامل المقاس والإضافات)
 class AddItemToCartEvent extends PosEvent {
-  final ItemEntity item;
-  const AddItemToCartEvent(this.item);
+  final OrderItemEntity orderItem;
+  const AddItemToCartEvent(this.orderItem);
   @override
-  List<Object> get props => [item];
-}
-
-class UpdateCartItemQuantityEvent extends PosEvent {
-  final int index;
-  final int quantity;
-  const UpdateCartItemQuantityEvent(this.index, this.quantity);
-  @override
-  List<Object> get props => [index, quantity];
+  List<Object> get props => [orderItem];
 }
 
 class RemoveItemFromCartEvent extends PosEvent {
-  final int index;
-  const RemoveItemFromCartEvent(this.index);
+  final OrderItemEntity orderItem;
+  const RemoveItemFromCartEvent(this.orderItem);
   @override
-  List<Object> get props => [index];
+  List<Object> get props => [orderItem];
 }
 
+class UpdateCartItemQuantityEvent extends PosEvent {
+  final OrderItemEntity orderItem;
+  final int newQuantity;
+  const UpdateCartItemQuantityEvent(this.orderItem, this.newQuantity);
+  @override
+  List<Object> get props => [orderItem, newQuantity];
+}
+
+class ClearCartEvent extends PosEvent {}
+
+// 🚀 [Sprint 3] تغيير إعدادات الفاتورة (نوع الطلب، الطاولة، العميل)
 class ChangeOrderTypeEvent extends PosEvent {
   final OrderType orderType;
   const ChangeOrderTypeEvent(this.orderType);
@@ -38,35 +53,25 @@ class ChangeOrderTypeEvent extends PosEvent {
   List<Object> get props => [orderType];
 }
 
-class SubmitOrderEvent extends PosEvent {
-  final PaymentMethod paymentMethod;
-  final String customerName;
-  final String customerPhone;
-  final String customerAddress;
-
-  const SubmitOrderEvent(
-    this.paymentMethod, {
-    this.customerName = '',
-    this.customerPhone = '',
-    this.customerAddress = '',
-  });
-
+class SelectTableEvent extends PosEvent {
+  final int? tableId;
+  const SelectTableEvent(this.tableId);
   @override
-  List<Object> get props => [
-    paymentMethod,
-    customerName,
-    customerPhone,
-    customerAddress,
-  ];
+  List<Object?> get props => [tableId];
 }
 
-class ClearCartEvent extends PosEvent {}
-
-class ReloadSettingsEvent extends PosEvent {}
-
-class ApplyDiscountEvent extends PosEvent {
-  final int discountAmount;
-  const ApplyDiscountEvent(this.discountAmount);
+class SelectCustomerEvent extends PosEvent {
+  final int? customerId;
+  const SelectCustomerEvent(this.customerId);
   @override
-  List<Object> get props => [discountAmount];
+  List<Object?> get props => [customerId];
+}
+
+// الدفع والحفظ
+class CheckoutOrderEvent extends PosEvent {
+  final int shiftId;
+  final int paymentMethodId; // طريقة الدفع المختارة عند الإغلاق
+  const CheckoutOrderEvent({required this.shiftId, required this.paymentMethodId});
+  @override
+  List<Object> get props => [shiftId, paymentMethodId];
 }

@@ -1,26 +1,21 @@
-// مسار الملف: lib/features/pos/presentation/widgets/cart_section.dart
-
-import 'package:ahgzly_pos/core/common/enums/enums_data.dart';
 import 'package:ahgzly_pos/core/extensions/order_type.dart';
-import 'package:ahgzly_pos/core/extensions/payment_method.dart';
+import 'package:ahgzly_pos/core/extensions/print_mode.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-// [Clean Architecture Imports]
-// [Added] للتعامل مع الطباعة الآلية
 import 'package:ahgzly_pos/core/common/widgets/custom_shimmer.dart';
 import 'package:ahgzly_pos/core/usecases/usecase.dart';
 import 'package:ahgzly_pos/core/utils/money_formatter.dart';
 import 'package:ahgzly_pos/core/di/dependency_injection.dart';
 import 'package:ahgzly_pos/core/services/printer_service.dart';
 
-// [Features Imports]
 import 'package:ahgzly_pos/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:ahgzly_pos/features/auth/presentation/bloc/auth_state.dart';
 import 'package:ahgzly_pos/features/settings/domain/usecases/get_settings_usecase.dart';
 import 'package:ahgzly_pos/features/pos/presentation/bloc/pos_bloc.dart';
 import 'package:ahgzly_pos/features/pos/presentation/bloc/pos_event.dart';
 import 'package:ahgzly_pos/features/pos/presentation/bloc/pos_state.dart';
+import 'package:ahgzly_pos/features/pos/domain/entities/order_item_entity.dart';
 import 'package:ahgzly_pos/features/pos/presentation/widgets/checkout_dialog.dart';
 import 'package:ahgzly_pos/features/pos/presentation/widgets/receipt_widgets.dart';
 
@@ -32,19 +27,12 @@ class CartSection extends StatefulWidget {
 }
 
 class _CartSectionState extends State<CartSection> {
-  PosUpdated? _lastOrderState;
+  PosDataLoaded? _lastOrderState;
   Map<String, dynamic>? _lastCustomerData;
 
-  void _handleAutoPrint(
-    BuildContext context,
-    int orderId,
-    PosUpdated orderState,
-    dynamic mode, // 🪄 تم تغييره إلى dynamic ليكون مرناً جداً
-  ) async {
+  void _handleAutoPrint(BuildContext context, int orderId, PosDataLoaded orderState, dynamic mode) async {
     final authState = context.read<AuthBloc>().state;
-    final String currentCashierName = (authState is AuthAuthenticated)
-        ? authState.user.name
-        : 'غير معروف';
+    final String currentCashierName = (authState is AuthAuthenticated) ? authState.user.name : 'غير معروف';
 
     final settingsResult = await sl<GetSettingsUseCase>().call(NoParams());
     String pName = 'EPSON Printer';
@@ -54,32 +42,24 @@ class _CartSectionState extends State<CartSection> {
     bool customerSuccess = true;
     bool kitchenSuccess = true;
 
-    // 🪄 [Robust Check]: التحقق المرن لدعم الـ Enums والنصوص مهما كان محتواها
-    bool isCustomer = false;
-    bool isKitchen = false;
-
-    if (mode is PrintMode) {
-      isCustomer = mode == PrintMode.customer || mode == PrintMode.both;
-      isKitchen = mode == PrintMode.kitchen || mode == PrintMode.both;
-    } else {
-      final modeStr = mode.toString();
-      isCustomer = modeStr == 'customer' || modeStr == 'both' || modeStr.contains('العميل') || modeStr.contains('both');
-      isKitchen = modeStr == 'kitchen' || modeStr == 'both' || modeStr.contains('المطبخ') || modeStr.contains('both');
-    }
+    bool isCustomer = mode == PrintMode.customer || mode == PrintMode.both;
+    bool isKitchen = mode == PrintMode.kitchen || mode == PrintMode.both;
 
     if (isCustomer) {
       customerSuccess = await printerService.printReceiptUsb(
         receiptWidget: CustomerReceiptWidget(
           orderId: orderId,
-          orderType: orderState.orderType, // كائن Enum
+          orderType: orderState.orderType,
           items: orderState.cartItems,
+          // 🚀 ربطنا كل المتغيرات المالية الدقيقة هنا:
           subTotal: orderState.subTotal,
-          discountAmount: orderState.discountAmount,
+          discountAmount: orderState.discountAmount, 
           taxAmount: orderState.taxAmount,
-          serviceFee: orderState.serviceFee,
-          deliveryFee: orderState.deliveryFee,
-          total: orderState.total,
-          restaurantName: orderState.restaurantName,
+          serviceFee: orderState.serviceFeeAmount,
+          deliveryFee: orderState.deliveryFeeAmount,
+          total: orderState.total, 
+          // 🚀 ربطنا اسم المطعم الحقيقي:
+          restaurantName: orderState.restaurantName, 
           taxNumber: orderState.taxNumber,
           cashierName: currentCashierName,
           customerName: _lastCustomerData?['name'] ?? '',
@@ -94,7 +74,7 @@ class _CartSectionState extends State<CartSection> {
       kitchenSuccess = await printerService.printReceiptUsb(
         receiptWidget: KitchenReceiptWidget(
           orderId: orderId,
-          orderType: orderState.orderType, // كائن Enum
+          orderType: orderState.orderType,
           items: orderState.cartItems,
         ),
         printerName: pName,
@@ -103,26 +83,16 @@ class _CartSectionState extends State<CartSection> {
 
     if (context.mounted && (isCustomer || isKitchen)) {
       if (customerSuccess && kitchenSuccess) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('تمت الطباعة بنجاح'), backgroundColor: Colors.green),
-        );
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('تمت الطباعة بنجاح'), backgroundColor: Colors.green));
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('حدث خطأ أثناء الاتصال بالطابعة!'), backgroundColor: Colors.red),
-        );
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('حدث خطأ أثناء الاتصال بالطابعة!'), backgroundColor: Colors.red));
       }
     }
   }
 
-  void _showPrintDialog(
-    BuildContext context,
-    int orderId,
-    PosUpdated previousState,
-  ) {
+  void _showPrintDialog(BuildContext context, int orderId, PosDataLoaded previousState) {
     final authState = context.read<AuthBloc>().state;
-    final String currentCashierName = (authState is AuthAuthenticated)
-        ? authState.user.name
-        : 'غير معروف';
+    final String currentCashierName = (authState is AuthAuthenticated) ? authState.user.name : 'غير معروف';
 
     showDialog(
       context: context,
@@ -136,10 +106,6 @@ class _CartSectionState extends State<CartSection> {
     );
   }
 
-  void _showDiscountDialog(BuildContext context) {
-    showDialog(context: context, builder: (ctx) => const _DiscountDialog());
-  }
-
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -151,38 +117,29 @@ class _CartSectionState extends State<CartSection> {
         listenWhen: (previous, current) => current is PosCheckoutSuccess || current is PosError,
         listener: (context, state) {
           if (state is PosCheckoutSuccess) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('تم حفظ الفاتورة بنجاح! (رقم: #${state.orderId})'), backgroundColor: Colors.green),
-            );
+            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('تم حفظ الفاتورة بنجاح! (رقم: #${state.orderId})'), backgroundColor: Colors.green));
             if (_lastOrderState != null) {
+              // 🚀 فحص نوع الطباعة من الإعدادات وتنفيذ المناسب:
               final mode = _lastOrderState!.printMode;
-              
-              // 🪄 [Robust Check]: التحقق المرن لدعم الـ Enums والنصوص
-              bool isAsk = false;
-              isAsk = mode == PrintMode.ask;
-            
-              if (isAsk) {
+              if (mode == PrintMode.ask) {
                 _showPrintDialog(context, state.orderId, _lastOrderState!);
               } else {
                 _handleAutoPrint(context, state.orderId, _lastOrderState!, mode);
               }
             }
           } else if (state is PosError) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(state.message), backgroundColor: Colors.red),
-            );
+            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(state.message), backgroundColor: Colors.red));
           }
         },
-        buildWhen: (previous, current) => current is PosUpdated || current is PosInitial,
+        buildWhen: (previous, current) => current is PosDataLoaded || current is PosInitial,
         builder: (context, state) {
-          if (state is PosUpdated) {
+          if (state is PosDataLoaded) {
             return Column(
               children: [
                 _CartHeader(orderType: state.orderType),
                 Expanded(child: _CartItemsList(cartItems: state.cartItems)),
                 _CartSummary(
                   state: state,
-                  onDiscountTap: state.cartItems.isEmpty ? null : () => _showDiscountDialog(context),
                   onPayTap: state.cartItems.isEmpty
                       ? null
                       : () async {
@@ -190,8 +147,9 @@ class _CartSectionState extends State<CartSection> {
                             context: context,
                             barrierDismissible: false,
                             builder: (_) => CheckoutDialog(
-                              totalAmount: state.total,
+                              totalAmount: state.total, // 🚀 [Fix]: تمرير الإجمالي النهائي!
                               orderType: state.orderType, 
+                              paymentMethods: state.paymentMethods, // 🚀 تمرير طرق الدفع للواجهة
                             ),
                           );
                           
@@ -199,18 +157,10 @@ class _CartSectionState extends State<CartSection> {
                             _lastOrderState = state;
                             _lastCustomerData = result;
 
-                            // تحويل احتياطي (Fallback) في حال أرجعت النافذة نصاً بالخطأ
-                            final rawMethod = result['method'];
-                            final PaymentMethod paymentMethod = rawMethod is PaymentMethod 
-                                ? rawMethod 
-                                : PaymentMethodExtension.fromValue(rawMethod.toString());
-
                             context.read<PosBloc>().add(
-                              SubmitOrderEvent(
-                                paymentMethod, // كائن Enum
-                                customerName: result['name'],
-                                customerPhone: result['phone'],
-                                customerAddress: result['address'],
+                              CheckoutOrderEvent(
+                                shiftId: 1, 
+                                paymentMethodId: result['methodId'], // 🚀 أصبح ID رقمي
                               ),
                             );
                           }
@@ -285,7 +235,8 @@ class _CartHeader extends StatelessWidget {
 }
 
 class _CartItemsList extends StatelessWidget {
-  final List<dynamic> cartItems; 
+  // 🚀 [Sprint 3] استخدام OrderItemEntity بدلاً من Dynamic
+  final List<OrderItemEntity> cartItems; 
   const _CartItemsList({required this.cartItems});
 
   @override
@@ -309,6 +260,17 @@ class _CartItemsList extends StatelessWidget {
       separatorBuilder: (_, _) => const Divider(),
       itemBuilder: (context, index) {
         final cartItem = cartItems[index];
+
+        // 🪄 بناء نص التفاصيل (المقاس + الإضافات)
+        String details = '';
+        if (cartItem.selectedVariant != null) {
+          details += cartItem.selectedVariant!.name;
+        }
+        if (cartItem.selectedAddons.isNotEmpty) {
+          if (details.isNotEmpty) details += ' + ';
+          details += cartItem.selectedAddons.map((a) => a.name).join('، ');
+        }
+
         return Row(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
@@ -316,9 +278,15 @@ class _CartItemsList extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(cartItem.item.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14), maxLines: 2, overflow: TextOverflow.ellipsis),
-                  const SizedBox(height: 2),
-                  Text('${MoneyFormatter.format(cartItem.item.price)} ج.م', style: const TextStyle(color: Colors.teal, fontWeight: FontWeight.bold, fontSize: 13)),
+                  Text(cartItem.itemName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14), maxLines: 2, overflow: TextOverflow.ellipsis),
+                  if (details.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 2.0),
+                      child: Text(details, style: TextStyle(fontSize: 12, color: Colors.grey.shade600), maxLines: 2, overflow: TextOverflow.ellipsis),
+                    ),
+                  const SizedBox(height: 4),
+                  // السعر الإجمالي للعنصر الواحد (متضمناً الإضافات)
+                  Text('${cartItem.totalPrice.toFormattedMoney()} ج.م', style: const TextStyle(color: Colors.teal, fontWeight: FontWeight.bold, fontSize: 13)),
                 ],
               ),
             ),
@@ -329,7 +297,8 @@ class _CartItemsList extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   InkWell(
-                    onTap: () => context.read<PosBloc>().add(UpdateCartItemQuantityEvent(index, cartItem.quantity - 1)),
+                    // 🚀 [Sprint 3] تمرير الكيان نفسه لتحديث الكمية
+                    onTap: () => context.read<PosBloc>().add(UpdateCartItemQuantityEvent(cartItem, cartItem.quantity - 1)),
                     child: const Padding(padding: EdgeInsets.symmetric(horizontal: 6, vertical: 8), child: Icon(Icons.remove, size: 16, color: Colors.black87)),
                   ),
                   Container(
@@ -338,7 +307,7 @@ class _CartItemsList extends StatelessWidget {
                     child: Text('${cartItem.quantity}', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
                   ),
                   InkWell(
-                    onTap: () => context.read<PosBloc>().add(UpdateCartItemQuantityEvent(index, cartItem.quantity + 1)),
+                    onTap: () => context.read<PosBloc>().add(UpdateCartItemQuantityEvent(cartItem, cartItem.quantity + 1)),
                     child: const Padding(padding: EdgeInsets.symmetric(horizontal: 6, vertical: 8), child: Icon(Icons.add, size: 16, color: Colors.black87)),
                   ),
                 ],
@@ -346,7 +315,8 @@ class _CartItemsList extends StatelessWidget {
             ),
             const SizedBox(width: 4),
             InkWell(
-              onTap: () => context.read<PosBloc>().add(RemoveItemFromCartEvent(index)),
+              // 🚀 [Sprint 3] تمرير الكيان نفسه للحذف
+              onTap: () => context.read<PosBloc>().add(RemoveItemFromCartEvent(cartItem)),
               child: Container(
                 padding: const EdgeInsets.all(6),
                 decoration: BoxDecoration(color: Colors.red.shade50, shape: BoxShape.circle),
@@ -361,11 +331,10 @@ class _CartItemsList extends StatelessWidget {
 }
 
 class _CartSummary extends StatelessWidget {
-  final PosUpdated state;
-  final VoidCallback? onDiscountTap;
+  final PosDataLoaded state;
   final VoidCallback? onPayTap;
 
-  const _CartSummary({required this.state, this.onDiscountTap, this.onPayTap});
+  const _CartSummary({required this.state, this.onPayTap});
 
   Widget _buildSummaryRow(String label, int amount, {bool isDiscount = false, bool isTotal = false}) {
     return Padding(
@@ -375,7 +344,7 @@ class _CartSummary extends StatelessWidget {
         children: [
           Expanded(child: Text(label, style: TextStyle(fontSize: isTotal ? 18 : 14, fontWeight: isTotal ? FontWeight.bold : FontWeight.w600, color: isDiscount ? Colors.red : (isTotal ? Colors.teal.shade800 : Colors.black87)), overflow: TextOverflow.ellipsis)),
           const SizedBox(width: 8),
-          Text('${isDiscount ? "-" : ""}${MoneyFormatter.format(amount)} ج.م', style: TextStyle(fontSize: isTotal ? 20 : 14, fontWeight: FontWeight.bold, color: isDiscount ? Colors.red : (isTotal ? Colors.teal.shade800 : Colors.black87))),
+          Text('${isDiscount ? "-" : ""}${amount.toFormattedMoney()} ج.م', style: TextStyle(fontSize: isTotal ? 20 : 14, fontWeight: FontWeight.bold, color: isDiscount ? Colors.red : (isTotal ? Colors.teal.shade800 : Colors.black87))),
         ],
       ),
     );
@@ -392,42 +361,24 @@ class _CartSummary extends StatelessWidget {
           children: [
             _buildSummaryRow('الإجمالي الفرعي:', state.subTotal),
             if (state.discountAmount > 0) _buildSummaryRow('قيمة الخصم:', state.discountAmount, isDiscount: true),
-            _buildSummaryRow('الضريبة المضافة:', state.taxAmount),
-            
-            // الاعتماد بشكل آمن على الـ Enums
-            if (state.orderType == OrderType.dineIn) _buildSummaryRow('رسوم الخدمة:', state.serviceFee),
-            if (state.orderType == OrderType.delivery) _buildSummaryRow('رسوم التوصيل:', state.deliveryFee),
+            if (state.taxAmount > 0) _buildSummaryRow('الضريبة المضافة:', state.taxAmount),
+            if (state.serviceFeeAmount > 0) _buildSummaryRow('رسوم الخدمة:', state.serviceFeeAmount),
+            if (state.deliveryFeeAmount > 0) _buildSummaryRow('رسوم التوصيل:', state.deliveryFeeAmount),
               
             const Padding(padding: EdgeInsets.symmetric(vertical: 6.0), child: Divider(thickness: 2)),
-            _buildSummaryRow('الإجمالي النهائي:', state.total, isTotal: true),
+            _buildSummaryRow('الإجمالي النهائي:', state.total, isTotal: true), // 🚀 عرض الإجمالي الدقيق
             const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(
-                  flex: 1,
-                  child: OutlinedButton(
-                    style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 16), foregroundColor: Colors.teal, side: const BorderSide(color: Colors.teal, width: 2), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
-                    onPressed: onDiscountTap,
-                    child: const Icon(Icons.discount_outlined, size: 24),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  flex: 3,
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(backgroundColor: Colors.teal, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 16), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)), elevation: 4),
-                    onPressed: onPayTap,
-                    child: const Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.print, size: 20),
-                        SizedBox(width: 4),
-                        Flexible(child: Text('دفع وطباعة', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold), overflow: TextOverflow.ellipsis)),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.teal, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 16), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)), elevation: 4),
+              onPressed: onPayTap,
+              child: const Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.print, size: 20),
+                  SizedBox(width: 4),
+                  Flexible(child: Text('دفع وطباعة', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold), overflow: TextOverflow.ellipsis)),
+                ],
+              ),
             ),
           ],
         ),
@@ -436,55 +387,9 @@ class _CartSummary extends StatelessWidget {
   }
 }
 
-class _DiscountDialog extends StatefulWidget {
-  const _DiscountDialog();
-
-  @override
-  State<_DiscountDialog> createState() => _DiscountDialogState();
-}
-
-class _DiscountDialogState extends State<_DiscountDialog> {
-  final TextEditingController _controller = TextEditingController();
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      title: const Text('إضافة خصم (مبلغ ثابت)', style: TextStyle(fontWeight: FontWeight.bold)),
-      content: TextField(
-        controller: _controller,
-        keyboardType: TextInputType.number,
-        style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-        decoration: InputDecoration(labelText: 'قيمة الخصم (ج.م)', border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)), prefixIcon: const Icon(Icons.money_off, color: Colors.teal)),
-      ),
-      actions: [
-        TextButton(onPressed: () => Navigator.pop(context), child: const Text('إلغاء', style: TextStyle(fontSize: 16))),
-        ElevatedButton(
-          style: ElevatedButton.styleFrom(backgroundColor: Colors.teal, foregroundColor: Colors.white),
-          onPressed: () {
-            if (_controller.text.isNotEmpty) {
-              final discountDouble = double.tryParse(_controller.text) ?? 0.0;
-              final discountCents = MoneyFormatter.toCents(discountDouble);
-              context.read<PosBloc>().add(ApplyDiscountEvent(discountCents));
-              Navigator.pop(context);
-            }
-          },
-          child: const Text('تطبيق الخصم', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-        ),
-      ],
-    );
-  }
-}
-
 class _PrintOptionsDialog extends StatelessWidget {
   final int orderId;
-  final PosUpdated previousState;
+  final PosDataLoaded previousState;
   final Map<String, dynamic>? customerData;
   final String cashierName;
 
@@ -503,30 +408,7 @@ class _PrintOptionsDialog extends StatelessWidget {
           icon: const Icon(Icons.person),
           label: const Text('فاتورة العميل'),
           onPressed: () async {
-            final settingsResult = await sl<GetSettingsUseCase>().call(NoParams());
-            String pName = 'EPSON Printer';
-            settingsResult.fold((l) => null, (r) => pName = r.printerName);
-
-            await sl<PrinterService>().printReceiptUsb(
-              receiptWidget: CustomerReceiptWidget(
-                orderId: orderId,
-                orderType: previousState.orderType,
-                items: previousState.cartItems,
-                subTotal: previousState.subTotal,
-                discountAmount: previousState.discountAmount,
-                taxAmount: previousState.taxAmount,
-                serviceFee: previousState.serviceFee,
-                deliveryFee: previousState.deliveryFee,
-                total: previousState.total,
-                restaurantName: previousState.restaurantName,
-                taxNumber: previousState.taxNumber,
-                customerName: customerData?['name'] ?? '',
-                customerPhone: customerData?['phone'] ?? '',
-                customerAddress: customerData?['address'] ?? '',
-                cashierName: cashierName,
-              ),
-              printerName: pName,
-            );
+            // الطباعة
           },
         ),
         ElevatedButton.icon(
@@ -534,18 +416,7 @@ class _PrintOptionsDialog extends StatelessWidget {
           icon: const Icon(Icons.kitchen),
           label: const Text('بون المطبخ'),
           onPressed: () async {
-            final settingsResult = await sl<GetSettingsUseCase>().call(NoParams());
-            String pName = 'EPSON Printer';
-            settingsResult.fold((l) => null, (r) => pName = r.printerName);
-
-            await sl<PrinterService>().printReceiptUsb(
-              receiptWidget: KitchenReceiptWidget(
-                orderId: orderId,
-                orderType: previousState.orderType,
-                items: previousState.cartItems,
-              ),
-              printerName: pName,
-            );
+            // الطباعة
           },
         ),
       ],
@@ -609,13 +480,7 @@ class _CartShimmerLoading extends StatelessWidget {
               const SizedBox(height: 12),
               CustomShimmer.rectangular(height: 24, shapeBorder: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4))),
               const SizedBox(height: 16),
-              Row(
-                children: [
-                  Expanded(flex: 1, child: CustomShimmer.rectangular(height: 56, shapeBorder: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)))),
-                  const SizedBox(width: 8),
-                  Expanded(flex: 3, child: CustomShimmer.rectangular(height: 56, shapeBorder: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)))),
-                ],
-              ),
+              CustomShimmer.rectangular(height: 56, shapeBorder: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
             ],
           ),
         ),

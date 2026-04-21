@@ -1,7 +1,5 @@
-import 'package:ahgzly_pos/core/common/enums/enums_data.dart';
 import 'package:ahgzly_pos/core/extensions/order_status.dart';
 import 'package:ahgzly_pos/core/extensions/order_type.dart';
-import 'package:ahgzly_pos/core/extensions/payment_method.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:ahgzly_pos/features/auth/presentation/bloc/auth_bloc.dart';
@@ -171,7 +169,10 @@ class _OrderCard extends StatelessWidget {
               Icon(isRefunded ? Icons.cancel_outlined : Icons.payment, size: 16, color: isRefunded ? Colors.red : Colors.grey.shade600),
               const SizedBox(width: 4),
               // [Refactor] استخدام toDisplayName
-              Text(isRefunded ? OrderStatus.refunded.toDisplayName() : order.paymentMethod.toDisplayName(), style: TextStyle(color: isRefunded ? Colors.red : Colors.grey.shade700, fontWeight: isRefunded ? FontWeight.bold : FontWeight.normal)),
+              Text(
+                isRefunded ? OrderStatus.refunded.toDisplayName() : order.paymentMethodName, 
+                style: TextStyle(color: isRefunded ? Colors.red : Colors.grey.shade700, fontWeight: isRefunded ? FontWeight.bold : FontWeight.normal)
+              ),
             ],
           ),
         ),

@@ -1,7 +1,7 @@
-// مسار الملف: lib/features/menu/data/models/item_model.dart
-
 import 'package:ahgzly_pos/core/database/app_database.dart';
 import 'package:ahgzly_pos/features/menu/domain/entities/item_entity.dart';
+import 'package:ahgzly_pos/features/menu/data/models/item_variant_model.dart';
+import 'package:ahgzly_pos/features/menu/data/models/addon_model.dart';
 
 class ItemModel extends ItemEntity {
   const ItemModel({
@@ -13,9 +13,15 @@ class ItemModel extends ItemEntity {
     super.imagePath,
     required super.createdAt,
     required super.updatedAt,
+    super.variants = const [],
+    super.availableAddons = const [],
   });
 
-  factory ItemModel.fromDrift(ItemData data) {
+  factory ItemModel.fromDrift(
+    ItemData data, {
+    List<ItemVariantModel> variants = const [],
+    List<AddonModel> addons = const [],
+  }) {
     return ItemModel(
       id: data.id,
       categoryId: data.categoryId,
@@ -24,6 +30,8 @@ class ItemModel extends ItemEntity {
       costPrice: data.costPrice,
       createdAt: data.createdAt,
       updatedAt: data.updatedAt, 
+      variants: variants,
+      availableAddons: addons,
     );
   }
 

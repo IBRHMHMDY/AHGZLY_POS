@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'package:ahgzly_pos/core/common/enums/enums_data.dart';
 import 'package:ahgzly_pos/core/database/app_database.dart';
 import 'package:ahgzly_pos/core/di/dependency_injection.dart';
 import 'package:ahgzly_pos/core/extensions/print_mode.dart';

@@ -1,6 +1,7 @@
 import 'dart:io';
-import 'package:ahgzly_pos/core/common/enums/enums_data.dart';
 import 'package:ahgzly_pos/core/database/types_converter.dart';
+import 'package:ahgzly_pos/core/extensions/order_status.dart';
+import 'package:ahgzly_pos/core/extensions/order_type.dart';
 import 'package:ahgzly_pos/core/utils/hash_util.dart';
 import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
@@ -11,16 +12,24 @@ import 'tables.dart';
 part 'app_database.g.dart'; 
 
 @DriftDatabase(tables: [
+  // الجداول القديمة
   License, Settings, Users, Shifts, Categories, 
   Items, Expenses, Orders, OrderItems,
+  
+  // 🚀 الجداول المضافة في Sprint 1 (تعريفها يحل مشكلة الـ Migration)
+  Customers, Zones, RestaurantTables, PaymentMethods,
+  
+  // 🚀 الجداول المضافة في Sprint 2 (تعريفها يحل مشكلة Undefined name)
+  ItemVariants, Addons, InventoryItems, Recipes
 ])
+
 class AppDatabase extends _$AppDatabase {
   
   // Refactored: Accept QueryExecutor to allow dependency injection (e.g., In-Memory DB for testing)
   AppDatabase(super.e);
 
   @override
-  int get schemaVersion => 16; 
+  int get schemaVersion => 17; 
 
   @override
   MigrationStrategy get migration {
@@ -100,6 +109,13 @@ class AppDatabase extends _$AppDatabase {
           // 3. حقن طرق الدفع الأساسية للعملاء الحاليين الذين يمتلكون النظام بالفعل
           await into(paymentMethods).insert(PaymentMethodsCompanion.insert(name: 'كاش'));
           await into(paymentMethods).insert(PaymentMethodsCompanion.insert(name: 'بطاقة إئتمان (فيزا / مدى)'));
+        }
+
+        if (from < 17) {
+          await m.createTable(itemVariants);
+          await m.createTable(addons);
+          await m.createTable(inventoryItems);
+          await m.createTable(recipes);
         }
       },
       beforeOpen: (details) async {

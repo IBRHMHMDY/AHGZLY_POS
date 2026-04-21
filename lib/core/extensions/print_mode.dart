@@ -1,4 +1,4 @@
-import 'package:ahgzly_pos/core/common/enums/enums_data.dart';
+enum PrintMode { ask, customer, kitchen, both }
 
 extension PrintModeExtension on PrintMode {
   String toValue() => name;

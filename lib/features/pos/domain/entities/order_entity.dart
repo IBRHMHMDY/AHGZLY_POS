@@ -1,6 +1,5 @@
-// مسار الملف: lib/features/pos/domain/entities/order_entity.dart
-
-import 'package:ahgzly_pos/core/common/enums/enums_data.dart';
+import 'package:ahgzly_pos/core/extensions/order_status.dart';
+import 'package:ahgzly_pos/core/extensions/order_type.dart';
 import 'package:equatable/equatable.dart';
 import 'package:ahgzly_pos/features/pos/domain/entities/order_item_entity.dart';
 
@@ -15,7 +14,7 @@ class OrderEntity extends Equatable {
   final int deliveryFee; 
   final int total;
   final int totalCost; 
-  final PaymentMethod paymentMethod; 
+  final int? paymentMethodId; 
   final OrderStatus status; 
   final DateTime createdAt; 
   final String customerName;
@@ -34,7 +33,7 @@ class OrderEntity extends Equatable {
     required this.deliveryFee, 
     required this.total,
     required this.totalCost,
-    required this.paymentMethod,
+    required this.paymentMethodId,
     required this.status, 
     required this.createdAt, 
     this.customerName = '', 
@@ -58,7 +57,7 @@ class OrderEntity extends Equatable {
       deliveryFee: deliveryFee,
       total: total,
       totalCost: totalCost,
-      paymentMethod: paymentMethod,
+      paymentMethodId: paymentMethodId,
       status: status,
       createdAt: createdAt,
       customerName: customerName,
@@ -71,7 +70,7 @@ class OrderEntity extends Equatable {
   @override
   List<Object?> get props => [
     shiftId, tableId, orderType, subTotal, discount, taxAmount, serviceFee, 
-    deliveryFee, total, totalCost, paymentMethod, status, createdAt, 
+    deliveryFee, total, totalCost, paymentMethodId, status, createdAt, 
     customerName, customerPhone, customerAddress, items
   ];
 }

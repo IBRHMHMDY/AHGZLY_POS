@@ -1,7 +1,7 @@
 import 'package:ahgzly_pos/core/database/app_database.dart';
 import 'package:ahgzly_pos/core/error/exceptions.dart';
+import 'package:ahgzly_pos/core/extensions/order_status.dart';
 import 'package:ahgzly_pos/features/orders/data/models/order_history_model.dart';
-import 'package:ahgzly_pos/core/common/enums/enums_data.dart'; // استيراد الـ Enum
 
 import 'package:drift/drift.dart';
 
@@ -88,19 +88,19 @@ class OrdersLocalDataSourceImpl implements OrdersLocalDataSource {
 
         final total = order.total;
         // [Refactor]: استخدام الـ Enum بدلاً من النصوص المتعددة
-        final isCash = order.paymentMethod == PaymentMethod.cash;
-        final isVisa = order.paymentMethod == PaymentMethod.visa;
-        final isInstapay = order.paymentMethod == PaymentMethod.wallet;
+        // final isCash = order.paymentMethod == PaymentMethod.cash;
+        // final isVisa = order.paymentMethod == PaymentMethod.visa;
+        // final isInstapay = order.paymentMethod == PaymentMethod.wallet;
 
         final updatedShift = shift.copyWith(
           totalSales: shift.totalSales - total,
           totalRefunds: shift.totalRefunds + total,
           refundedOrdersCount: shift.refundedOrdersCount + 1,
           totalOrders: shift.totalOrders - 1,
-          totalCash: isCash ? shift.totalCash - total : shift.totalCash,
-          totalVisa: isVisa ? shift.totalVisa - total : shift.totalVisa,
-          totalInstapay: isInstapay ? shift.totalInstapay - total : shift.totalInstapay,
-          expectedCash: isCash ? shift.expectedCash - total : shift.expectedCash,
+          // totalCash: isCash ? shift.totalCash - total : shift.totalCash,
+          // totalVisa: isVisa ? shift.totalVisa - total : shift.totalVisa,
+          // totalInstapay: isInstapay ? shift.totalInstapay - total : shift.totalInstapay,
+          // expectedCash: isCash ? shift.expectedCash - total : shift.expectedCash,
         );
 
         await appDatabase.update(appDatabase.shifts).replace(updatedShift);

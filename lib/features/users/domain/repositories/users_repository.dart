@@ -1,5 +1,5 @@
-import 'package:ahgzly_pos/core/common/enums/enums_data.dart';
 import 'package:ahgzly_pos/core/common/users/entities/user_entity.dart';
+import 'package:ahgzly_pos/core/extensions/user_role.dart';
 import 'package:dartz/dartz.dart';
 import 'package:ahgzly_pos/core/error/failures.dart';
 

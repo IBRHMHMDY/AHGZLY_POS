@@ -1,61 +1,137 @@
-import 'package:ahgzly_pos/core/common/enums/enums_data.dart';
-import 'package:equatable/equatable.dart';
+import 'package:ahgzly_pos/core/common/entities/customer_entity.dart';
+import 'package:ahgzly_pos/core/common/entities/restaurant_table_entity.dart';
+import 'package:ahgzly_pos/core/common/entities/payment_method_entity.dart';
+import 'package:ahgzly_pos/core/extensions/order_type.dart';
+import 'package:ahgzly_pos/core/extensions/print_mode.dart';
+import 'package:ahgzly_pos/features/menu/domain/entities/category_entity.dart';
 import 'package:ahgzly_pos/features/menu/domain/entities/item_entity.dart';
-
-class CartItem extends Equatable {
-  final ItemEntity item;
-  final int quantity;
-  final String? notes;
-  const CartItem({required this.item, required this.quantity, this.notes});
-  CartItem copyWith({int? quantity, String? notes}) {
-    return CartItem(item: item, quantity: quantity ?? this.quantity, notes: notes ?? this.notes);
-  }
-  @override
-  List<Object?> get props => [item, quantity, notes];
-}
+import 'package:ahgzly_pos/features/pos/domain/entities/order_item_entity.dart';
+import 'package:equatable/equatable.dart';
 
 abstract class PosState extends Equatable {
+  const PosState();
   @override
-  List<Object> get props => [];
+  List<Object?> get props => [];
 }
 
 class PosInitial extends PosState {}
 class PosLoading extends PosState {}
 
-class PosUpdated extends PosState {
-  final List<CartItem> cartItems;
+class PosDataLoaded extends PosState {
+  final List<CategoryEntity> categories;
+  final List<ItemEntity> currentItems;
+  final int? selectedCategoryId;
+  
+  final List<OrderItemEntity> cartItems;
   final OrderType orderType;
-  final int subTotal;
-  final int discountAmount; // جديد
-  final int taxAmount;
-  final int serviceFee;
+  final int? selectedTableId;
+  final int? selectedCustomerId;
+
+  final List<CustomerEntity> customers;
+  final List<RestaurantTableEntity> tables;
+  final List<PaymentMethodEntity> paymentMethods; // 🚀 [Fix]: طرق الدفع من قاعدة البيانات
+
+  // 🚀 [Fix]: المتغيرات المالية للحساب الدقيق في الواجهة
+  final int discountAmount;
+  final double taxRate;
+  final double serviceRate;
   final int deliveryFee;
-  final int total;
-  final int totalCost;
+
+  final PrintMode printMode;
   final String restaurantName;
   final String taxNumber;
-  final PrintMode printMode;
 
-  PosUpdated({
-    required this.cartItems, required this.orderType, required this.subTotal, required this.discountAmount,
-    required this.taxAmount, required this.serviceFee, required this.deliveryFee, required this.total, required this.totalCost,
-    required this.restaurantName, required this.taxNumber, required this.printMode,
+
+  const PosDataLoaded({
+    required this.categories,
+    required this.currentItems,
+    this.selectedCategoryId,
+    this.cartItems = const [],
+    this.orderType = OrderType.takeaway,
+    this.selectedTableId,
+    this.selectedCustomerId,
+    this.customers = const [],
+    this.tables = const [],
+    this.paymentMethods = const [],
+    this.discountAmount = 0,
+    this.taxRate = 0.0,
+    this.serviceRate = 0.0,
+    this.deliveryFee = 0,
+    this.printMode = PrintMode.ask,
+    this.restaurantName = '',
+    this.taxNumber = '',
   });
 
+  // 🚀 [Fix]: الحسابات الديناميكية الحقيقية
+  int get subTotal => cartItems.fold(0, (sum, item) => sum + item.totalPrice);
+  int get totalCost => cartItems.fold(0, (sum, item) => sum + item.totalCost);
+  
+  int get afterDiscount => (subTotal - discountAmount) > 0 ? (subTotal - discountAmount) : 0;
+  int get serviceFeeAmount => orderType == OrderType.dineIn ? (afterDiscount * serviceRate).round() : 0;
+  int get taxAmount => ((afterDiscount + serviceFeeAmount) * taxRate).round();
+  int get deliveryFeeAmount => orderType == OrderType.delivery ? deliveryFee : 0;
+  
+  // الإجمالي النهائي الدقيق الذي سيُدفع!
+  int get total => afterDiscount + serviceFeeAmount + taxAmount + deliveryFeeAmount;
+
+  PosDataLoaded copyWith({
+    List<CategoryEntity>? categories,
+    List<ItemEntity>? currentItems,
+    int? selectedCategoryId,
+    List<OrderItemEntity>? cartItems,
+    OrderType? orderType,
+    int? selectedTableId,
+    int? selectedCustomerId,
+    List<CustomerEntity>? customers,
+    List<RestaurantTableEntity>? tables,
+    List<PaymentMethodEntity>? paymentMethods,
+    int? discountAmount,
+    double? taxRate,
+    double? serviceRate,
+    int? deliveryFee,
+    PrintMode? printMode,
+    String? restaurantName,
+    String? taxNumber,
+  }) {
+    return PosDataLoaded(
+      categories: categories ?? this.categories,
+      currentItems: currentItems ?? this.currentItems,
+      selectedCategoryId: selectedCategoryId ?? this.selectedCategoryId,
+      cartItems: cartItems ?? this.cartItems,
+      orderType: orderType ?? this.orderType,
+      selectedTableId: selectedTableId ?? this.selectedTableId,
+      selectedCustomerId: selectedCustomerId ?? this.selectedCustomerId,
+      customers: customers ?? this.customers,
+      tables: tables ?? this.tables,
+      paymentMethods: paymentMethods ?? this.paymentMethods,
+      discountAmount: discountAmount ?? this.discountAmount,
+      taxRate: taxRate ?? this.taxRate,
+      serviceRate: serviceRate ?? this.serviceRate,
+      deliveryFee: deliveryFee ?? this.deliveryFee,
+      printMode: printMode ?? this.printMode,
+      restaurantName: restaurantName ?? this.restaurantName,
+      taxNumber: taxNumber ?? this.taxNumber,
+    );
+  }
+
   @override
-  List<Object> get props => [cartItems, orderType, subTotal, discountAmount, taxAmount, serviceFee, deliveryFee, total, totalCost, restaurantName, taxNumber, printMode];
+  List<Object?> get props => [
+        categories, currentItems, selectedCategoryId, cartItems, orderType, 
+        selectedTableId, selectedCustomerId, customers, tables, paymentMethods,
+        discountAmount, taxRate, serviceRate, deliveryFee, printMode, restaurantName, taxNumber
+      ];
 }
 
 class PosCheckoutSuccess extends PosState {
   final int orderId;
-  PosCheckoutSuccess(this.orderId);
+  const PosCheckoutSuccess(this.orderId);
   @override
   List<Object> get props => [orderId];
 }
 
 class PosError extends PosState {
   final String message;
-  PosError(this.message);
+  const PosError(this.message);
   @override
   List<Object> get props => [message];
 }

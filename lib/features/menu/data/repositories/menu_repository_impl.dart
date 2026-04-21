@@ -18,7 +18,6 @@ class MenuRepositoryImpl implements MenuRepository {
       final categories = await localDataSource.getCategories();
       return Right(categories.cast<CategoryEntity>());
     } catch (_) {
-      // Refactored: إخفاء تفاصيل الخطأ التقنية عن المستخدم
       return const Left(DatabaseFailure('فشل في جلب الأقسام. تأكد من اتصال قاعدة البيانات.'));
     }
   }
@@ -73,7 +72,13 @@ class MenuRepositoryImpl implements MenuRepository {
   Future<Either<Failure, int>> addItem(ItemEntity item) async {
     try {
       final itemModel = ItemModel(
-        categoryId: item.categoryId, name: item.name, price: item.price, costPrice: item.costPrice, imagePath: item.imagePath, createdAt: item.createdAt, updatedAt: item.updatedAt,
+        categoryId: item.categoryId, 
+        name: item.name, 
+        price: item.price, 
+        costPrice: item.costPrice, 
+        imagePath: item.imagePath, 
+        createdAt: item.createdAt, 
+        updatedAt: item.updatedAt,
       );
       final id = await localDataSource.addItem(itemModel);
       return Right(id);
@@ -86,7 +91,14 @@ class MenuRepositoryImpl implements MenuRepository {
   Future<Either<Failure, int>> updateItem(ItemEntity item) async {
     try {
       final itemModel = ItemModel(
-        id: item.id, categoryId: item.categoryId, name: item.name, price: item.price, costPrice: item.costPrice, imagePath: item.imagePath, createdAt: item.createdAt, updatedAt: item.updatedAt,
+        id: item.id, 
+        categoryId: item.categoryId, 
+        name: item.name, 
+        price: item.price, 
+        costPrice: item.costPrice, 
+        imagePath: item.imagePath, 
+        createdAt: item.createdAt, 
+        updatedAt: item.updatedAt,
       );
       final result = await localDataSource.updateItem(itemModel);
       return Right(result);

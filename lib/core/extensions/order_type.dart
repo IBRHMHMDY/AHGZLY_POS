@@ -1,6 +1,4 @@
-
-
-import 'package:ahgzly_pos/core/common/enums/enums_data.dart';
+enum OrderType { dineIn, takeaway, delivery }
 
 extension OrderTypeExtension on OrderType {
   // للحفظ في قاعدة البيانات
