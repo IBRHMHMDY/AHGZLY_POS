@@ -16,13 +16,6 @@ class AuthAuthenticated extends AuthState {
   @override List<Object> get props => [user];
 }
 
-// Refactored: Added specific state for unlocking the screen
-class AuthUnlocked extends AuthState {
-  final User user;
-  AuthUnlocked({required this.user});
-  @override List<Object> get props => [user];
-}
-
 class AuthUnauthenticated extends AuthState {}
 
 class AuthError extends AuthState {

@@ -1,11 +1,6 @@
 import 'package:go_router/go_router.dart';
 
 // ==========================================
-// 🪄 Core Entities
-// ==========================================
-import 'package:ahgzly_pos/core/common/users/entities/user_entity.dart';
-
-// ==========================================
 // 🪄 Features Screens Imports
 // ==========================================
 // 1. Splash & License
@@ -30,7 +25,6 @@ import 'package:ahgzly_pos/features/expenses/presentation/screens/expenses_scree
 import 'package:ahgzly_pos/features/users/presentation/screens/users_screen.dart';
 import 'package:ahgzly_pos/features/settings/presentation/screens/settings_screen.dart';
 
-
 class AppRouter {
   // --------------------------------------------------------
   // 1. Route Constants (Type-Safe Paths)
@@ -39,7 +33,7 @@ class AppRouter {
   static const String licensePath = '/license';
   static const String loginPath = '/login';
   static const String lockPath = '/lock'; // 🪄 تم إضافة الثابت المفقود
-  static const String openShiftPath = '/open-shift'; 
+  static const String openShiftPath = '/open-shift';
   static const String shiftPath = '/shift';
   static const String posPath = '/pos';
   static const String menuPath = '/menu';
@@ -76,18 +70,18 @@ class AppRouter {
         GoRoute(
           path: lockPath, // 🪄 استخدام الثابت بدلاً من النص الصلب
           builder: (context, state) {
-            final user = state.extra as User; 
-            return LockScreen(currentUser: user);
+            
+            return LockScreen();
           },
         ),
 
         // -- Shift Management --
         GoRoute(
-          path: openShiftPath, 
+          path: openShiftPath,
           builder: (context, state) {
-            final cashierId = state.extra as int? ?? 1; 
+            final cashierId = state.extra as int? ?? 1;
             return OpenShiftScreen(cashierId: cashierId);
-          }
+          },
         ),
         GoRoute(
           path: shiftPath,
@@ -95,10 +89,7 @@ class AppRouter {
         ),
 
         // -- Main POS Operations --
-        GoRoute(
-          path: posPath,
-          builder: (context, state) => const PosScreen(),
-        ),
+        GoRoute(path: posPath, builder: (context, state) => const PosScreen()),
         GoRoute(
           path: menuPath,
           builder: (context, state) => const MenuScreen(),

@@ -2,31 +2,32 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:ahgzly_pos/core/common/users/entities/user_entity.dart';
 import 'package:ahgzly_pos/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:ahgzly_pos/features/auth/presentation/bloc/auth_event.dart';
 import 'package:ahgzly_pos/features/auth/presentation/bloc/auth_state.dart';
+import 'package:ahgzly_pos/core/common/users/entities/user_entity.dart';
 
 class LockScreen extends StatefulWidget {
-  final User currentUser;
-  const LockScreen({super.key, required this.currentUser});
+  const LockScreen({super.key});
 
   @override
   State<LockScreen> createState() => _LockScreenState();
 }
 
 class _LockScreenState extends State<LockScreen> {
-  final _pinController = TextEditingController();
+  final TextEditingController _pinController = TextEditingController();
+  bool _isObscured = true;
   String? _errorMessage;
+  
+  User? _cachedUser; 
 
-  void _unlock() {
-    final pin = _pinController.text.trim();
-    if (pin.isEmpty) return;
-
-    setState(() => _errorMessage = null);
-    context.read<AuthBloc>().add(
-      UnlockSubmittedEvent(pin: pin, currentUser: widget.currentUser),
-    );
+  @override
+  void initState() {
+    super.initState();
+    final authState = context.read<AuthBloc>().state;
+    if (authState is AuthAuthenticated) {
+      _cachedUser = authState.user;
+    }
   }
 
   @override
@@ -35,104 +36,100 @@ class _LockScreenState extends State<LockScreen> {
     super.dispose();
   }
 
+  void _onUnlock() {
+    final pin = _pinController.text.trim();
+    if (pin.isEmpty) {
+      setState(() => _errorMessage = 'يرجى إدخال رمز المرور (PIN)');
+      return;
+    }
+    
+    if (_cachedUser != null) {
+      context.read<AuthBloc>().add(
+        UnlockSubmittedEvent(pin: pin, currentUser: _cachedUser!)
+      );
+    } else {
+      setState(() => _errorMessage = 'حدث خطأ. يرجى إعادة تشغيل التطبيق.');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    return PopScope(
-      canPop: false, 
-      child: Directionality(
-        textDirection: TextDirection.rtl,
-        child: Scaffold(
-          backgroundColor: Colors.teal.shade900, // خلفية داكنة لإعطاء إيحاء القفل
-          body: BlocConsumer<AuthBloc, AuthState>(
-            listener: (context, state) {
-              if (state is AuthUnlocked) {
-                context.pop(); 
-              } else if (state is AuthError) {
-                setState(() {
-                  _errorMessage = state.message;
-                  _pinController.clear();
-                });
-              }
-            },
-            builder: (context, state) {
-              final isLoading = state is AuthLoading;
-
-              return Center(
-                child: Container(
-                  width: 420,
-                  padding: const EdgeInsets.all(40),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(24),
-                    boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.3), blurRadius: 30, spreadRadius: 5)],
+    return Scaffold(
+      backgroundColor: Colors.teal.shade900,
+      body: BlocListener<AuthBloc, AuthState>(
+        listener: (context, state) {
+          if (state is AuthAuthenticated) {
+            // 🚀 التوجيه الآمن لشاشة الكاشير
+            if (context.canPop()) {
+              context.pop();
+            } else {
+              context.go('/pos');
+            }
+          } else if (state is AuthError) {
+            setState(() {
+              _errorMessage = state.message;
+              _pinController.clear();
+            });
+          }
+        },
+        child: Center(
+          child: Container(
+            width: 400,
+            padding: const EdgeInsets.all(32),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(24),
+              boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 20)],
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.lock_outline, size: 80, color: Colors.teal),
+                const SizedBox(height: 24),
+                const Text('تم قفل الشاشة', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.black87)),
+                const SizedBox(height: 8),
+                Text(
+                  _cachedUser != null ? 'مرحباً ${_cachedUser!.name}' : 'أدخل رمز المرور للمتابعة', 
+                  style: const TextStyle(fontSize: 16, color: Colors.grey)
+                ),
+                const SizedBox(height: 32),
+                
+                TextField(
+                  controller: _pinController,
+                  obscureText: _isObscured,
+                  keyboardType: TextInputType.number,
+                  maxLength: 6, 
+                  inputFormatters: [
+                    FilteringTextInputFormatter.digitsOnly, 
+                  ],
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(fontSize: 24, letterSpacing: 8),
+                  decoration: InputDecoration(
+                    counterText: "", 
+                    hintText: '******',
+                    errorText: _errorMessage,
+                    filled: true,
+                    fillColor: Colors.grey.shade100,
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
+                    suffixIcon: IconButton(
+                      icon: Icon(_isObscured ? Icons.visibility : Icons.visibility_off, color: Colors.grey),
+                      onPressed: () => setState(() => _isObscured = !_isObscured),
+                    ),
                   ),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(20),
-                        decoration: BoxDecoration(color: Colors.teal.shade50, shape: BoxShape.circle),
-                        child: const Icon(Icons.lock_rounded, size: 70, color: Colors.teal),
-                      ),
-                      const SizedBox(height: 24),
-                      const Text('شاشة نقطة البيع مقفلة', style: TextStyle(fontSize: 24, fontWeight: FontWeight.w900, color: Colors.black87)),
-                      const SizedBox(height: 8),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                        decoration: BoxDecoration(color: Colors.grey.shade100, borderRadius: BorderRadius.circular(20)),
-                        child: Text(
-                          'الكاشير الحالي: ${widget.currentUser.name}', 
-                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.teal.shade800),
-                        ),
-                      ),
-                      const SizedBox(height: 40),
-                      TextField(
-                        controller: _pinController,
-                        keyboardType: TextInputType.number,
-                        inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                        obscureText: true,
-                        autofocus: true,
-                        maxLength: 6,
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(fontSize: 32, letterSpacing: 12, color: Colors.teal, fontWeight: FontWeight.bold),
-                        decoration: InputDecoration(
-                          hintText: '****',
-                          hintStyle: const TextStyle(letterSpacing: 12),
-                          counterText: '',
-                          errorText: _errorMessage,
-                          errorStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-                          filled: true,
-                          fillColor: Colors.grey.shade50,
-                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide(color: Colors.grey.shade300)),
-                          enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide(color: Colors.grey.shade300)),
-                          focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: const BorderSide(color: Colors.teal, width: 2)),
-                          errorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: const BorderSide(color: Colors.red, width: 2)),
-                        ),
-                        onSubmitted: (_) => _unlock(),
-                      ),
-                      const SizedBox(height: 32),
-                      SizedBox(
-                        width: double.infinity,
-                        height: 56,
-                        child: ElevatedButton.icon(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.teal,
-                            foregroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                            elevation: 2,
-                          ),
-                          onPressed: isLoading ? null : _unlock,
-                          icon: isLoading ? const SizedBox.shrink() : const Icon(Icons.lock_open_rounded),
-                          label: isLoading
-                              ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 3))
-                              : const Text('إلغاء القفل والمتابعة', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                        ),
-                      ),
-                    ],
+                  onSubmitted: (_) => _onUnlock(),
+                ),
+                
+                const SizedBox(height: 32),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(backgroundColor: Colors.teal, padding: const EdgeInsets.symmetric(vertical: 16), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16))),
+                    onPressed: _onUnlock,
+                    child: const Text('فــك الـقـفـل', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
                   ),
                 ),
-              );
-            },
+              ],
+            ),
           ),
         ),
       ),

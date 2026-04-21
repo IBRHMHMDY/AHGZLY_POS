@@ -13,7 +13,6 @@ class LoginSubmittedEvent extends AuthEvent {
 class UnlockSubmittedEvent extends AuthEvent {
   final String pin;
   final User currentUser;
-  
   UnlockSubmittedEvent({required this.pin, required this.currentUser});
 }
 

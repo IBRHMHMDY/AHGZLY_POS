@@ -1,13 +1,16 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ahgzly_pos/core/di/dependency_injection.dart';
+import 'package:ahgzly_pos/core/database/app_database.dart';
 import 'package:ahgzly_pos/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:ahgzly_pos/features/auth/presentation/bloc/auth_state.dart';
 import 'package:ahgzly_pos/features/menu/presentation/bloc/menu_bloc.dart';
 import 'package:ahgzly_pos/features/menu/presentation/bloc/menu_event.dart';
 import 'package:ahgzly_pos/features/pos/presentation/bloc/pos_bloc.dart';
-import 'package:ahgzly_pos/features/pos/presentation/bloc/pos_event.dart'; // 🚀 [استيراد الأحداث]
+import 'package:ahgzly_pos/features/pos/presentation/bloc/pos_event.dart';
 
 class PosAppBar extends StatelessWidget implements PreferredSizeWidget {
   const PosAppBar({super.key});
@@ -15,9 +18,23 @@ class PosAppBar extends StatelessWidget implements PreferredSizeWidget {
   @override
   Size get preferredSize => const Size.fromHeight(kToolbarHeight);
 
+  // 🚀 [Sprint 4 - Task 4.1]: Graceful Shutdown
+  void _performGracefulShutdown(BuildContext context) async {
+    // 1. إغلاق اتصالات قاعدة البيانات بأمان لضمان عدم تلف البيانات
+    await sl<AppDatabase>().close();
+    
+    // 2. إغلاق التطبيق برمجياً بناءً على نوع المنصة
+    if (Platform.isAndroid || Platform.isIOS) {
+      SystemNavigator.pop();
+    } else {
+      exit(0);
+    }
+  }
+
   void _showExitConfirmation(BuildContext context) {
     showDialog(
       context: context,
+      barrierDismissible: false,
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: const Row(
@@ -37,7 +54,7 @@ class PosAppBar extends StatelessWidget implements PreferredSizeWidget {
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
             icon: const Icon(Icons.exit_to_app),
             label: const Text('تأكيد الإغلاق', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-            onPressed: () => exit(0), 
+            onPressed: () => _performGracefulShutdown(context), // 🚀 استدعاء الإغلاق الآمن
           ),
         ],
       ),
@@ -58,10 +75,10 @@ class PosAppBar extends StatelessWidget implements PreferredSizeWidget {
       backgroundColor: Colors.teal,
       foregroundColor: Colors.white,
       actions: [
-        BlocBuilder<AuthBloc, AuthState>(
-          builder: (context, state) {
-            final bool isAdmin = (state is AuthAuthenticated) && state.user.isAdmin;
-            final currentUser = (state is AuthAuthenticated) ? state.user : null;
+        BlocSelector<AuthBloc, AuthState, AuthAuthenticated?>(
+          selector: (state) => state is AuthAuthenticated ? state : null,
+          builder: (context, authState) {
+            final bool isAdmin = authState != null && authState.user.isAdmin;
 
             return Row(
               children: [
@@ -73,7 +90,6 @@ class PosAppBar extends StatelessWidget implements PreferredSizeWidget {
                   }),
                   IconButton(icon: const Icon(Icons.settings), tooltip: 'إعدادات النظام', onPressed: () async {
                     await context.push('/settings');
-                    // 🚀 [تصحيح]: استخدام LoadPosDataEvent بدلاً من ReloadSettingsEvent الخاطئ
                     if (context.mounted) context.read<PosBloc>().add(LoadPosDataEvent());
                   }),
                 ],
@@ -87,7 +103,7 @@ class PosAppBar extends StatelessWidget implements PreferredSizeWidget {
                     icon: const Icon(Icons.lock),
                     label: const Text('قفل الشاشة', style: TextStyle(fontWeight: FontWeight.bold)),
                     onPressed: () {
-                      if (currentUser != null) context.push('/lock', extra: currentUser);
+                      context.push('/lock');
                     },
                   ),
                 ),

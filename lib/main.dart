@@ -1,3 +1,4 @@
+import 'package:ahgzly_pos/core/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:ahgzly_pos/core/di/dependency_injection.dart' as di;
@@ -20,18 +21,14 @@ class AhgzlyPOS extends StatelessWidget {
       child: MaterialApp.router(
         title: 'احجزلي - نقطة بيع',
         debugShowCheckedModeBanner: false,
-        theme: ThemeData(
-          colorScheme: ColorScheme.fromSeed(seedColor: Colors.teal),
-          useMaterial3: true,
-          fontFamily: 'Cairo', 
-        ),
+        theme: AppTheme.lightTheme,
+        locale: const Locale('ar', 'EG'),
+        supportedLocales: const [Locale('ar', 'EG')],
         localizationsDelegates: const [
           GlobalMaterialLocalizations.delegate,
           GlobalWidgetsLocalizations.delegate,
           GlobalCupertinoLocalizations.delegate,
         ],
-        supportedLocales: const [Locale('ar', 'EG')],
-        locale: const Locale('ar', 'EG'),
         routerConfig: AppRouter.getRouter(),
       ),
     );
