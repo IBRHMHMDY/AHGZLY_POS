@@ -1,4 +1,3 @@
-import 'package:ahgzly_pos/core/error/exceptions.dart';
 import 'package:ahgzly_pos/core/error/failures.dart';
 import 'package:dartz/dartz.dart';
 import 'package:ahgzly_pos/features/shift/data/datasources/shift_local_data_source.dart';
@@ -15,8 +14,8 @@ class ShiftRepositoryImpl implements ShiftRepository {
     try {
       final shift = await localDataSource.getActiveShift();
       return Right(shift);
-    } on LocalDatabaseException catch (_) {
-      // Refactored: User-friendly error message
+    } catch (e) {
+      // 🚀 [FIXED]: اصطياد عام للأخطاء لمنع كراش التطبيق
       return const Left(DatabaseFailure('حدث خطأ أثناء التحقق من الوردية النشطة. يرجى المحاولة لاحقاً.'));
     }
   }
@@ -24,9 +23,13 @@ class ShiftRepositoryImpl implements ShiftRepository {
   @override
   Future<Either<Failure, ShiftEntity>> openShift({required int userId, required int startingCash}) async {
     try {
-      final shift = await localDataSource.openShift(cashierId: userId,startingCash: startingCash);
+      final shift = await localDataSource.openShift(cashierId: userId, startingCash: startingCash);
       return Right(shift);
-    } on LocalDatabaseException catch (_) {
+    } catch (e) {
+      // إظهار الرسالة المخصصة في حال كانت الوردية مفتوحة مسبقاً
+      if (e.toString().contains('مفتوحة بالفعل')) {
+        return Left(ValidationFailure(e.toString().replaceAll('Exception:', '').trim()));
+      }
       return const Left(DatabaseFailure('فشل في فتح الوردية. تأكد من مساحة التخزين الخاصة بالجهاز.'));
     }
   }
@@ -36,7 +39,7 @@ class ShiftRepositoryImpl implements ShiftRepository {
     try {
       final shift = await localDataSource.closeShift(shiftId: shiftId, actualCash: actualCash);
       return Right(shift);
-    } on LocalDatabaseException catch (_) {
+    } catch (e) {
       return const Left(DatabaseFailure('فشل في إغلاق الوردية. يرجى مراجعة الحسابات وتكرار المحاولة.'));
     }
   }
