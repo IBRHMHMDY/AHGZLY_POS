@@ -328,8 +328,8 @@ class _MenuItemsSection extends StatelessWidget {
                     )
                   : GridView.builder(
                       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 4,
+                      gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                        maxCrossAxisExtent: 220, // 🚀 سيقوم بوضع أصناف أكثر تلقائياً إذا كانت الشاشة أوسع
                         childAspectRatio: 0.85,
                         crossAxisSpacing: 16,
                         mainAxisSpacing: 16,
@@ -438,8 +438,8 @@ class _ItemsShimmerLoading extends StatelessWidget {
   Widget build(BuildContext context) {
     return GridView.builder(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 4,
+      gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+        maxCrossAxisExtent: 220, // 🚀 سيقوم بوضع أصناف أكثر تلقائياً إذا كانت الشاشة أوسع
         childAspectRatio: 0.85,
         crossAxisSpacing: 16,
         mainAxisSpacing: 16,

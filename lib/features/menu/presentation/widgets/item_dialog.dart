@@ -1,3 +1,4 @@
+import 'package:ahgzly_pos/core/common/widgets/pos_dialog_components.dart';
 import 'package:ahgzly_pos/core/utils/money_formatter.dart';
 import 'package:ahgzly_pos/features/menu/domain/entities/category_entity.dart';
 import 'package:ahgzly_pos/features/menu/domain/entities/item_variant_entity.dart';
@@ -166,7 +167,7 @@ class _ItemDialogState extends State<ItemDialog> {
       child: AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         titlePadding: EdgeInsets.zero,
-        title: _DialogHeader(
+        title: PosDialogHeader(
           title: isEditing ? 'تعديل الصنف' : 'إضافة صنف جديد',
           icon: isEditing ? Icons.edit_note_rounded : Icons.fastfood_rounded,
         ),
@@ -264,7 +265,7 @@ class _ItemDialogState extends State<ItemDialog> {
         ),
         actionsPadding: const EdgeInsets.all(24),
         actions: [
-          _DialogActions(onCancel: () => Navigator.pop(context), onSubmit: _onSubmit),
+          PosDialogActions(onCancel: () => Navigator.pop(context), onSubmit: _onSubmit),
         ],
       ),
     );
@@ -315,61 +316,3 @@ class _ItemDialogState extends State<ItemDialog> {
   }
 }
 
-class _DialogHeader extends StatelessWidget {
-  final String title;
-  final IconData icon;
-
-  const _DialogHeader({required this.title, required this.icon});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-      decoration: BoxDecoration(color: Colors.teal.shade50, borderRadius: const BorderRadius.vertical(top: Radius.circular(20))),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(color: Colors.teal.shade100, shape: BoxShape.circle),
-            child: Icon(icon, color: Colors.teal.shade800, size: 28),
-          ),
-          const SizedBox(width: 12),
-          Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20, color: Colors.black87)),
-        ],
-      ),
-    );
-  }
-}
-
-class _DialogActions extends StatelessWidget {
-  final VoidCallback onCancel;
-  final VoidCallback onSubmit;
-
-  const _DialogActions({required this.onCancel, required this.onSubmit});
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Expanded(
-          flex: 1,
-          child: TextButton(
-            onPressed: onCancel,
-            style: TextButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 14), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
-            child: const Text('إلغاء', style: TextStyle(color: Colors.redAccent, fontSize: 16, fontWeight: FontWeight.bold)),
-          ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          flex: 2,
-          child: ElevatedButton.icon(
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.teal, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 14), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
-            icon: const Icon(Icons.check_circle_outline),
-            label: const Text('حفظ البيانات', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-            onPressed: onSubmit,
-          ),
-        ),
-      ],
-    );
-  }
-}
