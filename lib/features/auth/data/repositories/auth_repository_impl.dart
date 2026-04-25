@@ -1,9 +1,9 @@
-import 'package:ahgzly_pos/core/common/users/entities/user_entity.dart';
 import 'package:dartz/dartz.dart';
-import '../../../../core/error/exceptions.dart'; 
-import '../../../../core/error/failures.dart';
-import '../../domain/repositories/auth_repository.dart';
-import '../datasources/auth_local_data_source.dart';
+import 'package:ahgzly_pos/core/error/failures.dart';
+import 'package:ahgzly_pos/core/error/exceptions.dart';
+import 'package:ahgzly_pos/core/common/users/entities/user_entity.dart';
+import 'package:ahgzly_pos/features/auth/domain/repositories/auth_repository.dart';
+import 'package:ahgzly_pos/features/auth/data/datasources/auth_local_data_source.dart';
 
 class AuthRepositoryImpl implements AuthRepository {
   final AuthLocalDataSource localDataSource;
@@ -13,13 +13,12 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   Future<Either<Failure, User>> login(String pin) async {
     try {
-      final user = await localDataSource.loginWithPin(pin);
-      return Right(user);
+      final userModel = await localDataSource.login(pin);
+      return Right(userModel); // UserModel inherits from User (Entity)
     } on AuthException catch (e) {
       return Left(AuthFailure(e.message));
     } catch (e) {
-      // Refactored: Use AuthFailure instead of CacheFailure for unknown auth errors
-      return Left(AuthFailure('حدث خطأ غير متوقع أثناء تسجيل الدخول.'));
+      return const Left(DatabaseFailure('حدث خطأ أثناء محاولة تسجيل الدخول'));
     }
   }
 
@@ -29,8 +28,17 @@ class AuthRepositoryImpl implements AuthRepository {
       await localDataSource.logout();
       return const Right(null);
     } catch (e) {
-      // Refactored: Ensure consistent failure usage
-      return Left(AuthFailure('فشل تسجيل الخروج. يرجى المحاولة لاحقاً.'));
+      return const Left(CacheFailure('فشل في مسح بيانات الجلسة السابقة'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, User?>> getCachedUser() async {
+    try {
+      final userModel = await localDataSource.getCachedSession();
+      return Right(userModel);
+    } catch (e) {
+      return const Left(CacheFailure('فشل في استرجاع الجلسة السابقة'));
     }
   }
 }
