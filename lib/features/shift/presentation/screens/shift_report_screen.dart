@@ -1,21 +1,20 @@
-import 'package:ahgzly_pos/core/utils/money_formatter.dart';
-import 'package:ahgzly_pos/features/settings/presentation/bloc/settings_bloc.dart';
-import 'package:ahgzly_pos/features/settings/presentation/bloc/settings_state.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
-import '../../../../core/routing/app_router.dart';
-import '../../../../core/di/dependency_injection.dart';
-import '../../../../core/usecases/usecase.dart';
-import '../../../../core/services/printer_service.dart';
-import '../../../../core/common/widgets/custom_shimmer.dart'; // 🪄 استدعاء الشيمر
-import '../../../settings/domain/usecases/get_settings_usecase.dart';
-import '../../../pos/presentation/widgets/receipt_widgets.dart';
-import '../../../auth/presentation/bloc/auth_bloc.dart';
-import '../../../auth/presentation/bloc/auth_event.dart';
-import '../../../auth/presentation/bloc/auth_state.dart';
+import 'package:ahgzly_pos/core/routing/app_router.dart';
+import 'package:ahgzly_pos/core/di/dependency_injection.dart';
+import 'package:ahgzly_pos/core/services/printer_service.dart';
+import 'package:ahgzly_pos/core/common/widgets/custom_shimmer.dart'; 
+import 'package:ahgzly_pos/core/utils/money_formatter.dart';
+
+import 'package:ahgzly_pos/features/settings/presentation/bloc/settings_bloc.dart';
+import 'package:ahgzly_pos/features/settings/presentation/bloc/settings_state.dart';
+import 'package:ahgzly_pos/features/auth/presentation/bloc/auth_bloc.dart';
+import 'package:ahgzly_pos/features/auth/presentation/bloc/auth_event.dart';
+import 'package:ahgzly_pos/features/auth/presentation/bloc/auth_state.dart';
+import 'package:ahgzly_pos/features/pos/presentation/widgets/receipt_widgets.dart';
 
 import '../../domain/entities/shift_entity.dart';
 import '../bloc/shift_bloc.dart';
@@ -51,13 +50,11 @@ class _ShiftReportScreenState extends State<ShiftReportScreen> {
     }
   }
 
-  void _printReportOnly(ShiftEntity shift) async {
-    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('جاري طباعة ملخص المبيعات (X-Report)...'), backgroundColor: Colors.teal));
-
+  // 🚀 جلب البيانات من الـ Bloc بشكل موحد لتجنب تكرار الكود
+  Map<String, String> _getPrinterAndAuthInfo() {
     String rName = 'مطعم احجزلي';
     String pName = 'EPSON Printer';
 
-    // 🪄 استخراج البيانات من الـ Bloc State
     final settingsState = context.read<SettingsBloc>().state;
     if (settingsState is SettingsLoaded) {
       rName = settingsState.settings.restaurantName;
@@ -67,9 +64,17 @@ class _ShiftReportScreenState extends State<ShiftReportScreen> {
     final authState = context.read<AuthBloc>().state;
     final cashierName = (authState is AuthAuthenticated) ? authState.user.name : 'غير معروف';
 
+    return {'restaurantName': rName, 'printerName': pName, 'cashierName': cashierName};
+  }
+
+  void _printReportOnly(ShiftEntity shift) async {
+    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('جاري طباعة ملخص المبيعات (X-Report)...'), backgroundColor: Colors.teal));
+
+    final info = _getPrinterAndAuthInfo();
+
     final success = await sl<PrinterService>().printReceiptUsb(
-      receiptWidget: ZReportReceiptWidget(shift: shift, restaurantName: rName, cashierName: cashierName, isXReport: true),
-      printerName: pName,
+      receiptWidget: ZReportReceiptWidget(shift: shift, restaurantName: info['restaurantName']!, cashierName: info['cashierName']!, isXReport: true),
+      printerName: info['printerName']!,
     );
 
     if (mounted) {
@@ -79,32 +84,22 @@ class _ShiftReportScreenState extends State<ShiftReportScreen> {
     }
   }
 
+  // 🚀 [FIXED]: إزالة UseCase وقراءة البيانات مباشرة من الـ State (Clean Architecture)
   void _processClosePrintAndExit(ShiftEntity shift) async {
-    final settingsResult = await sl<GetSettingsUseCase>().call(NoParams());
-    String restaurantName = 'مطعم احجزلي';
-    String printerName = 'EPSON Printer';
-    settingsResult.fold((failure) {}, (settings) {
-      restaurantName = settings.restaurantName;
-      printerName = settings.printerName;
-    });
-
-    final authState = context.read<AuthBloc>().state;
-    final cashierName = (authState is AuthAuthenticated)
-        ? authState.user.name
-        : 'غير معروف';
+    final info = _getPrinterAndAuthInfo();
 
     await sl<PrinterService>().printReceiptUsb(
       receiptWidget: ZReportReceiptWidget(
         shift: shift,
-        restaurantName: restaurantName,
-        cashierName: cashierName,
+        restaurantName: info['restaurantName']!,
+        cashierName: info['cashierName']!,
       ),
-      printerName: printerName,
+      printerName: info['printerName']!,
     );
 
     if (mounted) {
       context.read<AuthBloc>().add(LogoutEvent());
-      context.go('/');
+      context.go(AppRoutes.login); // التوجيه الصحيح عبر الـ Router
     }
   }
 
@@ -113,10 +108,7 @@ class _ShiftReportScreenState extends State<ShiftReportScreen> {
     return Scaffold(
       backgroundColor: Colors.grey.shade100,
       appBar: AppBar(
-        title: const Text(
-          'حالة الوردية',
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
+        title: const Text('حالة الوردية', style: TextStyle(fontWeight: FontWeight.bold)),
         backgroundColor: Colors.teal,
         foregroundColor: Colors.white,
         leading: IconButton(
@@ -127,38 +119,18 @@ class _ShiftReportScreenState extends State<ShiftReportScreen> {
       body: BlocConsumer<ShiftBloc, ShiftState>(
         listener: (context, state) {
           if (state is ShiftError) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(state.message),
-                backgroundColor: Colors.red,
-              ),
-            );
+            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(state.message), backgroundColor: Colors.red));
           } else if (state is ShiftClosedSuccess) {
             _processClosePrintAndExit(state.closedShift);
           }
         },
         builder: (context, state) {
-          if (state is ShiftLoading) {
-            return const _ShiftReportShimmer();
-          }
+          if (state is ShiftLoading) return const _ShiftReportShimmer();
           if (state is NoActiveShiftState) {
-            return const Center(
-              child: Text(
-                'لا توجد وردية نشطة حالياً.',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.grey,
-                ),
-              ),
-            );
+            return const Center(child: Text('لا توجد وردية نشطة حالياً.', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.grey)));
           }
           if (state is ActiveShiftLoaded) {
-            return _ActiveShiftView(
-              shift: state.shift,
-              onPrintReport: () => _printReportOnly(state.shift),
-              onCloseShift: () => _onCloseShiftPressed(state.shift),
-            );
+            return _ActiveShiftView(shift: state.shift, onPrintReport: () => _printReportOnly(state.shift), onCloseShift: () => _onCloseShiftPressed(state.shift));
           }
           if (state is ShiftClosedSuccess) return const _ClosingStateView();
           return const SizedBox.shrink();
@@ -167,6 +139,8 @@ class _ShiftReportScreenState extends State<ShiftReportScreen> {
     );
   }
 }
+
+// ... احتفظ بباقي المكونات الفرعية (_ActiveShiftView, _FinancialSummaryCard, إلخ) كما كتبتها تماماً بدون تغيير
 
 // ==========================================
 // 🪄 المكونات الفرعية (Sub-Widgets)

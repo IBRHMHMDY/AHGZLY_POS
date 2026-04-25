@@ -1,4 +1,5 @@
 import 'package:ahgzly_pos/core/utils/money_formatter.dart';
+import 'package:ahgzly_pos/core/common/widgets/pos_dialog_components.dart'; // 🚀 استدعاء المكونات المشتركة
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -59,7 +60,7 @@ class _CloseShiftDialogState extends State<CloseShiftDialog> {
       child: AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         titlePadding: EdgeInsets.zero,
-        title: const _DialogHeader(),
+        title: const _DialogHeader(), // تركنا الهيدر هنا لأنه مخصص للون الأحمر التحذيري
         contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
         content: SizedBox(
           width: 450,
@@ -84,7 +85,12 @@ class _CloseShiftDialogState extends State<CloseShiftDialog> {
         ),
         actionsPadding: const EdgeInsets.all(24),
         actions: [
-          _DialogActions(onCancel: () => Navigator.of(context).pop(), onSubmit: _submit),
+          // 🚀 استخدام المكون المشترك للأزرار لتجنب التكرار
+          PosDialogActions(
+            onCancel: () => Navigator.of(context).pop(), 
+            onSubmit: _submit,
+            submitText: 'إغلاق وطباعة Z-Report',
+          ),
         ],
       ),
     );
@@ -191,35 +197,3 @@ class _DifferenceBox extends StatelessWidget {
   }
 }
 
-class _DialogActions extends StatelessWidget {
-  final VoidCallback onCancel;
-  final VoidCallback onSubmit;
-
-  const _DialogActions({required this.onCancel, required this.onSubmit});
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Expanded(
-          flex: 1,
-          child: TextButton(
-            onPressed: onCancel,
-            style: TextButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 14), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
-            child: const Text('إلغاء', style: TextStyle(color: Colors.grey, fontSize: 16, fontWeight: FontWeight.bold)),
-          ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          flex: 2,
-          child: ElevatedButton.icon(
-            onPressed: onSubmit,
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 14), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)), elevation: 2),
-            icon: const Icon(Icons.print),
-            label: const Text('إغلاق وطباعة Z-Report', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-          ),
-        ),
-      ],
-    );
-  }
-}
