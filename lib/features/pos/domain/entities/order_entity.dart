@@ -4,19 +4,20 @@ import 'package:equatable/equatable.dart';
 import 'package:ahgzly_pos/features/pos/domain/entities/order_item_entity.dart';
 
 class OrderEntity extends Equatable {
-  final int? shiftId; 
-  final int? tableId; 
-  final OrderType orderType; 
-  final int subTotal;    
-  final int discount;    
-  final int taxAmount;   
-  final int serviceFee;  
-  final int deliveryFee; 
+  final int? shiftId;
+  final int? tableId;
+  final OrderType orderType;
+  final int subTotal;
+  final int discount;
+  final int taxAmount;
+  final int serviceFee;
+  final int deliveryFee;
   final int total;
-  final int totalCost; 
-  final int? paymentMethodId; 
-  final OrderStatus status; 
-  final DateTime createdAt; 
+  final int totalCost;
+  final int? paymentMethodId;
+  final OrderStatus status;
+  final DateTime createdAt;
+  final int? customerId;
   final String customerName;
   final String customerPhone;
   final String customerAddress;
@@ -25,20 +26,21 @@ class OrderEntity extends Equatable {
   const OrderEntity({
     this.shiftId,
     this.tableId,
-    required this.orderType, 
-    required this.subTotal, 
-    required this.discount, 
+    required this.orderType,
+    required this.subTotal,
+    required this.discount,
     required this.taxAmount,
-    required this.serviceFee, 
-    required this.deliveryFee, 
+    required this.serviceFee,
+    required this.deliveryFee,
     required this.total,
     required this.totalCost,
     required this.paymentMethodId,
-    required this.status, 
-    required this.createdAt, 
-    this.customerName = '', 
-    this.customerPhone = '', 
-    this.customerAddress = '', 
+    required this.status,
+    required this.createdAt,
+    this.customerId = 0,
+    this.customerName = '',
+    this.customerPhone = '',
+    this.customerAddress = '',
     required this.items,
   });
 
@@ -60,6 +62,7 @@ class OrderEntity extends Equatable {
       paymentMethodId: paymentMethodId,
       status: status,
       createdAt: createdAt,
+      customerId: customerId,
       customerName: customerName,
       customerPhone: customerPhone,
       customerAddress: customerAddress,
@@ -69,8 +72,23 @@ class OrderEntity extends Equatable {
 
   @override
   List<Object?> get props => [
-    shiftId, tableId, orderType, subTotal, discount, taxAmount, serviceFee, 
-    deliveryFee, total, totalCost, paymentMethodId, status, createdAt, 
-    customerName, customerPhone, customerAddress, items
+    shiftId,
+    tableId,
+    orderType,
+    subTotal,
+    discount,
+    taxAmount,
+    serviceFee,
+    deliveryFee,
+    total,
+    totalCost,
+    paymentMethodId,
+    status,
+    createdAt,
+    customerId,
+    customerName,
+    customerPhone,
+    customerAddress,
+    items,
   ];
 }

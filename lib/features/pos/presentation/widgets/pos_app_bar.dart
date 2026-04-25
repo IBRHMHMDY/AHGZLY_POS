@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:ahgzly_pos/core/extensions/order_type.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -11,6 +12,7 @@ import 'package:ahgzly_pos/features/menu/presentation/bloc/menu_bloc.dart';
 import 'package:ahgzly_pos/features/menu/presentation/bloc/menu_event.dart';
 import 'package:ahgzly_pos/features/pos/presentation/bloc/pos_bloc.dart';
 import 'package:ahgzly_pos/features/pos/presentation/bloc/pos_event.dart';
+import 'package:ahgzly_pos/features/pos/presentation/bloc/pos_state.dart';
 
 class PosAppBar extends StatelessWidget implements PreferredSizeWidget {
   const PosAppBar({super.key});
@@ -18,12 +20,8 @@ class PosAppBar extends StatelessWidget implements PreferredSizeWidget {
   @override
   Size get preferredSize => const Size.fromHeight(kToolbarHeight);
 
-  // 🚀 [Sprint 4 - Task 4.1]: Graceful Shutdown
   void _performGracefulShutdown(BuildContext context) async {
-    // 1. إغلاق اتصالات قاعدة البيانات بأمان لضمان عدم تلف البيانات
     await sl<AppDatabase>().close();
-    
-    // 2. إغلاق التطبيق برمجياً بناءً على نوع المنصة
     if (Platform.isAndroid || Platform.isIOS) {
       SystemNavigator.pop();
     } else {
@@ -46,15 +44,12 @@ class PosAppBar extends StatelessWidget implements PreferredSizeWidget {
         ),
         content: const Text('هل أنت متأكد من أنك تريد إغلاق البرنامج بالكامل؟', style: TextStyle(fontSize: 16)),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('إلغاء', style: TextStyle(color: Colors.grey, fontSize: 16, fontWeight: FontWeight.bold)),
-          ),
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('إلغاء', style: TextStyle(color: Colors.grey, fontSize: 16, fontWeight: FontWeight.bold))),
           ElevatedButton.icon(
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
             icon: const Icon(Icons.exit_to_app),
             label: const Text('تأكيد الإغلاق', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-            onPressed: () => _performGracefulShutdown(context), // 🚀 استدعاء الإغلاق الآمن
+            onPressed: () => _performGracefulShutdown(context),
           ),
         ],
       ),
@@ -65,11 +60,36 @@ class PosAppBar extends StatelessWidget implements PreferredSizeWidget {
   Widget build(BuildContext context) {
     return AppBar(
       elevation: 0,
-      title: const Row(
+      title: Row(
         children: [
-          Icon(Icons.point_of_sale, size: 28),
-          SizedBox(width: 8),
-          Text('نقطة البيع (POS)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22)),
+          const Icon(Icons.point_of_sale, size: 28),
+          const SizedBox(width: 8),
+          const Text('نقطة البيع', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22)),
+          const SizedBox(width: 24),
+          
+          // 🚀 [Sprint 4]: UX Indicator لمعرفة حالة الطلب الحالي من أي شاشة
+          BlocBuilder<PosBloc, PosState>(
+            builder: (context, state) {
+              if (state is PosDataLoaded) {
+                if (state.orderType == OrderType.dineIn && state.selectedTableId != null) {
+                  final table = state.tables.firstWhere((t) => t.id == state.selectedTableId, orElse: () => state.tables.first);
+                  return Chip(
+                    avatar: const Icon(Icons.table_restaurant, color: Colors.white, size: 18),
+                    label: Text('طاولة: ${table.tableNumber}', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                    backgroundColor: Colors.blue.shade700,
+                  );
+                } else if (state.orderType == OrderType.delivery && state.selectedCustomerId != null) {
+                   final customer = state.customers.firstWhere((c) => c.id == state.selectedCustomerId, orElse: () => state.customers.first);
+                   return Chip(
+                    avatar: const Icon(Icons.delivery_dining, color: Colors.white, size: 18),
+                    label: Text('عميل: ${customer.name}', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                    backgroundColor: Colors.orange.shade700,
+                  );
+                }
+              }
+              return const SizedBox.shrink();
+            },
+          ),
         ],
       ),
       backgroundColor: Colors.teal,
@@ -102,9 +122,7 @@ class PosAppBar extends StatelessWidget implements PreferredSizeWidget {
                     style: ElevatedButton.styleFrom(backgroundColor: Colors.blueGrey.shade50, foregroundColor: Colors.blueGrey.shade800, elevation: 0),
                     icon: const Icon(Icons.lock),
                     label: const Text('قفل الشاشة', style: TextStyle(fontWeight: FontWeight.bold)),
-                    onPressed: () {
-                      context.push('/lock');
-                    },
+                    onPressed: () => context.push('/lock'),
                   ),
                 ),
                 Padding(

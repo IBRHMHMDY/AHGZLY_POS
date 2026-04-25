@@ -20,7 +20,7 @@ part 'app_database.g.dart';
   Customers, Zones, RestaurantTables, PaymentMethods,
   
   // 🚀 الجداول المضافة في Sprint 2 (تعريفها يحل مشكلة Undefined name)
-  ItemVariants, Addons, InventoryItems, Recipes
+  ItemVariants, Addons, InventoryItems, Recipes, OrderItemAddons
 ])
 
 class AppDatabase extends _$AppDatabase {
@@ -29,7 +29,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase(super.e);
 
   @override
-  int get schemaVersion => 17; 
+  int get schemaVersion => 18; 
 
   @override
   MigrationStrategy get migration {
@@ -116,6 +116,12 @@ class AppDatabase extends _$AppDatabase {
           await m.createTable(addons);
           await m.createTable(inventoryItems);
           await m.createTable(recipes);
+        }
+        if (from < 18) {
+          // إضافة عمود المقاس لجدول عناصر الطلب
+          await m.addColumn(orderItems, orderItems.variantId);
+          // إنشاء جدول تفاصيل إضافات الطلب
+          await m.createTable(orderItemAddons);
         }
       },
       beforeOpen: (details) async {

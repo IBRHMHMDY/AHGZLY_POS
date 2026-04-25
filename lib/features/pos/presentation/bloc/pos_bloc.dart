@@ -1,9 +1,20 @@
+import 'package:ahgzly_pos/core/common/entities/customer_entity.dart';
+import 'package:ahgzly_pos/core/common/entities/restaurant_table_entity.dart';
+import 'package:ahgzly_pos/features/menu/domain/entities/category_entity.dart';
+import 'package:ahgzly_pos/features/menu/domain/entities/item_entity.dart';
 import 'package:ahgzly_pos/core/common/entities/payment_method_entity.dart';
 import 'package:ahgzly_pos/core/extensions/print_mode.dart';
+import 'package:ahgzly_pos/features/settings/domain/entities/app_settings_entity.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:ahgzly_pos/core/usecases/usecase.dart'; 
 import 'package:ahgzly_pos/features/pos/domain/usecases/save_order_usecase.dart';
 import 'package:ahgzly_pos/features/settings/domain/usecases/get_settings_usecase.dart';
+// 🚀 استيراد الـ UseCases الجديدة
+import 'package:ahgzly_pos/features/pos/domain/usecases/get_customers_usecase.dart';
+import 'package:ahgzly_pos/features/pos/domain/usecases/get_payment_methods_usecase.dart';
+import 'package:ahgzly_pos/features/menu/domain/usecases/category_usecases.dart'; // افترض وجودها
+import 'package:ahgzly_pos/features/menu/domain/usecases/item_usecases.dart'; // افترض وجودها
+
 import 'package:ahgzly_pos/features/pos/presentation/bloc/pos_event.dart';
 import 'package:ahgzly_pos/features/pos/presentation/bloc/pos_state.dart';
 import 'package:ahgzly_pos/features/pos/domain/entities/order_entity.dart';
@@ -14,11 +25,25 @@ import 'package:ahgzly_pos/core/extensions/order_type.dart';
 class PosBloc extends Bloc<PosEvent, PosState> {
   final SaveOrderUseCase saveOrderUseCase;
   final GetSettingsUseCase getSettingsUseCase;
+  
+  // 🚀 [Sprint 2]: إضافة UseCases لجلب البيانات الأساسية
+  final GetCustomersUseCase getCustomersUseCase;
+  final GetPaymentMethodsUseCase getPaymentMethodsUseCase;
+  final GetCategoriesUseCase getCategoriesUseCase;
+  final GetItemsUseCase getItemsUseCase;
 
-  // 🚀 [Sprint 3]: تحويل السلة لتعتمد على OrderItemEntity لدعم المقاسات والإضافات
+  // القوائم المحفوظة في الذاكرة (Memory Cache)
+  List<CategoryEntity> _categories = [];
+  List<ItemEntity> _allItems = [];
+  List<ItemEntity> _currentItems = [];
+  List<CustomerEntity> _customers = [];
+  final List<RestaurantTableEntity> _restTables = []; // سيتم جلبها لاحقاً
+  List<PaymentMethodEntity> _paymentMethods = [];
+  
   final List<OrderItemEntity> _cartItems = [];
   
-  // 🚀 [Sprint 3]: متغيرات الفاتورة النشطة
+  // متغيرات الفاتورة النشطة
+  int? _selectedCategoryId;
   OrderType _orderType = OrderType.takeaway; 
   int? _selectedTableId;
   int? _selectedCustomerId;
@@ -35,8 +60,13 @@ class PosBloc extends Bloc<PosEvent, PosState> {
   PosBloc({
     required this.saveOrderUseCase,
     required this.getSettingsUseCase,
+    required this.getCustomersUseCase,
+    required this.getPaymentMethodsUseCase,
+    required this.getCategoriesUseCase,
+    required this.getItemsUseCase,
   }) : super(PosInitial()) {
     on<LoadPosDataEvent>(_onLoadPosData);
+    on<ChangeCategoryEvent>(_onChangeCategory); // 🚀 تفعيل حدث تغيير القسم
     on<AddItemToCartEvent>(_onAddItem);
     on<UpdateCartItemQuantityEvent>(_onUpdateQuantity);
     on<RemoveItemFromCartEvent>(_onRemoveItem);
@@ -46,36 +76,78 @@ class PosBloc extends Bloc<PosEvent, PosState> {
     on<ClearCartEvent>(_onClearCart);
     on<CheckoutOrderEvent>(_onCheckoutOrder);
 
-    add(LoadPosDataEvent()); // تحميل الإعدادات عند البدء
+    add(LoadPosDataEvent()); 
   }
 
   Future<void> _onLoadPosData(LoadPosDataEvent event, Emitter<PosState> emit) async {
-    final result = await getSettingsUseCase(NoParams());
+    emit(PosLoading());
     
-    result.fold(
-      (failure) {
-        emit(const PosError('فشل في تحميل إعدادات النظام (الضرائب والرسوم).'));
-      },
-      (settings) {
-        _taxRate = settings.taxRate;
-        _serviceRate = settings.serviceRate;
-        _deliveryFee = settings.deliveryFee;
-        // 🚀 جلب إعدادات الطباعة
-        _printMode = settings.printMode;
-        _restaurantName = settings.restaurantName;
-        _taxNumber = settings.taxNumber;
-        
-        _emitDataLoadedState(emit); 
-      },
-    );
+    // 🚀 [Sprint 2]: جلب كافة البيانات بالتوازي (Parallel Execution) لتحسين الأداء
+    final results = await Future.wait([
+      getSettingsUseCase(NoParams()),
+      getCategoriesUseCase(NoParams()),
+      getItemsUseCase(const GetItemsParams(categoryId: 0)),
+      getCustomersUseCase(NoParams()),
+      getPaymentMethodsUseCase(NoParams()),
+    ]);
+
+    // معالجة الإعدادات
+    results[0].fold((l) => null, (settings) {
+      final s = settings as AppSettingsEntity;
+      _taxRate = s.taxRate;
+      _serviceRate = s.serviceRate;
+      _deliveryFee = s.deliveryFee;
+      _printMode = s.printMode;
+      _restaurantName = s.restaurantName;
+      _taxNumber = s.taxNumber;
+    });
+
+    // معالجة الأقسام
+    results[1].fold((l) => null, (cats) {
+      _categories = cats as List<CategoryEntity>;
+      if (_categories.isNotEmpty) _selectedCategoryId = _categories.first.id;
+    });
+
+    // معالجة الأصناف
+    results[2].fold((l) => null, (items) {
+      _allItems = items as List<ItemEntity>;
+      _filterItemsByCategory();
+    });
+
+    // معالجة العملاء
+    results[3].fold((l) => null, (custs) {
+      _customers = custs as List<CustomerEntity>;
+    });
+
+    // معالجة طرق الدفع
+    results[4].fold((l) => null, (methods) {
+      _paymentMethods = methods as List<PaymentMethodEntity>;
+    });
+
+    _emitDataLoadedState(emit); 
+  }
+
+  // 🚀 [Sprint 2]: دالة فلترة الأصناف عند اختيار قسم
+  void _onChangeCategory(ChangeCategoryEvent event, Emitter<PosState> emit) {
+    _selectedCategoryId = event.categoryId;
+    _filterItemsByCategory();
+    _emitDataLoadedState(emit);
+  }
+
+  void _filterItemsByCategory() {
+    if (_selectedCategoryId != null) {
+      _currentItems = _allItems.where((item) => item.categoryId == _selectedCategoryId).toList();
+    } else {
+      _currentItems = List.from(_allItems);
+    }
   }
 
   void _onAddItem(AddItemToCartEvent event, Emitter<PosState> emit) {
-    // 🪄 دمج الأصناف المتطابقة (نفس الصنف، نفس المقاس، نفس الإضافات)
+    // دمج الأصناف المتطابقة
     final existingIndex = _cartItems.indexWhere((c) => 
       c.itemId == event.orderItem.itemId && 
       c.selectedVariant?.id == event.orderItem.selectedVariant?.id &&
-      c.selectedAddons.length == event.orderItem.selectedAddons.length
+      _areAddonsEqual(c.selectedAddons, event.orderItem.selectedAddons) // 🚀 دالة أعمق للتحقق من تطابق الإضافات
     );
 
     if (existingIndex >= 0) {
@@ -85,6 +157,14 @@ class PosBloc extends Bloc<PosEvent, PosState> {
       _cartItems.add(event.orderItem);
     }
     _emitDataLoadedState(emit);
+  }
+
+  // دالة مساعدة للتحقق من تطابق الإضافات
+  bool _areAddonsEqual(List<dynamic> list1, List<dynamic> list2) {
+    if (list1.length != list2.length) return false;
+    final ids1 = list1.map((e) => e.id).toSet();
+    final ids2 = list2.map((e) => e.id).toSet();
+    return ids1.containsAll(ids2);
   }
 
   void _onUpdateQuantity(UpdateCartItemQuantityEvent event, Emitter<PosState> emit) {
@@ -106,7 +186,6 @@ class PosBloc extends Bloc<PosEvent, PosState> {
 
   void _onChangeType(ChangeOrderTypeEvent event, Emitter<PosState> emit) {
     _orderType = event.orderType;
-    // تنظيف البيانات غير المرتبطة بنوع الطلب الجديد
     if (_orderType != OrderType.dineIn) _selectedTableId = null;
     if (_orderType != OrderType.delivery) _selectedCustomerId = null;
     _emitDataLoadedState(emit);
@@ -133,22 +212,20 @@ class PosBloc extends Bloc<PosEvent, PosState> {
 
   void _emitDataLoadedState(Emitter<PosState> emit) {
     emit(PosDataLoaded(
-      categories: const [], 
-      currentItems: const [], 
+      categories: List.from(_categories), 
+      currentItems: List.from(_currentItems),
+      selectedCategoryId: _selectedCategoryId,
       cartItems: List.from(_cartItems),
       orderType: _orderType,
       selectedTableId: _selectedTableId,
       selectedCustomerId: _selectedCustomerId,
-      // 🚀 [Fix]: تمرير المتغيرات للـ State
+      customers: List.from(_customers),
+      tables: List.from(_restTables),
+      paymentMethods: List.from(_paymentMethods), 
       discountAmount: _discountAmount,
       taxRate: _taxRate,
       serviceRate: _serviceRate,
       deliveryFee: _deliveryFee,
-      // قائمة وهمية مؤقتة لطرق الدفع حتى يتم جلبها من الـ Database في هذا السبرينت
-      paymentMethods: const [
-        PaymentMethodEntity(id: 1, name: 'كاش'),
-        PaymentMethodEntity(id: 2, name: 'بطاقة ائتمانية (فيزا)'),
-      ],
       printMode: _printMode,
       restaurantName: _restaurantName,
       taxNumber: _taxNumber,
@@ -162,40 +239,37 @@ class PosBloc extends Bloc<PosEvent, PosState> {
       return;
     }
 
+    // 🚀 [Bug Fix]: يجب أن نستخرج البيانات *قبل* أن نحول الحالة إلى PosLoading
+    // لكي لا يتم عمل Return صامت للكود ويضيع الطلب.
+    final currentState = state;
+    if (currentState is! PosDataLoaded) return;
+
+    // الآن يمكننا إظهار التحميل بأمان
     emit(PosLoading());
 
-    // 🪄 الحسابات الديناميكية بناءً على المقاسات والإضافات
-    int subTotal = _cartItems.fold(0, (sum, item) => sum + item.totalPrice);
-    int totalCost = _cartItems.fold(0, (sum, item) => sum + item.totalCost);
-
-    int afterDiscount = subTotal - _discountAmount;
-    if (afterDiscount < 0) afterDiscount = 0;
-
-    int serviceFee = _orderType == OrderType.dineIn ? (afterDiscount * _serviceRate).round() : 0;
-    int taxAmount = ((afterDiscount + serviceFee) * _taxRate).round(); 
-    int deliveryFee = _orderType == OrderType.delivery ? _deliveryFee : 0;
-    
-    int total = afterDiscount + serviceFee + taxAmount + deliveryFee;
-
-    // 🚀 تكوين الكيان النهائي للحفظ
+    // تكوين الفاتورة وربط كافة البيانات
     final order = OrderEntity(
       shiftId: event.shiftId,
-      tableId: _selectedTableId,
+      tableId: event.tableId ?? _selectedTableId, // استلام الطاولة من الواجهة
       orderType: _orderType,
-      subTotal: subTotal,
-      discount: _discountAmount,
-      taxAmount: taxAmount,
-      serviceFee: serviceFee,
-      deliveryFee: deliveryFee,
-      total: total,
-      totalCost: totalCost, 
+      subTotal: currentState.subTotal,
+      discount: currentState.discountAmount,
+      taxAmount: currentState.taxAmount,
+      serviceFee: currentState.serviceFeeAmount,
+      deliveryFee: currentState.deliveryFeeAmount,
+      total: currentState.total,
+      totalCost: currentState.totalCost, 
       paymentMethodId: event.paymentMethodId,
       status: OrderStatus.completed,
+      // 🚀 استلام بيانات التوصيل إن وجدت
+      customerId: event.customerId,
+      customerName: event.customerName,
+      customerPhone: event.customerPhone,
+      customerAddress: event.customerAddress,
       createdAt: DateTime.now(),
       items: List.from(_cartItems),
     );
 
-    // ملاحظة: تأكد من أن SaveOrderUseCase يقبل OrderEntity مباشرة.
     final result = await saveOrderUseCase(SaveOrderParams(order: order));
 
     result.fold(
@@ -204,6 +278,7 @@ class PosBloc extends Bloc<PosEvent, PosState> {
         _emitDataLoadedState(emit); 
       },
       (orderId) {
+        // 🚀 سيعمل هذا السطر الآن، وسيلتقطه الـ CartSection ويطبع الفاتورة!
         emit(PosCheckoutSuccess(orderId));
         _cartItems.clear();
         _discountAmount = 0;

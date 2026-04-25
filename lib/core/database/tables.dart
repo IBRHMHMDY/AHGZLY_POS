@@ -134,6 +134,7 @@ class OrderItems extends Table {
   IntColumn get id => integer().autoIncrement()();
   IntColumn get orderId => integer().references(Orders, #id)();
   IntColumn get itemId => integer().references(Items, #id)();
+  IntColumn get variantId => integer().nullable().references(ItemVariants, #id)();
   IntColumn get quantity => integer()();
   IntColumn get unitPrice => integer()();
   IntColumn get unitCostPrice => integer().withDefault(const Constant(0))();
@@ -198,6 +199,16 @@ class Addons extends Table {
   IntColumn get price => integer()();
   IntColumn get costPrice => integer().withDefault(const Constant(0))();
 }
+/// OrderItemAddons Table
+@DataClassName('OrderItemAddonData')
+class OrderItemAddons extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  IntColumn get orderItemId => integer().references(OrderItems, #id)();
+  IntColumn get addonId => integer().references(Addons, #id)();
+  IntColumn get price => integer()(); // حفظ سعر الإضافة وقت الطلب لتجنب تأثر الفواتير القديمة بتغير الأسعار
+  IntColumn get costPrice => integer().withDefault(const Constant(0))();
+}
+
 
 /// InventoryItems Table
 @DataClassName('InventoryItemData')

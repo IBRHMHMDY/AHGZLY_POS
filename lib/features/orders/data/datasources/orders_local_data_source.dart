@@ -2,7 +2,6 @@ import 'package:ahgzly_pos/core/database/app_database.dart';
 import 'package:ahgzly_pos/core/error/exceptions.dart';
 import 'package:ahgzly_pos/core/extensions/order_status.dart';
 import 'package:ahgzly_pos/features/orders/data/models/order_history_model.dart';
-
 import 'package:drift/drift.dart';
 
 abstract class OrdersLocalDataSource {
@@ -35,8 +34,11 @@ class OrdersLocalDataSourceImpl implements OrdersLocalDataSource {
       List<OrderHistoryModel> orders = [];
       
       for (var order in ordersDrift) {
+        // جلب العناصر مع تفاصيل الصنف
         final query = appDatabase.select(appDatabase.orderItems).join([
-          innerJoin(appDatabase.items, appDatabase.items.id.equalsExp(appDatabase.orderItems.itemId))
+          innerJoin(appDatabase.items, appDatabase.items.id.equalsExp(appDatabase.orderItems.itemId)),
+          // 🚀 ربط المقاسات إن وجدت
+          leftOuterJoin(appDatabase.itemVariants, appDatabase.itemVariants.id.equalsExp(appDatabase.orderItems.variantId))
         ])..where(appDatabase.orderItems.orderId.equals(order.id));
         
         final rows = await query.get();
@@ -45,9 +47,27 @@ class OrdersLocalDataSourceImpl implements OrdersLocalDataSource {
         for (var row in rows) {
           final orderItem = row.readTable(appDatabase.orderItems);
           final item = row.readTable(appDatabase.items);
+          final variant = row.readTableOrNull(appDatabase.itemVariants);
           
-          // [Refactor]: تمرير المتغيرات مباشرة بدلاً من Map
-          items.add(OrderItemHistoryModel.fromDrift(item.name, orderItem.quantity, orderItem.unitPrice));
+          // 🚀 جلب الإضافات لهذا العنصر
+          final addonsQuery = appDatabase.select(appDatabase.orderItemAddons).join([
+            innerJoin(appDatabase.addons, appDatabase.addons.id.equalsExp(appDatabase.orderItemAddons.addonId))
+          ])..where(appDatabase.orderItemAddons.orderItemId.equals(orderItem.id));
+          
+          final addonsRows = await addonsQuery.get();
+          
+          // 🚀 بناء الاسم النهائي للصنف (صنف + مقاس + إضافات) ليعرض في السجل
+          String finalItemName = item.name;
+          if (variant != null) {
+            finalItemName += ' (${variant.name})';
+          }
+          if (addonsRows.isNotEmpty) {
+            final addonsNames = addonsRows.map((r) => r.readTable(appDatabase.addons).name).join(', ');
+            finalItemName += ' + $addonsNames';
+          }
+          
+          // [Refactor]: تمرير المتغيرات مباشرة
+          items.add(OrderItemHistoryModel.fromDrift(finalItemName, orderItem.quantity, orderItem.unitPrice));
         }
         
         orders.add(OrderHistoryModel.fromDrift(order, items));

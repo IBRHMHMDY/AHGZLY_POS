@@ -51,14 +51,12 @@ class _CartSectionState extends State<CartSection> {
           orderId: orderId,
           orderType: orderState.orderType,
           items: orderState.cartItems,
-          // 🚀 ربطنا كل المتغيرات المالية الدقيقة هنا:
           subTotal: orderState.subTotal,
           discountAmount: orderState.discountAmount, 
           taxAmount: orderState.taxAmount,
           serviceFee: orderState.serviceFeeAmount,
           deliveryFee: orderState.deliveryFeeAmount,
           total: orderState.total, 
-          // 🚀 ربطنا اسم المطعم الحقيقي:
           restaurantName: orderState.restaurantName, 
           taxNumber: orderState.taxNumber,
           cashierName: currentCashierName,
@@ -119,7 +117,6 @@ class _CartSectionState extends State<CartSection> {
           if (state is PosCheckoutSuccess) {
             ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('تم حفظ الفاتورة بنجاح! (رقم: #${state.orderId})'), backgroundColor: Colors.green));
             if (_lastOrderState != null) {
-              // 🚀 فحص نوع الطباعة من الإعدادات وتنفيذ المناسب:
               final mode = _lastOrderState!.printMode;
               if (mode == PrintMode.ask) {
                 _showPrintDialog(context, state.orderId, _lastOrderState!);
@@ -147,9 +144,11 @@ class _CartSectionState extends State<CartSection> {
                             context: context,
                             barrierDismissible: false,
                             builder: (_) => CheckoutDialog(
-                              totalAmount: state.total, // 🚀 [Fix]: تمرير الإجمالي النهائي!
+                              totalAmount: state.total, 
                               orderType: state.orderType, 
-                              paymentMethods: state.paymentMethods, // 🚀 تمرير طرق الدفع للواجهة
+                              paymentMethods: state.paymentMethods,
+                              customers: state.customers,
+                              tables: state.tables,
                             ),
                           );
                           
@@ -159,8 +158,8 @@ class _CartSectionState extends State<CartSection> {
 
                             context.read<PosBloc>().add(
                               CheckoutOrderEvent(
-                                shiftId: 1, 
-                                paymentMethodId: result['methodId'], // 🚀 أصبح ID رقمي
+                                shiftId: 1, // من المفترض جلب الـ Shift ID النشط هنا إذا كان متوفراً في State أو UseCase
+                                paymentMethodId: result['methodId'], 
                               ),
                             );
                           }
@@ -175,10 +174,6 @@ class _CartSectionState extends State<CartSection> {
     );
   }
 }
-
-// ==========================================
-// 🪄 المكونات الفرعية (Sub-Widgets) المستخرجة
-// ==========================================
 
 class _CartHeader extends StatelessWidget {
   final OrderType orderType; 
@@ -235,7 +230,6 @@ class _CartHeader extends StatelessWidget {
 }
 
 class _CartItemsList extends StatelessWidget {
-  // 🚀 [Sprint 3] استخدام OrderItemEntity بدلاً من Dynamic
   final List<OrderItemEntity> cartItems; 
   const _CartItemsList({required this.cartItems});
 
@@ -261,7 +255,6 @@ class _CartItemsList extends StatelessWidget {
       itemBuilder: (context, index) {
         final cartItem = cartItems[index];
 
-        // 🪄 بناء نص التفاصيل (المقاس + الإضافات)
         String details = '';
         if (cartItem.selectedVariant != null) {
           details += cartItem.selectedVariant!.name;
@@ -285,7 +278,6 @@ class _CartItemsList extends StatelessWidget {
                       child: Text(details, style: TextStyle(fontSize: 12, color: Colors.grey.shade600), maxLines: 2, overflow: TextOverflow.ellipsis),
                     ),
                   const SizedBox(height: 4),
-                  // السعر الإجمالي للعنصر الواحد (متضمناً الإضافات)
                   Text('${cartItem.totalPrice.toFormattedMoney()} ج.م', style: const TextStyle(color: Colors.teal, fontWeight: FontWeight.bold, fontSize: 13)),
                 ],
               ),
@@ -297,7 +289,6 @@ class _CartItemsList extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   InkWell(
-                    // 🚀 [Sprint 3] تمرير الكيان نفسه لتحديث الكمية
                     onTap: () => context.read<PosBloc>().add(UpdateCartItemQuantityEvent(cartItem, cartItem.quantity - 1)),
                     child: const Padding(padding: EdgeInsets.symmetric(horizontal: 6, vertical: 8), child: Icon(Icons.remove, size: 16, color: Colors.black87)),
                   ),
@@ -315,7 +306,6 @@ class _CartItemsList extends StatelessWidget {
             ),
             const SizedBox(width: 4),
             InkWell(
-              // 🚀 [Sprint 3] تمرير الكيان نفسه للحذف
               onTap: () => context.read<PosBloc>().add(RemoveItemFromCartEvent(cartItem)),
               child: Container(
                 padding: const EdgeInsets.all(6),
@@ -366,7 +356,7 @@ class _CartSummary extends StatelessWidget {
             if (state.deliveryFeeAmount > 0) _buildSummaryRow('رسوم التوصيل:', state.deliveryFeeAmount),
               
             const Padding(padding: EdgeInsets.symmetric(vertical: 6.0), child: Divider(thickness: 2)),
-            _buildSummaryRow('الإجمالي النهائي:', state.total, isTotal: true), // 🚀 عرض الإجمالي الدقيق
+            _buildSummaryRow('الإجمالي النهائي:', state.total, isTotal: true), 
             const SizedBox(height: 16),
             ElevatedButton(
               style: ElevatedButton.styleFrom(backgroundColor: Colors.teal, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 16), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)), elevation: 4),
@@ -408,7 +398,8 @@ class _PrintOptionsDialog extends StatelessWidget {
           icon: const Icon(Icons.person),
           label: const Text('فاتورة العميل'),
           onPressed: () async {
-            // الطباعة
+            // منطق الطباعة اليدوية هنا
+            Navigator.pop(context);
           },
         ),
         ElevatedButton.icon(
@@ -416,7 +407,8 @@ class _PrintOptionsDialog extends StatelessWidget {
           icon: const Icon(Icons.kitchen),
           label: const Text('بون المطبخ'),
           onPressed: () async {
-            // الطباعة
+            // منطق الطباعة اليدوية هنا
+             Navigator.pop(context);
           },
         ),
       ],

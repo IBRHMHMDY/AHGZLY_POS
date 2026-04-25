@@ -25,7 +25,7 @@ Widget _buildRow(String title, int valueInCents) {
 class CustomerReceiptWidget extends StatelessWidget {
   final int orderId;
   final OrderType orderType;
-  final List<OrderItemEntity> items; // 🚀 [Fix]: استخدام الكيان الصحيح
+  final List<OrderItemEntity> items; 
   final int subTotal;
   final int discountAmount;
   final int taxAmount;
@@ -34,10 +34,13 @@ class CustomerReceiptWidget extends StatelessWidget {
   final int total;
   final String restaurantName;
   final String taxNumber;
+  final String cashierName;
+  
+  // 🚀 [Sprint 4]: متغيرات الطاولة والعميل
+  final String? tableName; 
   final String customerName;
   final String customerPhone;
   final String customerAddress;
-  final String cashierName;
 
   const CustomerReceiptWidget({
     super.key,
@@ -53,6 +56,7 @@ class CustomerReceiptWidget extends StatelessWidget {
     required this.restaurantName,
     required this.taxNumber,
     required this.cashierName,
+    this.tableName,
     this.customerName = '',
     this.customerPhone = '',
     this.customerAddress = '',
@@ -72,94 +76,45 @@ class CustomerReceiptWidget extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            Text(
-              restaurantName,
-              style: const TextStyle(
-                fontSize: 28,
-                fontWeight: FontWeight.bold,
-                color: Colors.black,
-              ),
-            ),
-            Text(
-              'الرقم الضريبي: $taxNumber',
-              style: const TextStyle(fontSize: 14, color: Colors.black),
-            ),
+            Text(restaurantName, style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.black)),
+            Text('الرقم الضريبي: $taxNumber', style: const TextStyle(fontSize: 14, color: Colors.black)),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  'الكاشير: $cashierName',
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black,
-                  ),
-                ),
-                Text(
-                  formattedNow,
-                  style: const TextStyle(fontSize: 14, color: Colors.black),
-                ),
+                Text('الكاشير: $cashierName', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.black)),
+                Text(formattedNow, style: const TextStyle(fontSize: 14, color: Colors.black)),
               ],
             ),
             const Divider(color: Colors.black, thickness: 2),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  'فاتورة رقم: #$orderId',
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black,
-                  ),
-                ),
-                Text(
-                  'النوع: ${orderType.toDisplayName()}',
-                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black),
-                ),
+                Text('فاتورة: #$orderId', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black)),
+                Text('النوع: ${orderType.toDisplayName()}', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black)),
               ],
             ),
-            const Text(
-              '----------------------------------------',
-              style: TextStyle(color: Colors.black),
-            ),
-            ...items.map(
-              (c) {
-                // 🪄 تجهيز اسم الصنف مع المقاس للإيصال
-                String itemNameDisplay = c.itemName;
-                if (c.selectedVariant != null) {
-                  itemNameDisplay += ' (${c.selectedVariant!.name})';
-                }
+            
+            // 🚀 [Sprint 4]: عرض الطاولة بوضوح
+            if (orderType == OrderType.dineIn && tableName != null)
+               Text('الطاولة: $tableName', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w900, color: Colors.black)),
 
+            const Text('----------------------------------------', style: TextStyle(color: Colors.black)),
+            ...items.map((c) {
+                String itemNameDisplay = c.itemName;
+                if (c.selectedVariant != null) itemNameDisplay += ' (${c.selectedVariant!.name})';
                 return Padding(
                   padding: const EdgeInsets.symmetric(vertical: 4.0),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Expanded(
-                        child: Text(
-                          '$itemNameDisplay (x${c.quantity})',
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.black,
-                          ),
-                        ),
-                      ),
-                      Text(
-                        // 🚀 [Fix]: استخدام totalPrice الجاهز من الكيان بدلاً من العملية الحسابية اليدوية
-                        '${MoneyFormatter.format(c.totalPrice)} ج.م',
-                        style: const TextStyle(fontSize: 16, color: Colors.black),
-                      ),
+                      Expanded(child: Text('$itemNameDisplay (x${c.quantity})', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black))),
+                      Text('${MoneyFormatter.format(c.totalPrice)} ج.م', style: const TextStyle(fontSize: 16, color: Colors.black)),
                     ],
                   ),
                 );
               }
             ),
-            const Text(
-              '----------------------------------------',
-              style: TextStyle(color: Colors.black),
-            ),
+            const Text('----------------------------------------', style: TextStyle(color: Colors.black)),
             _buildRow('الإجمالي الفرعي:', subTotal),
             if (discountAmount > 0) _buildRow('قيمة الخصم:', -discountAmount),
             _buildRow('الضريبة المضافة:', taxAmount),
@@ -169,75 +124,21 @@ class CustomerReceiptWidget extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Expanded(
-                  child: Text(
-                    'الإجمالي النهائي:',
-                    style: TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black,
-                    ),
-                  ),
-                ),
-                FittedBox(
-                  fit: BoxFit.scaleDown,
-                  child: Text(
-                    '${MoneyFormatter.format(total)} ج.م',
-                    style: const TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black,
-                    ),
-                  ),
-                ),
+                const Expanded(child: Text('الإجمالي النهائي:', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.black))),
+                FittedBox(fit: BoxFit.scaleDown, child: Text('${MoneyFormatter.format(total)} ج.م', style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.black))),
               ],
             ),
-            if (orderType == OrderType.delivery &&
-                (customerName.isNotEmpty ||
-                    customerPhone.isNotEmpty ||
-                    customerAddress.isNotEmpty)) ...[
+            
+            // 🚀 [Sprint 4]: بيانات العميل
+            if (orderType == OrderType.delivery && (customerName.isNotEmpty || customerPhone.isNotEmpty || customerAddress.isNotEmpty)) ...[
               const Divider(color: Colors.black, thickness: 2),
-              const Text(
-                'بيانات التوصيل:',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black,
-                ),
-              ),
-              if (customerName.isNotEmpty)
-                Text(
-                  'الاسم: $customerName',
-                  style: const TextStyle(fontSize: 16, color: Colors.black),
-                ),
-              if (customerPhone.isNotEmpty)
-                Text(
-                  'الهاتف: $customerPhone',
-                  style: const TextStyle(
-                    fontSize: 16,
-                    color: Colors.black,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              if (customerAddress.isNotEmpty)
-                Text(
-                  'العنوان: $customerAddress',
-                  style: const TextStyle(fontSize: 16, color: Colors.black),
-                ),
+              const Text('بيانات التوصيل:', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black)),
+              if (customerName.isNotEmpty) Text('الاسم: $customerName', style: const TextStyle(fontSize: 16, color: Colors.black)),
+              if (customerPhone.isNotEmpty) Text('الهاتف: $customerPhone', style: const TextStyle(fontSize: 16, color: Colors.black, fontWeight: FontWeight.bold)),
+              if (customerAddress.isNotEmpty) Text('العنوان: $customerAddress', style: const TextStyle(fontSize: 16, color: Colors.black)),
             ],
             const SizedBox(height: 20),
-            const Text(
-              'شكراً لزيارتكم!',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: Colors.black,
-              ),
-            ),
-            Text(
-              formattedNow,
-              style: const TextStyle(fontSize: 14, color: Colors.black),
-            ),
+            const Text('شكراً لزيارتكم!', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black)),
           ],
         ),
       ),
@@ -248,13 +149,19 @@ class CustomerReceiptWidget extends StatelessWidget {
 class KitchenReceiptWidget extends StatelessWidget {
   final int orderId;
   final OrderType orderType;
-  final List<OrderItemEntity> items; // 🚀 [Fix]: استبدال CartItems بـ OrderItemEntity
+  final List<OrderItemEntity> items; 
+  
+  // 🚀 [Sprint 4]: إرسال بيانات التوجيه للمطبخ لتغليف الطلب بشكل صحيح
+  final String? tableName;
+  final String? customerName; 
 
   const KitchenReceiptWidget({
     super.key,
     required this.orderId,
     required this.orderType,
     required this.items,
+    this.tableName,
+    this.customerName,
   });
 
   @override
@@ -269,85 +176,44 @@ class KitchenReceiptWidget extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            const Text(
-              'بـون مـطـبـخ',
-              style: TextStyle(
-                fontSize: 32,
-                fontWeight: FontWeight.bold,
-                color: Colors.black,
-              ),
-            ),
+            const Text('بـون مـطـبـخ', style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Colors.black)),
             const Divider(color: Colors.black, thickness: 3),
-            Text(
-              'طلب رقم: #$orderId',
-              style: const TextStyle(
-                fontSize: 28,
-                fontWeight: FontWeight.bold,
-                color: Colors.black,
+            Text('طلب رقم: #$orderId', style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.black)),
+            
+            // 🚀 [UX] توجيه المطبخ بوضوح
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(border: Border.all(color: Colors.black, width: 2)),
+              child: Text(
+                orderType == OrderType.dineIn 
+                    ? 'صالة - الطاولة: ${tableName ?? "غير محدد"}' 
+                    : (orderType == OrderType.delivery ? 'دليفري - العميل: ${customerName ?? ""}' : 'تيك أواي'),
+                style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w900, color: Colors.black),
+                textAlign: TextAlign.center,
               ),
             ),
-            Text(
-              'النوع: ${orderType.toDisplayName()}',
-              style: const TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: Colors.black,
-              ),
-            ),
-            const Text(
-              '====================',
-              style: TextStyle(fontSize: 20, color: Colors.black),
-            ),
-            ...items.map(
-              (c) {
-                // 🪄 [UX Feature]: إظهار المقاس والإضافات والملاحظات بشكل بارز للمطبخ
+            
+            const Text('====================', style: TextStyle(fontSize: 20, color: Colors.black)),
+            ...items.map((c) {
                 String kitchenDetails = c.itemName;
-                if (c.selectedVariant != null) {
-                  kitchenDetails += ' (${c.selectedVariant!.name})';
-                }
-                if (c.selectedAddons.isNotEmpty) {
-                  kitchenDetails += '\n+ الإضافات: ${c.selectedAddons.map((a) => a.name).join('، ')}';
-                }
-                if (c.notes != null && c.notes!.isNotEmpty) {
-                  kitchenDetails += '\n* ملاحظة: ${c.notes}';
-                }
+                if (c.selectedVariant != null) kitchenDetails += ' (${c.selectedVariant!.name})';
+                if (c.selectedAddons.isNotEmpty) kitchenDetails += '\n+ الإضافات: ${c.selectedAddons.map((a) => a.name).join('، ')}';
+                if (c.notes != null && c.notes!.isNotEmpty) kitchenDetails += '\n* ملاحظة: ${c.notes}';
 
                 return Padding(
                   padding: const EdgeInsets.symmetric(vertical: 8.0),
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        '[ ${c.quantity} ]  ',
-                        style: const TextStyle(
-                          fontSize: 26,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black,
-                        ),
-                      ),
-                      Expanded(
-                        child: Text(
-                          kitchenDetails, // 🚀 [Fix]: استبدال c.item.name بـ String مجهز للمطبخ
-                          style: const TextStyle(
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.black,
-                          ),
-                        ),
-                      ),
+                      Text('[ ${c.quantity} ]  ', style: const TextStyle(fontSize: 26, fontWeight: FontWeight.bold, color: Colors.black)),
+                      Expanded(child: Text(kitchenDetails, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.black))),
                     ],
                   ),
                 );
               }
             ),
-            const Text(
-              '====================',
-              style: TextStyle(fontSize: 20, color: Colors.black),
-            ),
-            Text(
-              DateTime.now().toString().substring(0, 16),
-              style: const TextStyle(fontSize: 16, color: Colors.black),
-            ),
+            const Text('====================', style: TextStyle(fontSize: 20, color: Colors.black)),
+            Text(DateTime.now().toString().substring(0, 16), style: const TextStyle(fontSize: 16, color: Colors.black)),
           ],
         ),
       ),

@@ -71,7 +71,26 @@ class SelectCustomerEvent extends PosEvent {
 class CheckoutOrderEvent extends PosEvent {
   final int shiftId;
   final int paymentMethodId; // طريقة الدفع المختارة عند الإغلاق
-  const CheckoutOrderEvent({required this.shiftId, required this.paymentMethodId});
+  final int? tableId;
+  final int? customerId;
+  final String customerName;
+  final String customerPhone;
+  final String customerAddress;
+  const CheckoutOrderEvent({
+    required this.shiftId,
+    required this.paymentMethodId,
+    this.tableId,
+    this.customerId,
+    this.customerName = '',
+    this.customerPhone = '',
+    this.customerAddress = '',
+  });
   @override
-  List<Object> get props => [shiftId, paymentMethodId];
+  List<Object?> get props => [shiftId,
+        paymentMethodId,
+        tableId,
+        customerId,
+        customerName,
+        customerPhone,
+        customerAddress];
 }

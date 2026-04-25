@@ -22,6 +22,7 @@ class PosLocalDataSourceImpl implements PosLocalDataSource {
 
   @override
   Future<int> saveOrder(OrderModel order) async {
+    // استخدام Transaction لضمان حفظ الطلب ومكوناته دفعة واحدة أو التراجع عنها بالكامل
     return await appDatabase.transaction(() async {
       
       if (order.shiftId == null || order.shiftId == 0) {
@@ -32,10 +33,11 @@ class PosLocalDataSourceImpl implements PosLocalDataSource {
         throw CacheException('لا يمكن حفظ فاتورة فارغة.');
       }
 
+      // 1. حفظ الطلب الأساسي (Order)
       final orderId = await appDatabase.into(appDatabase.orders).insert(
         OrdersCompanion.insert(
           shiftId: order.shiftId!,
-          tableId: Value(order.tableId),
+          tableId: Value(order.tableId), // 🚀 حفظ الطاولة (إن وجدت)
           orderType: Value(order.orderType),       
           subTotal: order.subTotal,
           discount: Value(order.discount),
@@ -45,26 +47,46 @@ class PosLocalDataSourceImpl implements PosLocalDataSource {
           total: order.total,
           paymentMethodId: Value(order.paymentMethodId), 
           status: order.status,               
-          customerName: Value(order.customerName),
+          customerName: Value(order.customerName), // 🚀 حفظ بيانات العميل
           customerPhone: Value(order.customerPhone),
           customerAddress: Value(order.customerAddress),
           createdAt: order.createdAt,         
         ),
       );
 
+      // 2. حفظ الأصناف (OrderItems) والمقاسات والإضافات
       for (var item in order.items) {
         final itemModel = item as OrderItemModel;
-        await appDatabase.into(appDatabase.orderItems).insert(
+        
+        // إدخال الصنف واسترجاع الـ ID الخاص به
+        final orderItemId = await appDatabase.into(appDatabase.orderItems).insert(
           OrderItemsCompanion.insert(
             orderId: orderId,
             itemId: itemModel.itemId,
+            variantId: Value(itemModel.selectedVariant?.id), // 🚀 [إضافة المقاس]
             quantity: itemModel.quantity,
             unitPrice: itemModel.unitPrice,
+            unitCostPrice: Value(itemModel.unitCostPrice), 
             notes: Value(itemModel.notes),
           ),
         );
+
+        // 3. حفظ الإضافات المرتبطة بهذا الصنف (Addons)
+        if (itemModel.selectedAddons.isNotEmpty) {
+          for (var addon in itemModel.selectedAddons) {
+            await appDatabase.into(appDatabase.orderItemAddons).insert(
+              OrderItemAddonsCompanion.insert(
+                orderItemId: orderItemId,
+                addonId: addon.id!,
+                price: addon.price,       // حفظ سعر الإضافة وقت الطلب
+                costPrice: Value(addon.costPrice),
+              ),
+            );
+          }
+        }
       }
 
+      // 4. تحديث إحصائيات الوردية (كما هي بدون تغيير لعدم كسر النظام المالي)
       final shift = await (appDatabase.select(appDatabase.shifts)
             ..where((t) => t.id.equals(order.shiftId!) & t.status.equals('active')))
           .getSingleOrNull();
@@ -73,8 +95,6 @@ class PosLocalDataSourceImpl implements PosLocalDataSource {
          throw CacheException('الوردية الحالية غير نشطة أو تم إغلاقها.');
       }
 
-      // 🚀 [Fix Critical Bug]: التخلص من الـ Enum نهائياً.
-      // نقوم بالبحث عن اسم طريقة الدفع في قاعدة البيانات باستخدام الـ ID
       String methodName = '';
       if (order.paymentMethodId != null) {
         final methodData = await (appDatabase.select(appDatabase.paymentMethods)
