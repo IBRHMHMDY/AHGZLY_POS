@@ -1,4 +1,5 @@
 import 'package:dartz/dartz.dart';
+import 'package:ahgzly_pos/core/error/exceptions.dart';
 import 'package:ahgzly_pos/core/error/failures.dart';
 import 'package:ahgzly_pos/features/orders/domain/entities/order_history_entity.dart';
 import 'package:ahgzly_pos/features/orders/domain/repositories/orders_repository.dart';
@@ -14,7 +15,6 @@ class OrdersRepositoryImpl implements OrdersRepository {
       final orders = await localDataSource.getOrdersHistory(isAdmin: isAdmin, shiftId: shiftId);
       return Right(orders);
     } catch (_) {
-      // Refactored: User-friendly message
       return const Left(DatabaseFailure('فشل في جلب سجل الطلبات. يرجى التأكد من مساحة التخزين.'));
     }
   }
@@ -24,8 +24,10 @@ class OrdersRepositoryImpl implements OrdersRepository {
     try {
       await localDataSource.refundOrder(orderId);
       return const Right(null);
+    } on CacheException catch (e) {
+      // 🚀 [FIXED]: إظهار رسائل مخصصة مثل "الوردية مغلقة"
+      return Left(ValidationFailure(e.message)); 
     } catch (_) {
-      // Refactored: User-friendly message
       return const Left(DatabaseFailure('فشل استرجاع الطلب. يرجى المحاولة مرة أخرى.'));
     }
   }

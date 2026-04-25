@@ -1,3 +1,4 @@
+import 'package:ahgzly_pos/core/common/widgets/pos_dialog_components.dart';
 import 'package:ahgzly_pos/core/extensions/order_status.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -29,18 +30,19 @@ class OrderDetailsDialog extends StatelessWidget {
       child: AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         titlePadding: EdgeInsets.zero,
-        title: _DialogHeader(orderId: order.id, isRefunded: isRefunded),
+        // 🚀 [FIXED]: تطبيق مبدأ DRY باستخدام المكون الموحد
+        title: Container(
+          color: isRefunded ? Colors.red.shade50 : null, // تخصيص خلفية حمراء إذا كان مرتجع
+          child: PosDialogHeader(title: 'تفاصيل الطلب #${order.id}', icon: Icons.receipt_long),
+        ),
         contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
         content: SizedBox(
           width: 500,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // 🪄 1. ملخص الإجمالي
               _OrderSummary(total: order.total, isRefunded: isRefunded),
               const SizedBox(height: 16),
-              
-              // 🪄 2. قائمة الأصناف
               Flexible(child: _OrderItemsList(items: order.items)),
             ],
           ),
@@ -58,64 +60,22 @@ class OrderDetailsDialog extends StatelessWidget {
 // 🪄 المكونات الفرعية (Sub-Widgets)
 // ==========================================
 
-class _DialogHeader extends StatelessWidget {
-  final int orderId;
-  final bool isRefunded;
-
-  const _DialogHeader({required this.orderId, required this.isRefunded});
-
-  @override
-  Widget build(BuildContext context) {
-    final color = isRefunded ? Colors.red : Colors.teal;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-      decoration: BoxDecoration(
-        color: isRefunded ? Colors.red.shade50 : Colors.teal.shade50,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(color: isRefunded ? Colors.red.shade100 : Colors.teal.shade100, shape: BoxShape.circle),
-            child: Icon(Icons.receipt_long, color: color.shade800, size: 28),
-          ),
-          const SizedBox(width: 12),
-          Text('تفاصيل الطلب #$orderId', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20, color: color.shade900)),
-        ],
-      ),
-    );
-  }
-}
 
 class _OrderSummary extends StatelessWidget {
   final int total;
   final bool isRefunded;
-
   const _OrderSummary({required this.total, required this.isRefunded});
 
   @override
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: isRefunded ? Colors.red.shade50 : Colors.teal.shade50,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: isRefunded ? Colors.red.shade200 : Colors.teal.shade200),
-      ),
+      decoration: BoxDecoration(color: isRefunded ? Colors.red.shade50 : Colors.teal.shade50, borderRadius: BorderRadius.circular(12), border: Border.all(color: isRefunded ? Colors.red.shade200 : Colors.teal.shade200)),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text('إجمالي الطلب:', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: isRefunded ? Colors.red.shade900 : Colors.teal.shade900)),
-          Text(
-            '${total.toFormattedMoney()} ج.م',
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.w900,
-              color: isRefunded ? Colors.red : Colors.teal,
-              decoration: isRefunded ? TextDecoration.lineThrough : null,
-            ),
-          ),
+          Text('${total.toFormattedMoney()} ج.م', style: TextStyle(fontSize: 24, fontWeight: FontWeight.w900, color: isRefunded ? Colors.red : Colors.teal, decoration: isRefunded ? TextDecoration.lineThrough : null)),
         ],
       ),
     );
@@ -123,7 +83,7 @@ class _OrderSummary extends StatelessWidget {
 }
 
 class _OrderItemsList extends StatelessWidget {
-  final List<dynamic> items; // يفضل استخدام النوع الصحيح بدلاً من dynamic لاحقاً
+  final List<OrderItemHistoryEntity> items; // 🚀 [FIXED]: استخدام الـ Entity الصحيح بدلاً من dynamic
 
   const _OrderItemsList({required this.items});
 
@@ -139,10 +99,7 @@ class _OrderItemsList extends StatelessWidget {
           contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
           title: Text(item.itemName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
           subtitle: Text('الكمية: ${item.quantity}', style: TextStyle(color: Colors.grey.shade700, fontWeight: FontWeight.w600)),
-          trailing: Text(
-            '${MoneyFormatter.format(item.unitPrice * item.quantity)} ج.م',
-            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.black87),
-          ),
+          trailing: Text('${MoneyFormatter.format(item.unitPrice * item.quantity)} ج.م', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.black87)),
         );
       },
     );

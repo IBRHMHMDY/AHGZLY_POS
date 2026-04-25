@@ -12,7 +12,8 @@ import 'package:ahgzly_pos/features/orders/presentation/bloc/orders_state.dart';
 import 'package:ahgzly_pos/features/orders/domain/entities/order_history_entity.dart';
 import 'package:ahgzly_pos/features/orders/presentation/widgets/order_details_dialog.dart';
 import 'package:ahgzly_pos/core/utils/money_formatter.dart';
-import 'package:ahgzly_pos/core/common/widgets/custom_shimmer.dart'; // 🪄 استيراد الشيمر
+import 'package:ahgzly_pos/core/common/widgets/custom_shimmer.dart';
+import 'package:intl/intl.dart'; // 🪄 استيراد الشيمر
 
 class OrdersScreen extends StatefulWidget {
   const OrdersScreen({super.key});
@@ -126,15 +127,12 @@ class _OrderCard extends StatelessWidget {
 
   const _OrderCard({required this.order});
 
-  // [Refactor] دالة بسيطة لتنسيق التاريخ بدون الحاجة لمكتبات خارجية
-  String _formatDate(DateTime date) {
-    return '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')} ${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
-  }
-
   @override
   Widget build(BuildContext context) {
     final date = order.createdAt;
     final isRefunded = order.status == OrderStatus.refunded;
+    // 🚀 [FIXED]: استخدام intl لتنسيق التاريخ بدلاً من الدالة اليدوية المعقدة
+    final dateString = DateFormat('yyyy-MM-dd hh:mm a').format(date);
     
     return Card(
       elevation: 2,
@@ -158,17 +156,14 @@ class _OrderCard extends StatelessWidget {
             children: [
               Icon(Icons.access_time, size: 16, color: Colors.grey.shade600),
               const SizedBox(width: 4),
-              // [Refactor] استخدام التاريخ المنسق
-              Text(_formatDate(date), style: TextStyle(color: Colors.grey.shade700)),
+              Text(dateString, style: TextStyle(color: Colors.grey.shade700)),
               const SizedBox(width: 12),
               Icon(Icons.shopping_bag_outlined, size: 16, color: Colors.grey.shade600),
               const SizedBox(width: 4),
-              // [Refactor] استخدام toDisplayName
               Text(order.orderType.toDisplayName(), style: TextStyle(color: Colors.grey.shade700)),
               const SizedBox(width: 12),
               Icon(isRefunded ? Icons.cancel_outlined : Icons.payment, size: 16, color: isRefunded ? Colors.red : Colors.grey.shade600),
               const SizedBox(width: 4),
-              // [Refactor] استخدام toDisplayName
               Text(
                 isRefunded ? OrderStatus.refunded.toDisplayName() : order.paymentMethodName, 
                 style: TextStyle(color: isRefunded ? Colors.red : Colors.grey.shade700, fontWeight: isRefunded ? FontWeight.bold : FontWeight.normal)

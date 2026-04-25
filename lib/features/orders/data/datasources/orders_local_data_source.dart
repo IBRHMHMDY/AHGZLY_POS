@@ -34,10 +34,8 @@ class OrdersLocalDataSourceImpl implements OrdersLocalDataSource {
       List<OrderHistoryModel> orders = [];
       
       for (var order in ordersDrift) {
-        // جلب العناصر مع تفاصيل الصنف
         final query = appDatabase.select(appDatabase.orderItems).join([
           innerJoin(appDatabase.items, appDatabase.items.id.equalsExp(appDatabase.orderItems.itemId)),
-          // 🚀 ربط المقاسات إن وجدت
           leftOuterJoin(appDatabase.itemVariants, appDatabase.itemVariants.id.equalsExp(appDatabase.orderItems.variantId))
         ])..where(appDatabase.orderItems.orderId.equals(order.id));
         
@@ -49,24 +47,19 @@ class OrdersLocalDataSourceImpl implements OrdersLocalDataSource {
           final item = row.readTable(appDatabase.items);
           final variant = row.readTableOrNull(appDatabase.itemVariants);
           
-          // 🚀 جلب الإضافات لهذا العنصر
           final addonsQuery = appDatabase.select(appDatabase.orderItemAddons).join([
             innerJoin(appDatabase.addons, appDatabase.addons.id.equalsExp(appDatabase.orderItemAddons.addonId))
           ])..where(appDatabase.orderItemAddons.orderItemId.equals(orderItem.id));
           
           final addonsRows = await addonsQuery.get();
           
-          // 🚀 بناء الاسم النهائي للصنف (صنف + مقاس + إضافات) ليعرض في السجل
           String finalItemName = item.name;
-          if (variant != null) {
-            finalItemName += ' (${variant.name})';
-          }
+          if (variant != null) finalItemName += ' (${variant.name})';
           if (addonsRows.isNotEmpty) {
-            final addonsNames = addonsRows.map((r) => r.readTable(appDatabase.addons).name).join(', ');
+            final addonsNames = addonsRows.map((r) => r.readTable(appDatabase.addons).name).join(' + ');
             finalItemName += ' + $addonsNames';
           }
           
-          // [Refactor]: تمرير المتغيرات مباشرة
           items.add(OrderItemHistoryModel.fromDrift(finalItemName, orderItem.quantity, orderItem.unitPrice));
         }
         
@@ -83,51 +76,49 @@ class OrdersLocalDataSourceImpl implements OrdersLocalDataSource {
   Future<void> refundOrder(int orderId) async {
     try {
       await appDatabase.transaction(() async {
-        final order = await (appDatabase.select(appDatabase.orders)
-              ..where((t) => t.id.equals(orderId)))
-            .getSingleOrNull();
+        final order = await (appDatabase.select(appDatabase.orders)..where((t) => t.id.equals(orderId))).getSingleOrNull();
         
         if (order == null) throw CacheException('لم يتم العثور على الفاتورة.');
+        if (order.status == OrderStatus.refunded) throw CacheException('هذه الفاتورة مسترجعة بالفعل.');
 
-        // [Refactor]: استخدام الـ Enum بدلاً من النص
-        if (order.status == OrderStatus.refunded) {
-          throw CacheException('هذه الفاتورة مسترجعة بالفعل.');
-        }
-
-        // [Refactor]: تمرير الـ Enum للـ Companion
+        // تحديث حالة الفاتورة
         await (appDatabase.update(appDatabase.orders)..where((t) => t.id.equals(orderId))).write(
-          const OrdersCompanion(status: Value(OrderStatus.refunded))
+          OrdersCompanion(status: Value(OrderStatus.refunded))
         );
 
-        final shiftId = order.shiftId;
-        final shift = await (appDatabase.select(appDatabase.shifts)
-              ..where((t) => t.id.equals(shiftId) & t.status.equals('active')))
-            .getSingleOrNull();
-
+        // تحديث الوردية والتحقق من نشاطها
+        final shift = await (appDatabase.select(appDatabase.shifts)..where((t) => t.id.equals(order.shiftId) & t.status.equals('active'))).getSingleOrNull();
         if (shift == null) throw CacheException('لا يمكن استرجاع الفاتورة: الوردية الخاصة بها مغلقة أو غير نشطة.');
 
-        final total = order.total;
-        // [Refactor]: استخدام الـ Enum بدلاً من النصوص المتعددة
-        // final isCash = order.paymentMethod == PaymentMethod.cash;
-        // final isVisa = order.paymentMethod == PaymentMethod.visa;
-        // final isInstapay = order.paymentMethod == PaymentMethod.wallet;
+        // 🚀 [FIXED]: معرفة طريقة الدفع لخصم الأموال من المكان الصحيح (الدرج، الفيزا، الخ)
+        String methodName = '';
+        if (order.paymentMethodId != null) {
+          final methodData = await (appDatabase.select(appDatabase.paymentMethods)..where((t) => t.id.equals(order.paymentMethodId!))).getSingleOrNull();
+          methodName = methodData?.name ?? '';
+        }
 
+        final isCash = methodName.contains('كاش') || methodName.contains('نقد');
+        final isVisa = methodName.contains('فيزا') || methodName.contains('بطاقة') || methodName.contains('ائتمان');
+        final isInstapay = methodName.contains('محفظة') || methodName.contains('انستا') || methodName.contains('فودافون');
+
+        final total = order.total;
+        
         final updatedShift = shift.copyWith(
           totalSales: shift.totalSales - total,
           totalRefunds: shift.totalRefunds + total,
           refundedOrdersCount: shift.refundedOrdersCount + 1,
           totalOrders: shift.totalOrders - 1,
-          // totalCash: isCash ? shift.totalCash - total : shift.totalCash,
-          // totalVisa: isVisa ? shift.totalVisa - total : shift.totalVisa,
-          // totalInstapay: isInstapay ? shift.totalInstapay - total : shift.totalInstapay,
-          // expectedCash: isCash ? shift.expectedCash - total : shift.expectedCash,
+          totalCash: isCash ? shift.totalCash - total : shift.totalCash,
+          totalVisa: isVisa ? shift.totalVisa - total : shift.totalVisa,
+          totalInstapay: isInstapay ? shift.totalInstapay - total : shift.totalInstapay,
+          expectedCash: isCash ? shift.expectedCash - total : shift.expectedCash, // 🚀 تأمين درج الكاشير
         );
 
         await appDatabase.update(appDatabase.shifts).replace(updatedShift);
       });
     } catch (e) {
       if (e is CacheException) rethrow;
-      throw CacheException('حدث خطأ أثناء إتمام عملية المرتجع: ${e.toString()}');
+      throw CacheException('حدث خطأ أثناء إتمام عملية المرتجع.');
     }
   }
 }
