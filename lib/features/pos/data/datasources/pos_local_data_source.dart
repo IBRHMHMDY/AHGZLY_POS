@@ -5,7 +5,6 @@ import 'package:ahgzly_pos/features/pos/data/models/order_model.dart';
 import 'package:ahgzly_pos/features/pos/data/models/order_item_model.dart';
 import 'package:drift/drift.dart';
 
-// 🚀 [Fix]: إكمال العقد (Contract) ليتوافق مع الـ Repository
 abstract class PosLocalDataSource {
   Future<int> saveOrder(OrderModel order);
   Future<List<CustomerData>> getCustomers();
@@ -22,7 +21,6 @@ class PosLocalDataSourceImpl implements PosLocalDataSource {
 
   @override
   Future<int> saveOrder(OrderModel order) async {
-    // استخدام Transaction لضمان حفظ الطلب ومكوناته دفعة واحدة أو التراجع عنها بالكامل
     return await appDatabase.transaction(() async {
       
       if (order.shiftId == null || order.shiftId == 0) {
@@ -37,7 +35,7 @@ class PosLocalDataSourceImpl implements PosLocalDataSource {
       final orderId = await appDatabase.into(appDatabase.orders).insert(
         OrdersCompanion.insert(
           shiftId: order.shiftId!,
-          tableId: Value(order.tableId), // 🚀 حفظ الطاولة (إن وجدت)
+          tableId: Value(order.tableId), 
           orderType: Value(order.orderType),       
           subTotal: order.subTotal,
           discount: Value(order.discount),
@@ -47,7 +45,7 @@ class PosLocalDataSourceImpl implements PosLocalDataSource {
           total: order.total,
           paymentMethodId: Value(order.paymentMethodId), 
           status: order.status,               
-          customerName: Value(order.customerName), // 🚀 حفظ بيانات العميل
+          customerName: Value(order.customerName), 
           customerPhone: Value(order.customerPhone),
           customerAddress: Value(order.customerAddress),
           createdAt: order.createdAt,         
@@ -58,12 +56,11 @@ class PosLocalDataSourceImpl implements PosLocalDataSource {
       for (var item in order.items) {
         final itemModel = item as OrderItemModel;
         
-        // إدخال الصنف واسترجاع الـ ID الخاص به
         final orderItemId = await appDatabase.into(appDatabase.orderItems).insert(
           OrderItemsCompanion.insert(
             orderId: orderId,
             itemId: itemModel.itemId,
-            variantId: Value(itemModel.selectedVariant?.id), // 🚀 [إضافة المقاس]
+            variantId: Value(itemModel.selectedVariant?.id), 
             quantity: itemModel.quantity,
             unitPrice: itemModel.unitPrice,
             unitCostPrice: Value(itemModel.unitCostPrice), 
@@ -71,14 +68,13 @@ class PosLocalDataSourceImpl implements PosLocalDataSource {
           ),
         );
 
-        // 3. حفظ الإضافات المرتبطة بهذا الصنف (Addons)
         if (itemModel.selectedAddons.isNotEmpty) {
           for (var addon in itemModel.selectedAddons) {
             await appDatabase.into(appDatabase.orderItemAddons).insert(
               OrderItemAddonsCompanion.insert(
                 orderItemId: orderItemId,
                 addonId: addon.id!,
-                price: addon.price,       // حفظ سعر الإضافة وقت الطلب
+                price: addon.price,       
                 costPrice: Value(addon.costPrice),
               ),
             );
@@ -86,13 +82,13 @@ class PosLocalDataSourceImpl implements PosLocalDataSource {
         }
       }
 
-      // 4. تحديث إحصائيات الوردية (كما هي بدون تغيير لعدم كسر النظام المالي)
+      // 3. تحديث إحصائيات الوردية
       final shift = await (appDatabase.select(appDatabase.shifts)
             ..where((t) => t.id.equals(order.shiftId!) & t.status.equals('active')))
           .getSingleOrNull();
 
       if (shift == null) {
-         throw CacheException('الوردية الحالية غير نشطة أو تم إغلاقها.');
+         throw CacheException('الوردية الحالية غير نشطة أو تم إغلاقها من جهاز آخر.');
       }
 
       String methodName = '';
@@ -103,8 +99,9 @@ class PosLocalDataSourceImpl implements PosLocalDataSource {
         methodName = methodData?.name ?? '';
       }
 
-      final isCash = methodName.contains('كاش');
-      final isVisa = methodName.contains('فيزا') || methodName.contains('بطاقة');
+      // 🚀 [FIXED]: تحسين دقة الفرز المالي لضمان عدم حدوث عجز في الدرج
+      final isCash = methodName.contains('كاش') || methodName.contains('نقد');
+      final isVisa = methodName.contains('فيزا') || methodName.contains('بطاقة') || methodName.contains('ائتمان');
       final isInstapay = methodName.contains('محفظة') || methodName.contains('انستا') || methodName.contains('فودافون');
 
       final updatedShift = shift.copyWith(
@@ -122,31 +119,18 @@ class PosLocalDataSourceImpl implements PosLocalDataSource {
     });
   }
 
-  // ==========================================
-  // 🚀 [Fix]: تنفيذ الدوال المساعدة لجلب البيانات
-  // ==========================================
   @override
-  Future<List<CustomerData>> getCustomers() async {
-    return await appDatabase.getAllCustomers();
-  }
+  Future<List<CustomerData>> getCustomers() async => await appDatabase.getAllCustomers();
 
   @override
-  Future<List<ZoneData>> getZones() async {
-    return await appDatabase.getAllZones();
-  }
+  Future<List<ZoneData>> getZones() async => await appDatabase.getAllZones();
 
   @override
-  Future<List<RestaurantTableData>> getTablesByZone(int zoneId) async {
-    return await appDatabase.getTablesByZoneId(zoneId);
-  }
+  Future<List<RestaurantTableData>> getTablesByZone(int zoneId) async => await appDatabase.getTablesByZoneId(zoneId);
 
   @override
-  Future<List<PaymentMethodData>> getPaymentMethods() async {
-    return await appDatabase.getAllPaymentMethods();
-  }
+  Future<List<PaymentMethodData>> getPaymentMethods() async => await appDatabase.getAllPaymentMethods();
 
   @override
-  Future<int> addCustomer(CustomersCompanion customer) async {
-    return await appDatabase.insertCustomer(customer);
-  }
+  Future<int> addCustomer(CustomersCompanion customer) async => await appDatabase.insertCustomer(customer);
 }

@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:ahgzly_pos/features/pos/domain/entities/order_item_entity.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -17,6 +18,7 @@ import 'package:ahgzly_pos/features/auth/presentation/bloc/auth_state.dart';
 import 'package:ahgzly_pos/features/pos/presentation/widgets/categories_section.dart';
 import 'package:ahgzly_pos/features/pos/presentation/widgets/items_section.dart';
 import 'package:ahgzly_pos/features/pos/presentation/widgets/cart_section.dart';
+import 'package:ahgzly_pos/features/pos/presentation/widgets/modifiers_dialog.dart'; 
 
 class PosScreen extends StatefulWidget {
   const PosScreen({super.key});
@@ -114,14 +116,49 @@ class _PosScreenState extends State<PosScreen> {
             ),
             Expanded(
               flex: 3,
-              // 🚀 سنقوم بتحديث ItemSection في الخطوة القادمة لإظهار نافذة المقاسات
               child: ItemsSection(
                 items: _items,
-                categoryName: _selectedCategory?.name ?? 'الأصناف',
                 isLoading: context.watch<MenuBloc>().state is MenuLoading,
+                // 🚀 [FIXED]: معالجة النقر على الصنف وإظهار نافذة الإضافات إذا لزم الأمر
+                onItemTap: (item) async {
+                  if (item.variants.isNotEmpty || item.availableAddons.isNotEmpty) {
+                    final result = await showDialog<Map<String, dynamic>>(
+                      context: context,
+                      builder: (_) => ModifiersDialog(item: item),
+                    );
+                    
+                    if (result != null && context.mounted) {
+                      final selectedVariant = result['variant']; // سحب المقاس المختار
+                      
+                      final orderItem = OrderItemEntity(
+                        itemId: item.id!,
+                        itemName: item.name,
+                        quantity: 1,
+                        // 🚀 [FIXED]: أخذ سعر المقاس المختار، وإذا لم يوجد نأخذ السعر الأساسي
+                        unitPrice: selectedVariant != null ? selectedVariant.price : item.price,
+                        // 🚀 [FIXED]: نفس الأمر بالنسبة لتكلفة الصنف (لحساب الأرباح بدقة)
+                        unitCostPrice: selectedVariant != null ? selectedVariant.costPrice : item.costPrice,
+                        selectedVariant: selectedVariant,
+                        selectedAddons: List.from(result['addons'] ?? []),
+                      );
+                      
+                      context.read<PosBloc>().add(AddItemToCartEvent(orderItem));
+                    }
+                  } else {
+                    // في حال كان الصنف عادياً (بدون إضافات أو مقاسات)
+                    final orderItem = OrderItemEntity(
+                      itemId: item.id!,
+                      itemName: item.name,
+                      quantity: 1,
+                      unitPrice: item.price,
+                      unitCostPrice: item.costPrice,
+                    );
+                    
+                    context.read<PosBloc>().add(AddItemToCartEvent(orderItem));
+                  }
+                },
               ),
             ),
-            // 🚀 سنقوم بتحديث السلة في الخطوة القادمة لدعم أنواع الطلبات
             const Expanded(flex: 2, child: CartSection()),
           ],
         ),
@@ -157,7 +194,7 @@ class _PosScreenState extends State<PosScreen> {
                   }),
                   IconButton(icon: const Icon(Icons.settings), tooltip: 'إعدادات النظام', onPressed: () async {
                     await context.push('/settings');
-                    if (context.mounted) context.read<PosBloc>().add(LoadPosDataEvent()); // تم تعديل الحدث
+                    if (context.mounted) context.read<PosBloc>().add(LoadPosDataEvent());
                   }),
                 ],
                 IconButton(icon: const Icon(Icons.history), tooltip: 'سجل الطلبات', onPressed: () => context.push('/orders')),

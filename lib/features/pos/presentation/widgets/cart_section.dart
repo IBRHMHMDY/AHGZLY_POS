@@ -1,5 +1,7 @@
 import 'package:ahgzly_pos/core/extensions/order_type.dart';
 import 'package:ahgzly_pos/core/extensions/print_mode.dart';
+import 'package:ahgzly_pos/features/shift/presentation/bloc/shift_bloc.dart';
+import 'package:ahgzly_pos/features/shift/presentation/bloc/shift_state.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -30,9 +32,16 @@ class _CartSectionState extends State<CartSection> {
   PosDataLoaded? _lastOrderState;
   Map<String, dynamic>? _lastCustomerData;
 
-  void _handleAutoPrint(BuildContext context, int orderId, PosDataLoaded orderState, dynamic mode) async {
+  void _handleAutoPrint(
+    BuildContext context,
+    int orderId,
+    PosDataLoaded orderState,
+    dynamic mode,
+  ) async {
     final authState = context.read<AuthBloc>().state;
-    final String currentCashierName = (authState is AuthAuthenticated) ? authState.user.name : 'غير معروف';
+    final String currentCashierName = (authState is AuthAuthenticated)
+        ? authState.user.name
+        : 'غير معروف';
 
     final settingsResult = await sl<GetSettingsUseCase>().call(NoParams());
     String pName = 'EPSON Printer';
@@ -52,12 +61,12 @@ class _CartSectionState extends State<CartSection> {
           orderType: orderState.orderType,
           items: orderState.cartItems,
           subTotal: orderState.subTotal,
-          discountAmount: orderState.discountAmount, 
+          discountAmount: orderState.discountAmount,
           taxAmount: orderState.taxAmount,
           serviceFee: orderState.serviceFeeAmount,
           deliveryFee: orderState.deliveryFeeAmount,
-          total: orderState.total, 
-          restaurantName: orderState.restaurantName, 
+          total: orderState.total,
+          restaurantName: orderState.restaurantName,
           taxNumber: orderState.taxNumber,
           cashierName: currentCashierName,
           customerName: _lastCustomerData?['name'] ?? '',
@@ -81,16 +90,32 @@ class _CartSectionState extends State<CartSection> {
 
     if (context.mounted && (isCustomer || isKitchen)) {
       if (customerSuccess && kitchenSuccess) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('تمت الطباعة بنجاح'), backgroundColor: Colors.green));
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('تمت الطباعة بنجاح'),
+            backgroundColor: Colors.green,
+          ),
+        );
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('حدث خطأ أثناء الاتصال بالطابعة!'), backgroundColor: Colors.red));
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('حدث خطأ أثناء الاتصال بالطابعة!'),
+            backgroundColor: Colors.red,
+          ),
+        );
       }
     }
   }
 
-  void _showPrintDialog(BuildContext context, int orderId, PosDataLoaded previousState) {
+  void _showPrintDialog(
+    BuildContext context,
+    int orderId,
+    PosDataLoaded previousState,
+  ) {
     final authState = context.read<AuthBloc>().state;
-    final String currentCashierName = (authState is AuthAuthenticated) ? authState.user.name : 'غير معروف';
+    final String currentCashierName = (authState is AuthAuthenticated)
+        ? authState.user.name
+        : 'غير معروف';
 
     showDialog(
       context: context,
@@ -109,26 +134,51 @@ class _CartSectionState extends State<CartSection> {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(-5, 0))],
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(-5, 0),
+          ),
+        ],
       ),
       child: BlocConsumer<PosBloc, PosState>(
-        listenWhen: (previous, current) => current is PosCheckoutSuccess || current is PosError,
+        listenWhen: (previous, current) =>
+            current is PosCheckoutSuccess || current is PosError,
         listener: (context, state) {
           if (state is PosCheckoutSuccess) {
-            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('تم حفظ الفاتورة بنجاح! (رقم: #${state.orderId})'), backgroundColor: Colors.green));
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  'تم حفظ الفاتورة بنجاح! (رقم: #${state.orderId})',
+                ),
+                backgroundColor: Colors.green,
+              ),
+            );
             if (_lastOrderState != null) {
               final mode = _lastOrderState!.printMode;
               if (mode == PrintMode.ask) {
                 _showPrintDialog(context, state.orderId, _lastOrderState!);
               } else {
-                _handleAutoPrint(context, state.orderId, _lastOrderState!, mode);
+                _handleAutoPrint(
+                  context,
+                  state.orderId,
+                  _lastOrderState!,
+                  mode,
+                );
               }
             }
           } else if (state is PosError) {
-            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(state.message), backgroundColor: Colors.red));
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(state.message),
+                backgroundColor: Colors.red,
+              ),
+            );
           }
         },
-        buildWhen: (previous, current) => current is PosDataLoaded || current is PosInitial,
+        buildWhen: (previous, current) =>
+            current is PosDataLoaded || current is PosInitial,
         builder: (context, state) {
           if (state is PosDataLoaded) {
             return Column(
@@ -138,32 +188,38 @@ class _CartSectionState extends State<CartSection> {
                 _CartSummary(
                   state: state,
                   onPayTap: state.cartItems.isEmpty
-                      ? null
-                      : () async {
-                          final result = await showDialog<Map<String, dynamic>>(
-                            context: context,
-                            barrierDismissible: false,
-                            builder: (_) => CheckoutDialog(
-                              totalAmount: state.total, 
-                              orderType: state.orderType, 
-                              paymentMethods: state.paymentMethods,
-                              customers: state.customers,
-                              tables: state.tables,
-                            ),
-                          );
-                          
-                          if (result != null && context.mounted) {
-                            _lastOrderState = state;
-                            _lastCustomerData = result;
+                  ? null
+                  : () async {
+                      final paymentMethodId = await showDialog<int>(
+                        context: context,
+                        barrierDismissible: false,
+                        builder: (_) => CheckoutDialog(
+                          totalAmount: state.total, 
+                          paymentMethods: state.paymentMethods,
+                        ),
+                      );
+                      
+                      if (paymentMethodId != null && context.mounted) {
+                        _lastOrderState = state;
+                        _lastCustomerData = null;
 
-                            context.read<PosBloc>().add(
-                              CheckoutOrderEvent(
-                                shiftId: 1, // من المفترض جلب الـ Shift ID النشط هنا إذا كان متوفراً في State أو UseCase
-                                paymentMethodId: result['methodId'], 
-                              ),
-                            );
-                          }
-                        },
+                        // 🚀 [FIXED]: قراءة الوردية النشطة ديناميكياً من الـ Bloc
+                        int currentShiftId = 0;
+                        // يجب استدعاء ملف حالة الوردية بالأعلى: import 'package:ahgzly_pos/features/shift/presentation/bloc/shift_state.dart';
+                        // واستدعاء البلوك: import 'package:ahgzly_pos/features/shift/presentation/bloc/shift_bloc.dart';
+                        final shiftState = context.read<ShiftBloc>().state;
+                        if (shiftState is ActiveShiftLoaded) {
+                          currentShiftId = shiftState.shift.id;
+                        }
+
+                        context.read<PosBloc>().add(
+                          CheckoutOrderEvent(
+                            shiftId: currentShiftId, // 🚀 تمرير الـ ID الديناميكي
+                            paymentMethodId: paymentMethodId, 
+                          ),
+                        );
+                      }
+                    },
                 ),
               ],
             );
@@ -176,14 +232,17 @@ class _CartSectionState extends State<CartSection> {
 }
 
 class _CartHeader extends StatelessWidget {
-  final OrderType orderType; 
+  final OrderType orderType;
   const _CartHeader({required this.orderType});
 
   @override
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(color: Colors.white, border: Border(bottom: BorderSide(color: Colors.grey.shade200))),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        border: Border(bottom: BorderSide(color: Colors.grey.shade200)),
+      ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -197,14 +256,28 @@ class _CartHeader extends StatelessWidget {
               ),
               child: DropdownButtonHideUnderline(
                 child: DropdownButton<OrderType>(
-                  value: orderType, 
+                  value: orderType,
                   isExpanded: true,
-                  icon: const Icon(Icons.keyboard_arrow_down, color: Colors.teal),
-                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.teal),
-                  items: OrderType.values.map((type) => DropdownMenuItem<OrderType>(
-                    value: type, 
-                    child: Text(type.toDisplayName(), style: const TextStyle(fontWeight: FontWeight.bold)),
-                  )).toList(),
+                  icon: const Icon(
+                    Icons.keyboard_arrow_down,
+                    color: Colors.teal,
+                  ),
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.teal,
+                  ),
+                  items: OrderType.values
+                      .map(
+                        (type) => DropdownMenuItem<OrderType>(
+                          value: type,
+                          child: Text(
+                            type.toDisplayName(),
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                      )
+                      .toList(),
                   onChanged: (value) {
                     if (value != null) {
                       context.read<PosBloc>().add(ChangeOrderTypeEvent(value));
@@ -219,7 +292,10 @@ class _CartHeader extends StatelessWidget {
             onTap: () => context.read<PosBloc>().add(ClearCartEvent()),
             child: Container(
               padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(color: Colors.red.shade50, borderRadius: BorderRadius.circular(12)),
+              decoration: BoxDecoration(
+                color: Colors.red.shade50,
+                borderRadius: BorderRadius.circular(12),
+              ),
               child: const Icon(Icons.delete_sweep, color: Colors.red),
             ),
           ),
@@ -230,7 +306,7 @@ class _CartHeader extends StatelessWidget {
 }
 
 class _CartItemsList extends StatelessWidget {
-  final List<OrderItemEntity> cartItems; 
+  final List<OrderItemEntity> cartItems;
   const _CartItemsList({required this.cartItems});
 
   @override
@@ -240,9 +316,20 @@ class _CartItemsList extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.shopping_basket_outlined, size: 64, color: Colors.grey.shade300),
+            Icon(
+              Icons.shopping_basket_outlined,
+              size: 64,
+              color: Colors.grey.shade300,
+            ),
             const SizedBox(height: 16),
-            Text('الفاتورة فارغة', style: TextStyle(fontSize: 18, color: Colors.grey.shade500, fontWeight: FontWeight.bold)),
+            Text(
+              'الفاتورة فارغة',
+              style: TextStyle(
+                fontSize: 18,
+                color: Colors.grey.shade500,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
           ],
         ),
       );
@@ -271,46 +358,108 @@ class _CartItemsList extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(cartItem.itemName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14), maxLines: 2, overflow: TextOverflow.ellipsis),
+                  Text(
+                    cartItem.itemName,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                   if (details.isNotEmpty)
                     Padding(
                       padding: const EdgeInsets.only(top: 2.0),
-                      child: Text(details, style: TextStyle(fontSize: 12, color: Colors.grey.shade600), maxLines: 2, overflow: TextOverflow.ellipsis),
+                      child: Text(
+                        details,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey.shade600,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
                   const SizedBox(height: 4),
-                  Text('${cartItem.totalPrice.toFormattedMoney()} ج.م', style: const TextStyle(color: Colors.teal, fontWeight: FontWeight.bold, fontSize: 13)),
+                  Text(
+                    '${cartItem.totalPrice.toFormattedMoney()} ج.م',
+                    style: const TextStyle(
+                      color: Colors.teal,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 13,
+                    ),
+                  ),
                 ],
               ),
             ),
             const SizedBox(width: 4),
             Container(
-              decoration: BoxDecoration(color: Colors.grey.shade100, borderRadius: BorderRadius.circular(30), border: Border.all(color: Colors.grey.shade300)),
+              decoration: BoxDecoration(
+                color: Colors.grey.shade100,
+                borderRadius: BorderRadius.circular(30),
+                border: Border.all(color: Colors.grey.shade300),
+              ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   InkWell(
-                    onTap: () => context.read<PosBloc>().add(UpdateCartItemQuantityEvent(cartItem, cartItem.quantity - 1)),
-                    child: const Padding(padding: EdgeInsets.symmetric(horizontal: 6, vertical: 8), child: Icon(Icons.remove, size: 16, color: Colors.black87)),
+                    onTap: () => context.read<PosBloc>().add(
+                      UpdateCartItemQuantityEvent(
+                        cartItem,
+                        cartItem.quantity - 1,
+                      ),
+                    ),
+                    child: const Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 6, vertical: 8),
+                      child: Icon(
+                        Icons.remove,
+                        size: 16,
+                        color: Colors.black87,
+                      ),
+                    ),
                   ),
                   Container(
                     constraints: const BoxConstraints(minWidth: 20),
                     alignment: Alignment.center,
-                    child: Text('${cartItem.quantity}', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
+                    child: Text(
+                      '${cartItem.quantity}',
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ),
                   InkWell(
-                    onTap: () => context.read<PosBloc>().add(UpdateCartItemQuantityEvent(cartItem, cartItem.quantity + 1)),
-                    child: const Padding(padding: EdgeInsets.symmetric(horizontal: 6, vertical: 8), child: Icon(Icons.add, size: 16, color: Colors.black87)),
+                    onTap: () => context.read<PosBloc>().add(
+                      UpdateCartItemQuantityEvent(
+                        cartItem,
+                        cartItem.quantity + 1,
+                      ),
+                    ),
+                    child: const Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 6, vertical: 8),
+                      child: Icon(Icons.add, size: 16, color: Colors.black87),
+                    ),
                   ),
                 ],
               ),
             ),
             const SizedBox(width: 4),
             InkWell(
-              onTap: () => context.read<PosBloc>().add(RemoveItemFromCartEvent(cartItem)),
+              onTap: () => context.read<PosBloc>().add(
+                RemoveItemFromCartEvent(cartItem),
+              ),
               child: Container(
                 padding: const EdgeInsets.all(6),
-                decoration: BoxDecoration(color: Colors.red.shade50, shape: BoxShape.circle),
-                child: const Icon(Icons.delete_outline, color: Colors.red, size: 18),
+                decoration: BoxDecoration(
+                  color: Colors.red.shade50,
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.delete_outline,
+                  color: Colors.red,
+                  size: 18,
+                ),
               ),
             ),
           ],
@@ -326,15 +475,41 @@ class _CartSummary extends StatelessWidget {
 
   const _CartSummary({required this.state, this.onPayTap});
 
-  Widget _buildSummaryRow(String label, int amount, {bool isDiscount = false, bool isTotal = false}) {
+  Widget _buildSummaryRow(
+    String label,
+    int amount, {
+    bool isDiscount = false,
+    bool isTotal = false,
+  }) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4.0),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Expanded(child: Text(label, style: TextStyle(fontSize: isTotal ? 18 : 14, fontWeight: isTotal ? FontWeight.bold : FontWeight.w600, color: isDiscount ? Colors.red : (isTotal ? Colors.teal.shade800 : Colors.black87)), overflow: TextOverflow.ellipsis)),
+          Expanded(
+            child: Text(
+              label,
+              style: TextStyle(
+                fontSize: isTotal ? 18 : 14,
+                fontWeight: isTotal ? FontWeight.bold : FontWeight.w600,
+                color: isDiscount
+                    ? Colors.red
+                    : (isTotal ? Colors.teal.shade800 : Colors.black87),
+              ),
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
           const SizedBox(width: 8),
-          Text('${isDiscount ? "-" : ""}${amount.toFormattedMoney()} ج.م', style: TextStyle(fontSize: isTotal ? 20 : 14, fontWeight: FontWeight.bold, color: isDiscount ? Colors.red : (isTotal ? Colors.teal.shade800 : Colors.black87))),
+          Text(
+            '${isDiscount ? "-" : ""}${amount.toFormattedMoney()} ج.م',
+            style: TextStyle(
+              fontSize: isTotal ? 20 : 14,
+              fontWeight: FontWeight.bold,
+              color: isDiscount
+                  ? Colors.red
+                  : (isTotal ? Colors.teal.shade800 : Colors.black87),
+            ),
+          ),
         ],
       ),
     );
@@ -344,29 +519,67 @@ class _CartSummary extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(color: Colors.grey.shade50, borderRadius: const BorderRadius.vertical(top: Radius.circular(30)), boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, -5))]),
+      decoration: BoxDecoration(
+        color: Colors.grey.shade50,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, -5),
+          ),
+        ],
+      ),
       child: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             _buildSummaryRow('الإجمالي الفرعي:', state.subTotal),
-            if (state.discountAmount > 0) _buildSummaryRow('قيمة الخصم:', state.discountAmount, isDiscount: true),
-            if (state.taxAmount > 0) _buildSummaryRow('الضريبة المضافة:', state.taxAmount),
-            if (state.serviceFeeAmount > 0) _buildSummaryRow('رسوم الخدمة:', state.serviceFeeAmount),
-            if (state.deliveryFeeAmount > 0) _buildSummaryRow('رسوم التوصيل:', state.deliveryFeeAmount),
-              
-            const Padding(padding: EdgeInsets.symmetric(vertical: 6.0), child: Divider(thickness: 2)),
-            _buildSummaryRow('الإجمالي النهائي:', state.total, isTotal: true), 
+            if (state.discountAmount > 0)
+              _buildSummaryRow(
+                'قيمة الخصم:',
+                state.discountAmount,
+                isDiscount: true,
+              ),
+            if (state.taxAmount > 0)
+              _buildSummaryRow('الضريبة المضافة:', state.taxAmount),
+            if (state.serviceFeeAmount > 0)
+              _buildSummaryRow('رسوم الخدمة:', state.serviceFeeAmount),
+            if (state.deliveryFeeAmount > 0)
+              _buildSummaryRow('رسوم التوصيل:', state.deliveryFeeAmount),
+
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 6.0),
+              child: Divider(thickness: 2),
+            ),
+            _buildSummaryRow('الإجمالي النهائي:', state.total, isTotal: true),
             const SizedBox(height: 16),
             ElevatedButton(
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.teal, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 16), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)), elevation: 4),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.teal,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                elevation: 4,
+              ),
               onPressed: onPayTap,
               child: const Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Icon(Icons.print, size: 20),
                   SizedBox(width: 4),
-                  Flexible(child: Text('دفع وطباعة', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold), overflow: TextOverflow.ellipsis)),
+                  Flexible(
+                    child: Text(
+                      'دفع وطباعة',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -383,18 +596,38 @@ class _PrintOptionsDialog extends StatelessWidget {
   final Map<String, dynamic>? customerData;
   final String cashierName;
 
-  const _PrintOptionsDialog({required this.orderId, required this.previousState, required this.customerData, required this.cashierName});
+  const _PrintOptionsDialog({
+    required this.orderId,
+    required this.previousState,
+    required this.customerData,
+    required this.cashierName,
+  });
 
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      title: const Text('تم حفظ الطلب!', style: TextStyle(fontWeight: FontWeight.bold)),
-      content: const Text('اختر الفاتورة التي ترغب في طباعتها:', style: TextStyle(fontSize: 16)),
+      title: const Text(
+        'تم حفظ الطلب!',
+        style: TextStyle(fontWeight: FontWeight.bold),
+      ),
+      content: const Text(
+        'اختر الفاتورة التي ترغب في طباعتها:',
+        style: TextStyle(fontSize: 16),
+      ),
       actions: [
-        TextButton(onPressed: () => Navigator.pop(context), child: const Text('إغلاق', style: TextStyle(color: Colors.red, fontSize: 16))),
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text(
+            'إغلاق',
+            style: TextStyle(color: Colors.red, fontSize: 16),
+          ),
+        ),
         ElevatedButton.icon(
-          style: ElevatedButton.styleFrom(backgroundColor: Colors.teal, foregroundColor: Colors.white),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.teal,
+            foregroundColor: Colors.white,
+          ),
           icon: const Icon(Icons.person),
           label: const Text('فاتورة العميل'),
           onPressed: () async {
@@ -403,12 +636,15 @@ class _PrintOptionsDialog extends StatelessWidget {
           },
         ),
         ElevatedButton.icon(
-          style: ElevatedButton.styleFrom(backgroundColor: Colors.orange.shade700, foregroundColor: Colors.white),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.orange.shade700,
+            foregroundColor: Colors.white,
+          ),
           icon: const Icon(Icons.kitchen),
           label: const Text('بون المطبخ'),
           onPressed: () async {
             // منطق الطباعة اليدوية هنا
-             Navigator.pop(context);
+            Navigator.pop(context);
           },
         ),
       ],
@@ -425,19 +661,35 @@ class _CartShimmerLoading extends StatelessWidget {
       children: [
         Container(
           padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(color: Colors.white, border: Border(bottom: BorderSide(color: Colors.grey.shade200))),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            border: Border(bottom: BorderSide(color: Colors.grey.shade200)),
+          ),
           child: Row(
             children: [
-              Expanded(child: CustomShimmer.rectangular(height: 48, shapeBorder: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)))),
+              Expanded(
+                child: CustomShimmer.rectangular(
+                  height: 48,
+                  shapeBorder: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              ),
               const SizedBox(width: 8),
-              CustomShimmer.rectangular(height: 48, width: 48, shapeBorder: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
+              CustomShimmer.rectangular(
+                height: 48,
+                width: 48,
+                shapeBorder: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
             ],
           ),
         ),
         Expanded(
           child: ListView.separated(
             padding: const EdgeInsets.all(12),
-            itemCount: 4, 
+            itemCount: 4,
             separatorBuilder: (_, _) => const Divider(),
             itemBuilder: (context, index) {
               return Row(
@@ -446,14 +698,32 @@ class _CartShimmerLoading extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        CustomShimmer.rectangular(height: 16, width: double.infinity, shapeBorder: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4))),
+                        CustomShimmer.rectangular(
+                          height: 16,
+                          width: double.infinity,
+                          shapeBorder: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                        ),
                         const SizedBox(height: 8),
-                        CustomShimmer.rectangular(height: 14, width: 80, shapeBorder: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4))),
+                        CustomShimmer.rectangular(
+                          height: 14,
+                          width: 80,
+                          shapeBorder: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                        ),
                       ],
                     ),
                   ),
                   const SizedBox(width: 16),
-                  CustomShimmer.rectangular(height: 36, width: 90, shapeBorder: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30))),
+                  CustomShimmer.rectangular(
+                    height: 36,
+                    width: 90,
+                    shapeBorder: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(30),
+                    ),
+                  ),
                   const SizedBox(width: 8),
                   const CustomShimmer.circular(height: 36, width: 36),
                 ],
@@ -463,16 +733,46 @@ class _CartShimmerLoading extends StatelessWidget {
         ),
         Container(
           padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(color: Colors.white, borderRadius: const BorderRadius.vertical(top: Radius.circular(30)), boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, -5))]),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: 10,
+                offset: const Offset(0, -5),
+              ),
+            ],
+          ),
           child: Column(
             children: [
-              CustomShimmer.rectangular(height: 20, shapeBorder: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4))),
+              CustomShimmer.rectangular(
+                height: 20,
+                shapeBorder: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(4),
+                ),
+              ),
               const SizedBox(height: 12),
-              CustomShimmer.rectangular(height: 20, shapeBorder: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4))),
+              CustomShimmer.rectangular(
+                height: 20,
+                shapeBorder: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(4),
+                ),
+              ),
               const SizedBox(height: 12),
-              CustomShimmer.rectangular(height: 24, shapeBorder: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4))),
+              CustomShimmer.rectangular(
+                height: 24,
+                shapeBorder: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(4),
+                ),
+              ),
               const SizedBox(height: 16),
-              CustomShimmer.rectangular(height: 56, shapeBorder: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
+              CustomShimmer.rectangular(
+                height: 56,
+                shapeBorder: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
             ],
           ),
         ),

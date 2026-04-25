@@ -14,26 +14,26 @@ class PrinterService {
     required String printerName, 
   }) async {
     try {
+      // 1. البحث عن الطابعة بشكل آمن
       final printers = await Printing.listPrinters();
-      Printer? targetPrinter;
-      for (var p in printers) {
-        if (p.name.trim().toLowerCase() == printerName.trim().toLowerCase()) {
-          targetPrinter = p;
-          break;
-        }
-      }
+      final targetPrinter = printers.cast<Printer?>().firstWhere(
+        (p) => p != null && p.name.trim().toLowerCase() == printerName.trim().toLowerCase(),
+        orElse: () => null,
+      );
 
       if (targetPrinter == null || !targetPrinter.isAvailable) {
         debugPrint('Print Error: Printer [$printerName] not found or offline.');
         return false;
       }
 
+      // 2. التقاط صورة للفاتورة
       final Uint8List capturedImage = await _screenshotController.captureFromWidget(
         receiptWidget,
         pixelRatio: 2.0, 
         delay: const Duration(milliseconds: 300), 
       );
 
+      // 3. بناء ملف الـ PDF بأبعاد الطابعة الحرارية
       final pdf = pw.Document();
       final image = pw.MemoryImage(capturedImage);
       final double printWidth = PdfPageFormat.roll80.width;
@@ -42,12 +42,14 @@ class PrinterService {
       pdf.addPage(
         pw.Page(
           pageFormat: PdfPageFormat(printWidth, printHeight, marginAll: 0),
-          build: (pw.Context context) => pw.FullPage(ignoreMargins: true, child: pw.Image(image, fit: pw.BoxFit.fill)),
+          build: (pw.Context context) => pw.FullPage(
+            ignoreMargins: true, 
+            child: pw.Image(image, fit: pw.BoxFit.contain), 
+          ),
         ),
       );
 
-      // 🪄 الحل الجذري لمشكلة FutureOr:
-      // تغليف دالة الطباعة بـ Future<bool>.value لضمان دعم دالة timeout
+      // 4. 🚀 [FIXED]: إرجاع حلك الذكي لتغليف FutureOr لتفعيل الـ timeout
       final bool printResult = await Future<bool>.value(
         Printing.directPrintPdf(
           printer: targetPrinter,
@@ -57,11 +59,12 @@ class PrinterService {
         const Duration(seconds: 15),
         onTimeout: () {
           debugPrint('Print Error: Spooler Timeout.');
-          return false; // نعتبر الطباعة فاشلة إذا طالت المدة
+          return false;
         },
       );
 
       return printResult;
+
     } catch (e) {
       debugPrint('USB Print Exception: $e');
       return false;

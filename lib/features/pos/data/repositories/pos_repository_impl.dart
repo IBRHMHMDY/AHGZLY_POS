@@ -1,4 +1,5 @@
 import 'dart:developer' as developer; 
+import 'package:ahgzly_pos/core/error/exceptions.dart'; // 🚀 استدعاء الـ Exceptions
 import 'package:ahgzly_pos/core/error/failures.dart';
 import 'package:ahgzly_pos/features/pos/domain/entities/order_entity.dart';
 import 'package:ahgzly_pos/features/pos/domain/repositories/pos_repository.dart';
@@ -23,16 +24,15 @@ class PosRepositoryImpl implements PosRepository {
       final orderModel = OrderModel.fromEntity(order);
       final orderId = await localDataSource.saveOrder(orderModel);
       return Right(orderId);
+    } on CacheException catch (e) {
+      // 🚀 [FIXED]: تمرير الخطأ الواضح للكاشير (مثل: الوردية أغلقت أو السلة فارغة)
+      return Left(ValidationFailure(e.message));
     } catch (e, stackTrace) {
       developer.log('Database Error during saveOrder', error: e, stackTrace: stackTrace, name: 'PosRepositoryImpl');
-      return const Left(DatabaseFailure('فشل في حفظ الطلب. يرجى المحاولة مرة أخرى.'));
+      return const Left(DatabaseFailure('فشل في حفظ الطلب. يرجى التأكد من مساحة التخزين والمحاولة مرة أخرى.'));
     }
   }
 
-  // ==========================================
-  // 🚀 [Fix]: تنفيذ الدوال المفقودة للـ Contract
-  // ==========================================
-  
   @override
   Future<Either<Failure, List<CustomerEntity>>> getCustomers() async {
     try {
@@ -40,7 +40,7 @@ class PosRepositoryImpl implements PosRepository {
       final entities = data.map((c) => CustomerEntity(id: c.id, name: c.name, phone: c.phone, address: c.address)).toList();
       return Right(entities);
     } catch (e) {
-      return const Left(DatabaseFailure('فشل في جلب العملاء'));
+      return const Left(DatabaseFailure('فشل في جلب قائمة العملاء.'));
     }
   }
 
@@ -51,7 +51,7 @@ class PosRepositoryImpl implements PosRepository {
       final entities = data.map((z) => ZoneEntity(id: z.id, name: z.name)).toList();
       return Right(entities);
     } catch (e) {
-      return const Left(DatabaseFailure('فشل في جلب المناطق'));
+      return const Left(DatabaseFailure('فشل في جلب مناطق التوصيل/الطاولات.'));
     }
   }
 
@@ -62,7 +62,7 @@ class PosRepositoryImpl implements PosRepository {
       final entities = data.map((t) => RestaurantTableEntity(id: t.id, zoneId: t.zoneId, tableNumber: t.tableNumber, capacity: t.capacity, status: t.status)).toList();
       return Right(entities);
     } catch (e) {
-      return const Left(DatabaseFailure('فشل في جلب الطاولات'));
+      return const Left(DatabaseFailure('فشل في جلب الطاولات المتاحة.'));
     }
   }
 
@@ -73,7 +73,7 @@ class PosRepositoryImpl implements PosRepository {
       final entities = data.map((p) => PaymentMethodEntity(id: p.id, name: p.name, isActive: p.isActive)).toList();
       return Right(entities);
     } catch (e) {
-      return const Left(DatabaseFailure('فشل في جلب طرق الدفع'));
+      return const Left(DatabaseFailure('فشل في جلب طرق الدفع.'));
     }
   }
 
@@ -88,7 +88,7 @@ class PosRepositoryImpl implements PosRepository {
       final id = await localDataSource.addCustomer(companion);
       return Right(id);
     } catch (e) {
-      return const Left(DatabaseFailure('فشل في إضافة العميل'));
+      return const Left(DatabaseFailure('فشل في إضافة العميل الجديد.'));
     }
   }
 }
