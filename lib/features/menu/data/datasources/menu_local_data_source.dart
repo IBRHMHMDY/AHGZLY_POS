@@ -54,18 +54,14 @@ class MenuLocalDataSourceImpl implements MenuLocalDataSource {
 
   @override
   Future<int> deleteCategory(int id) async {
-    return await (appDatabase.delete(appDatabase.categories)
-          ..where((t) => t.id.equals(id)))
-        .go();
+    return await (appDatabase.delete(appDatabase.categories)..where((t) => t.id.equals(id))).go();
   }
 
   @override
   Future<List<ItemModel>> getItems(int categoryId) async {
-    // 1. جلب الإضافات (Addons) العامة أولاً
     final addonsData = await appDatabase.select(appDatabase.addons).get();
     final addons = addonsData.map((a) => AddonModel.fromDrift(a)).toList();
 
-    // 2. جلب الأصناف التابعة للقسم
     final maps = await (appDatabase.select(appDatabase.items)
           ..where((t) => t.categoryId.equals(categoryId))
           ..orderBy([(t) => OrderingTerm(expression: t.id, mode: OrderingMode.desc)]))
@@ -73,17 +69,12 @@ class MenuLocalDataSourceImpl implements MenuLocalDataSource {
 
     List<ItemModel> items = [];
     
-    // 3. جلب المقاسات (Variants) الخاصة بكل صنف ودمجها
     for (var data in maps) {
       final variantsData = await (appDatabase.select(appDatabase.itemVariants)
           ..where((v) => v.itemId.equals(data.id))).get();
       final variants = variantsData.map((v) => ItemVariantModel.fromDrift(v)).toList();
 
-      items.add(ItemModel.fromDrift(
-        data,
-        variants: variants, // حقن المقاسات
-        addons: addons,     // حقن الإضافات
-      ));
+      items.add(ItemModel.fromDrift(data, variants: variants, addons: addons));
     }
     
     return items;
@@ -91,9 +82,7 @@ class MenuLocalDataSourceImpl implements MenuLocalDataSource {
 
   @override
   Future<int> addItem(ItemModel item) async {
-    // 🚀 استخدام Transaction لضمان حفظ الصنف ومقاساته معاً بدون أخطاء
     return await appDatabase.transaction(() async {
-      // 1. حفظ الصنف الأساسي
       final itemId = await appDatabase.into(appDatabase.items).insert(
             ItemsCompanion.insert(
               categoryId: item.categoryId,
@@ -105,11 +94,10 @@ class MenuLocalDataSourceImpl implements MenuLocalDataSource {
             ),
           );
 
-      // 2. حفظ المقاسات المرتبطة بالصنف (إن وجدت)
       for (var variant in item.variants) {
         await appDatabase.into(appDatabase.itemVariants).insert(
           ItemVariantsCompanion.insert(
-            itemId: itemId, // ربط المقاس بالـ ID الجديد للصنف
+            itemId: itemId, 
             name: variant.name,
             price: variant.price,
             costPrice: Value(variant.costPrice),
@@ -124,8 +112,7 @@ class MenuLocalDataSourceImpl implements MenuLocalDataSource {
   Future<int> updateItem(ItemModel item) async {
     return await appDatabase.transaction(() async {
       // 1. تحديث بيانات الصنف الأساسية
-      await (appDatabase.update(appDatabase.items)
-            ..where((t) => t.id.equals(item.id!)))
+      await (appDatabase.update(appDatabase.items)..where((t) => t.id.equals(item.id!)))
           .write(
         ItemsCompanion(
           categoryId: Value(item.categoryId),
@@ -136,21 +123,41 @@ class MenuLocalDataSourceImpl implements MenuLocalDataSource {
         ),
       );
 
-      // 2. مسح المقاسات القديمة للصنف
-      await (appDatabase.delete(appDatabase.itemVariants)
-            ..where((v) => v.itemId.equals(item.id!)))
-          .go();
+      // 🚀 [Refactored UX/DB]: منع مسح المقاسات القديمة عشوائياً.
+      // نطبق خوارزمية (Diffing) للتحديث لتجنب حدوث Foreign Key Constraint Error
+      final existingVariants = await (appDatabase.select(appDatabase.itemVariants)..where((v) => v.itemId.equals(item.id!))).get();
+      final incomingIds = item.variants.map((v) => v.id).where((id) => id != null).toList();
 
-      // 3. إدخال المقاسات الجديدة المحدثة
+      // مسح المقاسات التي تمت إزالتها فقط (محاولة مسح آمنة)
+      for (var existing in existingVariants) {
+        if (!incomingIds.contains(existing.id)) {
+          try {
+            await (appDatabase.delete(appDatabase.itemVariants)..where((t) => t.id.equals(existing.id))).go();
+          } catch (_) {
+            // تجاهل المسح إذا كان المقاس مرتبطاً بفاتورة قديمة لحماية النظام
+          }
+        }
+      }
+
+      // إضافة الجديد أو تحديث الحالي
       for (var variant in item.variants) {
-        await appDatabase.into(appDatabase.itemVariants).insert(
-          ItemVariantsCompanion.insert(
-            itemId: item.id!,
-            name: variant.name,
-            price: variant.price,
-            costPrice: Value(variant.costPrice),
-          ),
-        );
+        if (variant.id != null) {
+          await (appDatabase.update(appDatabase.itemVariants)..where((t) => t.id.equals(variant.id!)))
+            .write(ItemVariantsCompanion(
+              name: Value(variant.name),
+              price: Value(variant.price),
+              costPrice: Value(variant.costPrice),
+            ));
+        } else {
+          await appDatabase.into(appDatabase.itemVariants).insert(
+            ItemVariantsCompanion.insert(
+              itemId: item.id!,
+              name: variant.name,
+              price: variant.price,
+              costPrice: Value(variant.costPrice),
+            ),
+          );
+        }
       }
       return item.id!;
     });
@@ -159,15 +166,8 @@ class MenuLocalDataSourceImpl implements MenuLocalDataSource {
   @override
   Future<int> deleteItem(int id) async {
     return await appDatabase.transaction(() async {
-      // 1. يجب مسح المقاسات المرتبطة أولاً (لتجنب مشاكل Foreign Key)
-      await (appDatabase.delete(appDatabase.itemVariants)
-            ..where((v) => v.itemId.equals(id)))
-          .go();
-      
-      // 2. مسح الصنف
-      return await (appDatabase.delete(appDatabase.items)
-            ..where((t) => t.id.equals(id)))
-          .go();
+      await (appDatabase.delete(appDatabase.itemVariants)..where((v) => v.itemId.equals(id))).go();
+      return await (appDatabase.delete(appDatabase.items)..where((t) => t.id.equals(id))).go();
     });
   }
 }

@@ -79,11 +79,13 @@ class MenuRepositoryImpl implements MenuRepository {
         imagePath: item.imagePath, 
         createdAt: item.createdAt, 
         updatedAt: item.updatedAt,
+        variants: item.variants, // 🚀 [FIXED]: تم تمرير المقاسات لمنع فقدانها
+        availableAddons: item.availableAddons, // 🚀 [FIXED]: تم تمرير الإضافات
       );
       final id = await localDataSource.addItem(itemModel);
       return Right(id);
     } catch (_) {
-      return const Left(DatabaseFailure('فشل في إضافة الصنف.'));
+      return const Left(DatabaseFailure('فشل في إضافة الصنف. تأكد من صحة البيانات.'));
     }
   }
 
@@ -99,6 +101,8 @@ class MenuRepositoryImpl implements MenuRepository {
         imagePath: item.imagePath, 
         createdAt: item.createdAt, 
         updatedAt: item.updatedAt,
+        variants: item.variants, // 🚀 [FIXED]: تم تمرير المقاسات
+        availableAddons: item.availableAddons, // 🚀 [FIXED]: تم تمرير الإضافات
       );
       final result = await localDataSource.updateItem(itemModel);
       return Right(result);
