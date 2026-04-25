@@ -27,10 +27,10 @@ class _SplashScreenState extends State<SplashScreen> {
       listener: (context, state) {
         if (state is LicenseValidState) {
           // الترخيص صالح والنظام آمن -> توجيه لشاشة الدخول/الكاشير
-          context.go(AppRouter.loginPath); 
+          context.go(AppRoutes.login); 
         } else if (state is LicenseInvalidState) {
           // تم اكتشاف تلاعب، أو انتهى الترخيص -> توجيه إجباري لشاشة التفعيل مع تمرير السبب
-          context.go(AppRouter.licensePath, extra: state.message);
+          context.go(AppRoutes.license, extra: state.message);
         }
       },
       child: Scaffold(

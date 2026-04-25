@@ -3,59 +3,50 @@ import 'package:go_router/go_router.dart';
 // ==========================================
 // 🪄 Features Screens Imports
 // ==========================================
-// 1. Splash & License
 import 'package:ahgzly_pos/features/splash/presentation/screens/splash_screen.dart';
 import 'package:ahgzly_pos/features/license/presentation/screens/license_screen.dart';
-
-// 2. Auth & Lock
 import 'package:ahgzly_pos/features/auth/presentation/screens/login_screen.dart';
 import 'package:ahgzly_pos/features/auth/presentation/screens/lock_screen.dart';
-
-// 3. Shift Management
 import 'package:ahgzly_pos/features/shift/presentation/screens/open_shift_screen.dart';
 import 'package:ahgzly_pos/features/shift/presentation/screens/shift_report_screen.dart';
-
-// 4. POS Core (Menu, Orders, Point of Sale)
 import 'package:ahgzly_pos/features/pos/presentation/screens/pos_screen.dart';
 import 'package:ahgzly_pos/features/menu/presentation/screens/menu_screen.dart';
 import 'package:ahgzly_pos/features/orders/presentation/screens/orders_screen.dart';
-
-// 5. Finance & Management (Expenses, Users, Settings)
 import 'package:ahgzly_pos/features/expenses/presentation/screens/expenses_screen.dart';
 import 'package:ahgzly_pos/features/users/presentation/screens/users_screen.dart';
 import 'package:ahgzly_pos/features/settings/presentation/screens/settings_screen.dart';
 
-class AppRouter {
-  // --------------------------------------------------------
-  // 1. Route Constants (Type-Safe Paths)
-  // --------------------------------------------------------
-  static const String splashPath = '/';
-  static const String licensePath = '/license';
-  static const String loginPath = '/login';
-  static const String lockPath = '/lock'; // 🪄 تم إضافة الثابت المفقود
-  static const String openShiftPath = '/open-shift';
-  static const String shiftPath = '/shift';
-  static const String posPath = '/pos';
-  static const String menuPath = '/menu';
-  static const String ordersPath = '/orders';
-  static const String expensesPath = '/expenses';
-  static const String usersPath = '/users';
-  static const String settingsPath = '/settings';
+/// 🛣️ مسارات التطبيق (Route Constants)
+abstract class AppRoutes {
+  static const String splash = '/';
+  static const String license = '/license';
+  static const String login = '/login';
+  static const String lock = '/lock';
+  static const String openShift = '/open-shift';
+  static const String shift = '/shift';
+  static const String pos = '/pos';
+  static const String menu = '/menu';
+  static const String orders = '/orders';
+  static const String expenses = '/expenses';
+  static const String users = '/users';
+  static const String settings = '/settings';
+}
 
-  // --------------------------------------------------------
-  // 2. Router Configuration
-  // --------------------------------------------------------
+/// 🗺️ مدير التوجيه المركزي (Router Configuration)
+class AppRouter {
   static GoRouter getRouter() {
     return GoRouter(
-      initialLocation: splashPath,
+      initialLocation: AppRoutes.splash,
+      // يمكن تفعيل الـ debugLogDiagnostics في وضع التطوير فقط
+      debugLogDiagnostics: false, 
       routes: [
         // -- Initial & Licensing --
         GoRoute(
-          path: splashPath,
+          path: AppRoutes.splash,
           builder: (context, state) => const SplashScreen(),
         ),
         GoRoute(
-          path: licensePath,
+          path: AppRoutes.license,
           builder: (context, state) {
             final errorMessage = state.extra as String?;
             return LicenseScreen(errorMessage: errorMessage);
@@ -64,52 +55,52 @@ class AppRouter {
 
         // -- Authentication --
         GoRoute(
-          path: loginPath,
+          path: AppRoutes.login,
           builder: (context, state) => const LoginScreen(),
         ),
         GoRoute(
-          path: lockPath, // 🪄 استخدام الثابت بدلاً من النص الصلب
-          builder: (context, state) {
-            
-            return LockScreen();
-          },
+          path: AppRoutes.lock,
+          builder: (context, state) => const LockScreen(),
         ),
 
         // -- Shift Management --
         GoRoute(
-          path: openShiftPath,
+          path: AppRoutes.openShift,
           builder: (context, state) {
             final cashierId = state.extra as int? ?? 1;
             return OpenShiftScreen(cashierId: cashierId);
           },
         ),
         GoRoute(
-          path: shiftPath,
+          path: AppRoutes.shift,
           builder: (context, state) => const ShiftReportScreen(),
         ),
 
         // -- Main POS Operations --
-        GoRoute(path: posPath, builder: (context, state) => const PosScreen()),
         GoRoute(
-          path: menuPath,
+          path: AppRoutes.pos,
+          builder: (context, state) => const PosScreen(),
+        ),
+        GoRoute(
+          path: AppRoutes.menu,
           builder: (context, state) => const MenuScreen(),
         ),
         GoRoute(
-          path: ordersPath,
+          path: AppRoutes.orders,
           builder: (context, state) => const OrdersScreen(),
         ),
 
         // -- Management & Finance --
         GoRoute(
-          path: expensesPath,
+          path: AppRoutes.expenses,
           builder: (context, state) => const ExpensesScreen(),
         ),
         GoRoute(
-          path: usersPath,
+          path: AppRoutes.users,
           builder: (context, state) => const UsersScreen(),
         ),
         GoRoute(
-          path: settingsPath,
+          path: AppRoutes.settings,
           builder: (context, state) => const SettingsScreen(),
         ),
       ],

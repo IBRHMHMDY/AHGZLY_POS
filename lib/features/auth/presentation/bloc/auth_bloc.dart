@@ -16,7 +16,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     
     on<LoginSubmittedEvent>((event, emit) async {
       emit(AuthLoading());
-      final result = await loginUseCase(event.pin);
+      final result = await loginUseCase(LoginParams(pin: event.pin));
       
       result.fold(
         (failure) => emit(AuthError(message: failure.message)),
@@ -27,7 +27,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     // Refactored: Business logic for unlocking moved here (Clean Architecture)
     on<UnlockSubmittedEvent>((event, emit) async {
       emit(AuthLoading());
-      final result = await loginUseCase(event.pin);
+      final result = await loginUseCase(LoginParams(pin: event.pin));
       
       result.fold(
         (failure) => emit(AuthError(message: failure.message)),

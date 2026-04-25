@@ -55,7 +55,7 @@ class _LicenseScreenState extends State<LicenseScreen> {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(content: Text('System activated successfully!'), backgroundColor: Colors.green),
             );
-            context.go(AppRouter.loginPath);
+            context.go(AppRoutes.login);
           } else if (state is LicenseErrorState) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(content: Text(state.message), backgroundColor: Colors.red),

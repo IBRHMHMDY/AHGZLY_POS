@@ -54,14 +54,14 @@ class _OpenShiftScreenState extends State<OpenShiftScreen> {
           IconButton(
             icon: const Icon(Icons.power_settings_new),
             tooltip: 'تسجيل الخروج',
-            onPressed: () => context.go(AppRouter.loginPath),
+            onPressed: () => context.go(AppRoutes.login),
           ),
         ],
       ),
       body: BlocConsumer<ShiftBloc, ShiftState>(
         listener: (context, state) {
           if (state is ShiftOpenedSuccess) {
-            context.go(AppRouter.posPath);
+            context.go(AppRoutes.pos);
           } else if (state is ShiftError) {
             ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(state.message), backgroundColor: Colors.red));
           }

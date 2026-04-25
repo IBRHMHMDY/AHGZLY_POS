@@ -121,7 +121,7 @@ class _ShiftReportScreenState extends State<ShiftReportScreen> {
         foregroundColor: Colors.white,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.go(AppRouter.posPath),
+          onPressed: () => context.go(AppRoutes.pos),
         ),
       ),
       body: BlocConsumer<ShiftBloc, ShiftState>(
@@ -400,7 +400,7 @@ class _ActionButtonsRow extends StatelessWidget {
       alignment: WrapAlignment.center,
       children: [
         OutlinedButton.icon(
-          onPressed: () => context.go(AppRouter.posPath),
+          onPressed: () => context.go(AppRoutes.pos),
           icon: const Icon(Icons.storefront),
           label: const Text(
             'عودة للكاشير',
