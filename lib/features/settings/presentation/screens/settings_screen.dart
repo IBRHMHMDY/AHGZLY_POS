@@ -11,7 +11,7 @@ import 'package:ahgzly_pos/features/settings/domain/entities/app_settings_entity
 import 'package:ahgzly_pos/features/settings/presentation/bloc/settings_bloc.dart';
 import 'package:ahgzly_pos/features/settings/presentation/bloc/settings_event.dart';
 import 'package:ahgzly_pos/features/settings/presentation/bloc/settings_state.dart';
-import 'package:printing/printing.dart';
+import 'package:flutter_pos_printer_platform_image_3/flutter_pos_printer_platform_image_3.dart';
 import 'package:ahgzly_pos/core/common/widgets/custom_shimmer.dart'; // 🪄 استيراد مكون الشيمر
 
 class SettingsScreen extends StatefulWidget {
@@ -25,7 +25,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   final _formKey = GlobalKey<FormState>();
   final BackupService _backupService = sl<BackupService>();
 
-  List<Printer> _printers = [];
+  List<PrinterDevice> _printers = [];
   bool _isLoadingPrinters = false;
   String? _selectedPrinterName;
   PrintMode _selectedPrintMode = PrintMode.ask;
@@ -62,13 +62,24 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Future<void> _fetchPrinters() async {
     setState(() => _isLoadingPrinters = true);
     try {
-      final printers = await Printing.listPrinters();
-      setState(() {
-        _printers = printers;
-        _isLoadingPrinters = false;
+      List<PrinterDevice> discovered = [];
+      final subscription = PrinterManager.instance.discovery(type: PrinterType.usb).listen((device) {
+        if (!discovered.any((d) => d.name == device.name)) {
+          discovered.add(device);
+        }
       });
+      
+      await Future.delayed(const Duration(seconds: 3));
+      await subscription.cancel();
+      
+      if (mounted) {
+        setState(() {
+          _printers = discovered;
+          _isLoadingPrinters = false;
+        });
+      }
     } catch (e) {
-      setState(() => _isLoadingPrinters = false);
+      if (mounted) setState(() => _isLoadingPrinters = false);
     }
   }
 
@@ -321,10 +332,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
             isExpanded: true,
             value: (_selectedPrinterName != null && _printers.any((p) => p.name == _selectedPrinterName)) ? _selectedPrinterName : null,
             decoration: _inputStyle(label: 'اختر الطابعة المتصلة', icon: Icons.print),
-            items: _printers.map((Printer printer) {
+            items: _printers.map((PrinterDevice printer) {
               return DropdownMenuItem<String>(
                 value: printer.name,
-                child: Text('${printer.name} ${printer.isDefault ? "(الافتراضية)" : ""}', style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600), overflow: TextOverflow.ellipsis),
+                child: Text(printer.name, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600), overflow: TextOverflow.ellipsis),
               );
             }).toList(),
             onChanged: (val) => setState(() => _selectedPrinterName = val),
@@ -375,7 +386,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       prefixIcon: Container(
         margin: const EdgeInsets.only(left: 8),
         padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(color: Colors.teal.shade100, borderRadius: const BorderRadius.horizontal(right: Radius.circular(10))),
+        decoration: BoxDecoration(color: Colors.transparent, borderRadius: const BorderRadius.horizontal(right: Radius.circular(10))),
         child: Icon(icon, color: Colors.teal.shade800),
       ),
     );

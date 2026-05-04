@@ -14,6 +14,8 @@ import 'package:ahgzly_pos/features/pos/presentation/bloc/pos_state.dart';
 import 'package:ahgzly_pos/features/pos/presentation/bloc/pos_event.dart';
 import 'package:ahgzly_pos/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:ahgzly_pos/features/auth/presentation/bloc/auth_state.dart';
+import 'package:ahgzly_pos/core/services/backup_service.dart';
+import 'package:ahgzly_pos/core/di/dependency_injection.dart';
 
 import 'package:ahgzly_pos/features/pos/presentation/widgets/categories_section.dart';
 import 'package:ahgzly_pos/features/pos/presentation/widgets/items_section.dart';
@@ -60,7 +62,11 @@ class _PosScreenState extends State<PosScreen> {
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
             icon: const Icon(Icons.exit_to_app),
             label: const Text('تأكيد الإغلاق', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-            onPressed: () => exit(0), 
+            onPressed: () async {
+              // 🚀 [FIXED]: أخذ نسخة احتياطية تلقائية قبل الإغلاق
+              await sl<BackupService>().autoBackupDatabase();
+              exit(0);
+            }, 
           ),
         ],
       ),
