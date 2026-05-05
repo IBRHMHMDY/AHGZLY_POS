@@ -327,6 +327,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           SizedBox(
                             width: double.infinity,
                             child: ElevatedButton.icon(
+                              style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF0F5132), foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 20), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
+                              icon: const Icon(Icons.dashboard_rounded),
+                              label: const Text('لوحة التحكم والتقارير', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                              onPressed: () => context.push(AppRoutes.dashboard),
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton.icon(
                               style: ElevatedButton.styleFrom(backgroundColor: Colors.blue.shade800, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 20), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
                               icon: const Icon(Icons.warehouse),
                               label: const Text('إدارة المخزون والمقادير', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
@@ -351,6 +361,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
                               icon: const Icon(Icons.shopping_cart),
                               label: const Text('إدارة فواتير المشتريات والتوريد', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                               onPressed: () => context.push(AppRoutes.purchases),
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton.icon(
+                              style: ElevatedButton.styleFrom(backgroundColor: Colors.purple.shade800, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 20), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
+                              icon: const Icon(Icons.people_rounded),
+                              label: const Text('إدارة العملاء', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                              onPressed: () => context.push(AppRoutes.customers),
                             ),
                           ),
                         ],

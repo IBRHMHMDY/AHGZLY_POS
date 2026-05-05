@@ -20,6 +20,9 @@ import 'package:ahgzly_pos/features/inventory/presentation/screens/inventory_scr
 import 'package:ahgzly_pos/features/suppliers/presentation/screens/suppliers_screen.dart';
 import 'package:ahgzly_pos/features/purchases/presentation/screens/purchases_screen.dart';
 import 'package:ahgzly_pos/features/purchases/presentation/screens/add_purchase_screen.dart';
+import 'package:ahgzly_pos/features/dashboard/presentation/screens/dashboard_screen.dart';
+import 'package:ahgzly_pos/features/reports/presentation/screens/reports_screen.dart';
+import 'package:ahgzly_pos/features/customers/presentation/screens/customers_screen.dart';
 
 /// 🛣️ مسارات التطبيق (Route Constants)
 abstract class AppRoutes {
@@ -40,6 +43,9 @@ abstract class AppRoutes {
   static const String suppliers = '/suppliers';
   static const String purchases = '/purchases';
   static const String addPurchase = '/addPurchase';
+  static const String dashboard = '/dashboard';
+  static const String reports = '/reports';
+  static const String customers = '/customers';
 }
 
 /// 🗺️ مدير التوجيه المركزي (Router Configuration)
@@ -132,6 +138,18 @@ class AppRouter {
         GoRoute(
           path: AppRoutes.addPurchase,
           builder: (context, state) => const AddPurchaseScreen(),
+        ),
+        GoRoute(
+          path: AppRoutes.dashboard,
+          builder: (context, state) => const DashboardScreen(),
+        ),
+        GoRoute(
+          path: AppRoutes.reports,
+          builder: (context, state) => const ReportsScreen(),
+        ),
+        GoRoute(
+          path: AppRoutes.customers,
+          builder: (context, state) => const CustomersScreen(),
         ),
       ],
     );
