@@ -45,9 +45,9 @@ class ShiftRepositoryImpl implements ShiftRepository {
   }
 
   @override
-  Future<Either<Failure, List<ShiftEntity>>> getShiftsHistory() async {
+  Future<Either<Failure, List<ShiftEntity>>> getShiftsHistory({int limit = 50, int offset = 0}) async {
     try {
-      final shifts = await localDataSource.getShiftsHistory();
+      final shifts = await localDataSource.getShiftsHistory(limit: limit, offset: offset);
       return Right(shifts);
     } catch (e) {
       return const Left(DatabaseFailure('فشل في جلب سجل الورديات.'));

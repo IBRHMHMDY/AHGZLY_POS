@@ -21,10 +21,11 @@ class ShiftModel extends ShiftEntity {
     required super.expectedCash,
     required super.actualCash,
     required super.status,
+    super.cashierName,
   });
 
   // [Refactor]: قراءة البيانات مباشرة من Drift بدون الحاجة لـ Map أو DateTime.parse
-  factory ShiftModel.fromDrift(ShiftData data) {
+  factory ShiftModel.fromDrift(ShiftData data, {String? cashierName}) {
     return ShiftModel(
       id: data.id,
       cashierId: data.cashierId,
@@ -42,6 +43,7 @@ class ShiftModel extends ShiftEntity {
       expectedCash: data.expectedCash,
       actualCash: data.actualCash,
       status: data.status,
+      cashierName: cashierName,
     );
   }
 }

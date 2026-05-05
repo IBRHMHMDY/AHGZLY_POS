@@ -31,5 +31,20 @@ class ShiftError extends ShiftState {
 
 class ShiftsHistoryLoaded extends ShiftState {
   final List<ShiftEntity> shifts;
-  ShiftsHistoryLoaded({required this.shifts});
+  final bool hasReachedMax;
+  
+  ShiftsHistoryLoaded({
+    required this.shifts,
+    this.hasReachedMax = false,
+  });
+
+  ShiftsHistoryLoaded copyWith({
+    List<ShiftEntity>? shifts,
+    bool? hasReachedMax,
+  }) {
+    return ShiftsHistoryLoaded(
+      shifts: shifts ?? this.shifts,
+      hasReachedMax: hasReachedMax ?? this.hasReachedMax,
+    );
+  }
 }

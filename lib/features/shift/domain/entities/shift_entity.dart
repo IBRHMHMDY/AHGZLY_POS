@@ -23,6 +23,7 @@ class ShiftEntity extends Equatable {
   final int expectedCash; // Refactored: int (Cents)
   final int actualCash; // Refactored: int (Cents)
   final String status;
+  final String? cashierName; // 🚀 [Sprint 2] UX Fix
 
   const ShiftEntity({
     required this.id,
@@ -41,6 +42,7 @@ class ShiftEntity extends Equatable {
     required this.expectedCash,
     required this.actualCash,
     required this.status,
+    this.cashierName, // 🚀 [Sprint 2]
   });
 
   // Refactored: العائد أصبح int
@@ -64,5 +66,6 @@ class ShiftEntity extends Equatable {
     expectedCash,
     actualCash,
     status,
+    cashierName,
   ];
 }

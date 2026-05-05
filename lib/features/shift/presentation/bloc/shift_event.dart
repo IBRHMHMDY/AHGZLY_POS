@@ -17,4 +17,7 @@ class CloseShiftSubmittedEvent extends ShiftEvent {
   CloseShiftSubmittedEvent({required this.shiftId, required this.actualCash});
 }
 
-class LoadShiftsHistoryEvent extends ShiftEvent {} // 🚀 [Sprint 2]
+class LoadShiftsHistoryEvent extends ShiftEvent {
+  final bool isLoadMore;
+  LoadShiftsHistoryEvent({this.isLoadMore = false});
+} // 🚀 [Sprint 2]

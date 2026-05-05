@@ -6,7 +6,7 @@ abstract class ShiftLocalDataSource {
   Future<ShiftModel?> getActiveShift();
   Future<ShiftModel> openShift({required int startingCash, required int cashierId});
   Future<ShiftModel> closeShift({required int shiftId, required int actualCash});
-  Future<List<ShiftModel>> getShiftsHistory(); // 🚀 [Sprint 2]
+  Future<List<ShiftModel>> getShiftsHistory({int limit = 50, int offset = 0}); // 🚀 [Sprint 2]
 }
 
 class ShiftLocalDataSourceImpl implements ShiftLocalDataSource {
@@ -66,10 +66,19 @@ class ShiftLocalDataSourceImpl implements ShiftLocalDataSource {
   }
 
   @override
-  Future<List<ShiftModel>> getShiftsHistory() async {
-    final query = appDatabase.select(appDatabase.shifts)
-      ..orderBy([(t) => OrderingTerm(expression: t.id, mode: OrderingMode.desc)]);
-    final shifts = await query.get();
-    return shifts.map((s) => ShiftModel.fromDrift(s)).toList();
+  Future<List<ShiftModel>> getShiftsHistory({int limit = 50, int offset = 0}) async {
+    final query = appDatabase.select(appDatabase.shifts).join([
+      leftOuterJoin(appDatabase.users, appDatabase.users.id.equalsExp(appDatabase.shifts.cashierId))
+    ])
+      ..orderBy([OrderingTerm(expression: appDatabase.shifts.id, mode: OrderingMode.desc)])
+      ..limit(limit, offset: offset);
+
+    final rows = await query.get();
+    
+    return rows.map((row) {
+      final shiftData = row.readTable(appDatabase.shifts);
+      final userData = row.readTableOrNull(appDatabase.users);
+      return ShiftModel.fromDrift(shiftData, cashierName: userData?.name ?? 'غير معروف');
+    }).toList();
   }
 }

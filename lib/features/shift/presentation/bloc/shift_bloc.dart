@@ -1,4 +1,5 @@
 import 'package:ahgzly_pos/core/usecases/usecase.dart'; // ⬅️ إضافة هامة لاستخدام NoParams
+import 'package:ahgzly_pos/features/shift/domain/entities/shift_entity.dart';
 import 'package:ahgzly_pos/features/shift/domain/usecases/check_active_shift_usecase.dart';
 import 'package:ahgzly_pos/features/shift/domain/usecases/close_shift_usecase.dart';
 import 'package:ahgzly_pos/features/shift/domain/usecases/open_shift_usecase.dart';
@@ -66,12 +67,40 @@ class ShiftBloc extends Bloc<ShiftEvent, ShiftState> {
     });
 
     on<LoadShiftsHistoryEvent>((event, emit) async {
-      emit(ShiftLoading());
-      final result = await getShiftsHistoryUseCase(NoParams());
+      if (!event.isLoadMore) {
+        emit(ShiftLoading());
+      }
+
+      final currentState = state;
+      int offset = 0;
+      List<ShiftEntity> currentShifts = [];
+
+      if (event.isLoadMore && currentState is ShiftsHistoryLoaded) {
+        if (currentState.hasReachedMax) return;
+        offset = currentState.shifts.length;
+        currentShifts = currentState.shifts;
+      }
+
+      final result = await getShiftsHistoryUseCase(GetShiftsHistoryParams(limit: 50, offset: offset));
       
       result.fold(
-        (failure) => emit(ShiftError(message: failure.message)),
-        (shifts) => emit(ShiftsHistoryLoaded(shifts: shifts)),
+        (failure) {
+          if (!event.isLoadMore) emit(ShiftError(message: failure.message));
+        },
+        (newShifts) {
+          if (newShifts.isEmpty) {
+            if (event.isLoadMore) {
+              emit(ShiftsHistoryLoaded(shifts: currentShifts, hasReachedMax: true));
+            } else {
+              emit(ShiftsHistoryLoaded(shifts: const [], hasReachedMax: true));
+            }
+          } else {
+            emit(ShiftsHistoryLoaded(
+              shifts: currentShifts + newShifts,
+              hasReachedMax: newShifts.length < 50,
+            ));
+          }
+        },
       );
     });
   }

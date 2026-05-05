@@ -14,10 +14,25 @@ class ShiftHistoryScreen extends StatefulWidget {
 }
 
 class _ShiftHistoryScreenState extends State<ShiftHistoryScreen> {
+  final ScrollController _scrollController = ScrollController();
+
   @override
   void initState() {
     super.initState();
     context.read<ShiftBloc>().add(LoadShiftsHistoryEvent());
+    _scrollController.addListener(_onScroll);
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _onScroll() {
+    if (_scrollController.position.pixels >= _scrollController.position.maxScrollExtent * 0.9) {
+      context.read<ShiftBloc>().add(LoadShiftsHistoryEvent(isLoadMore: true));
+    }
   }
 
   @override
@@ -50,7 +65,7 @@ class _ShiftHistoryScreenState extends State<ShiftHistoryScreen> {
         body: BlocBuilder<ShiftBloc, ShiftState>(
           buildWhen: (previous, current) => current is ShiftsHistoryLoaded || current is ShiftLoading || current is ShiftError,
           builder: (context, state) {
-            if (state is ShiftLoading) {
+            if (state is ShiftLoading && context.read<ShiftBloc>().state is! ShiftsHistoryLoaded) {
               return const Center(child: CircularProgressIndicator(color: Colors.teal));
             } else if (state is ShiftError) {
               return Center(child: Text(state.message, style: const TextStyle(color: Colors.red, fontSize: 18)));
@@ -81,64 +96,75 @@ class _ShiftHistoryScreenState extends State<ShiftHistoryScreen> {
                     child: SingleChildScrollView(
                       scrollDirection: Axis.horizontal,
                       child: SingleChildScrollView(
-                        child: DataTable(
-                          headingRowColor: MaterialStateProperty.all(Colors.teal.shade50),
-                          dataRowMinHeight: 60,
-                          dataRowMaxHeight: 60,
-                          columns: const [
-                            DataColumn(label: Text('رقم الوردية', style: TextStyle(fontWeight: FontWeight.bold))),
-                            DataColumn(label: Text('الكاشير', style: TextStyle(fontWeight: FontWeight.bold))),
-                            DataColumn(label: Text('وقت البدء', style: TextStyle(fontWeight: FontWeight.bold))),
-                            DataColumn(label: Text('وقت الإغلاق', style: TextStyle(fontWeight: FontWeight.bold))),
-                            DataColumn(label: Text('العهدة (البداية)', style: TextStyle(fontWeight: FontWeight.bold))),
-                            DataColumn(label: Text('المتوقع', style: TextStyle(fontWeight: FontWeight.bold))),
-                            DataColumn(label: Text('الفعلي', style: TextStyle(fontWeight: FontWeight.bold))),
-                            DataColumn(label: Text('العجز/الزيادة', style: TextStyle(fontWeight: FontWeight.bold))),
-                            DataColumn(label: Text('الحالة', style: TextStyle(fontWeight: FontWeight.bold))),
-                          ],
-                          rows: state.shifts.map((shift) {
-                            final isClosed = shift.status == 'closed';
-                            final difference = isClosed ? shift.actualCash - shift.expectedCash : 0;
-                            
-                            return DataRow(
-                              cells: [
-                                DataCell(Text('#${shift.id}', style: const TextStyle(fontWeight: FontWeight.bold))),
-                                DataCell(Text('كاشير #${shift.cashierId}')), // In a real app, join with users table
-                                DataCell(Text(shift.startTime.toString().substring(0, 16))),
-                                DataCell(Text(shift.endTime != null ? shift.endTime.toString().substring(0, 16) : '-')),
-                                DataCell(Text('${shift.startingCash.toFormattedMoney()} ج.م')),
-                                DataCell(Text('${shift.expectedCash.toFormattedMoney()} ج.م', style: const TextStyle(fontWeight: FontWeight.bold))),
-                                DataCell(Text(isClosed ? '${shift.actualCash.toFormattedMoney()} ج.م' : '-', style: const TextStyle(fontWeight: FontWeight.bold))),
-                                DataCell(
-                                  Text(
-                                    isClosed ? '${difference.toFormattedMoney()} ج.م' : '-',
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      color: isClosed 
-                                          ? (difference == 0 ? Colors.green : (difference < 0 ? Colors.red : Colors.orange))
-                                          : Colors.black,
-                                    ),
-                                  ),
-                                ),
-                                DataCell(
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                                    decoration: BoxDecoration(
-                                      color: isClosed ? Colors.grey.shade200 : Colors.green.shade100,
-                                      borderRadius: BorderRadius.circular(20),
-                                    ),
-                                    child: Text(
-                                      isClosed ? 'مغلقة' : 'نشطة',
-                                      style: TextStyle(
-                                        color: isClosed ? Colors.grey.shade800 : Colors.green.shade800,
-                                        fontWeight: FontWeight.bold,
+                        controller: _scrollController,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            DataTable(
+                              headingRowColor: MaterialStateProperty.all(Colors.teal.shade50),
+                              dataRowMinHeight: 60,
+                              dataRowMaxHeight: 60,
+                              columns: const [
+                                DataColumn(label: Text('رقم الوردية', style: TextStyle(fontWeight: FontWeight.bold))),
+                                DataColumn(label: Text('الكاشير', style: TextStyle(fontWeight: FontWeight.bold))),
+                                DataColumn(label: Text('وقت البدء', style: TextStyle(fontWeight: FontWeight.bold))),
+                                DataColumn(label: Text('وقت الإغلاق', style: TextStyle(fontWeight: FontWeight.bold))),
+                                DataColumn(label: Text('العهدة (البداية)', style: TextStyle(fontWeight: FontWeight.bold))),
+                                DataColumn(label: Text('المتوقع', style: TextStyle(fontWeight: FontWeight.bold))),
+                                DataColumn(label: Text('الفعلي', style: TextStyle(fontWeight: FontWeight.bold))),
+                                DataColumn(label: Text('العجز/الزيادة', style: TextStyle(fontWeight: FontWeight.bold))),
+                                DataColumn(label: Text('الحالة', style: TextStyle(fontWeight: FontWeight.bold))),
+                              ],
+                              rows: state.shifts.map((shift) {
+                                final isClosed = shift.status == 'closed';
+                                final difference = isClosed ? shift.actualCash - shift.expectedCash : 0;
+                                
+                                return DataRow(
+                                  cells: [
+                                    DataCell(Text('#${shift.id}', style: const TextStyle(fontWeight: FontWeight.bold))),
+                                    DataCell(Text(shift.cashierName ?? 'كاشير #${shift.cashierId}')), // 🚀 [Sprint 2] UX Fix
+                                    DataCell(Text(shift.startTime.toString().substring(0, 16))),
+                                    DataCell(Text(shift.endTime != null ? shift.endTime.toString().substring(0, 16) : '-')),
+                                    DataCell(Text('${shift.startingCash.toFormattedMoney()} ج.م')),
+                                    DataCell(Text('${shift.expectedCash.toFormattedMoney()} ج.م', style: const TextStyle(fontWeight: FontWeight.bold))),
+                                    DataCell(Text(isClosed ? '${shift.actualCash.toFormattedMoney()} ج.م' : '-', style: const TextStyle(fontWeight: FontWeight.bold))),
+                                    DataCell(
+                                      Text(
+                                        isClosed ? '${difference.toFormattedMoney()} ج.م' : '-',
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          color: isClosed 
+                                              ? (difference == 0 ? Colors.green : (difference < 0 ? Colors.red : Colors.orange))
+                                              : Colors.black,
+                                        ),
                                       ),
                                     ),
-                                  ),
-                                ),
-                              ],
-                            );
-                          }).toList(),
+                                    DataCell(
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                        decoration: BoxDecoration(
+                                          color: isClosed ? Colors.grey.shade200 : Colors.green.shade100,
+                                          borderRadius: BorderRadius.circular(20),
+                                        ),
+                                        child: Text(
+                                          isClosed ? 'مغلقة' : 'نشطة',
+                                          style: TextStyle(
+                                            color: isClosed ? Colors.grey.shade800 : Colors.green.shade800,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                );
+                              }).toList(),
+                            ),
+                            if (!state.hasReachedMax)
+                              const Padding(
+                                padding: EdgeInsets.all(16.0),
+                                child: Center(child: CircularProgressIndicator(color: Colors.teal)),
+                              ),
+                          ],
                         ),
                       ),
                     ),
