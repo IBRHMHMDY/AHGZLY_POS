@@ -9,6 +9,7 @@ import 'package:ahgzly_pos/features/auth/presentation/screens/login_screen.dart'
 import 'package:ahgzly_pos/features/auth/presentation/screens/lock_screen.dart';
 import 'package:ahgzly_pos/features/shift/presentation/screens/open_shift_screen.dart';
 import 'package:ahgzly_pos/features/shift/presentation/screens/shift_report_screen.dart';
+import 'package:ahgzly_pos/features/shift/presentation/screens/shift_history_screen.dart'; // 🚀 [Sprint 2]
 import 'package:ahgzly_pos/features/pos/presentation/screens/pos_screen.dart';
 import 'package:ahgzly_pos/features/menu/presentation/screens/menu_screen.dart';
 import 'package:ahgzly_pos/features/orders/presentation/screens/orders_screen.dart';
@@ -24,6 +25,7 @@ abstract class AppRoutes {
   static const String lock = '/lock';
   static const String openShift = '/open-shift';
   static const String shift = '/shift';
+  static const String shiftHistory = '/shift-history'; // 🚀 [Sprint 2]
   static const String pos = '/pos';
   static const String menu = '/menu';
   static const String orders = '/orders';
@@ -74,6 +76,10 @@ class AppRouter {
         GoRoute(
           path: AppRoutes.shift,
           builder: (context, state) => const ShiftReportScreen(),
+        ),
+        GoRoute(
+          path: AppRoutes.shiftHistory,
+          builder: (context, state) => const ShiftHistoryScreen(), // 🚀 [Sprint 2]
         ),
 
         // -- Main POS Operations --

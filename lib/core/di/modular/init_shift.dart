@@ -5,6 +5,7 @@ import 'package:ahgzly_pos/features/shift/domain/repositories/shift_repository.d
 import 'package:ahgzly_pos/features/shift/domain/usecases/check_active_shift_usecase.dart';
 import 'package:ahgzly_pos/features/shift/domain/usecases/close_shift_usecase.dart';
 import 'package:ahgzly_pos/features/shift/domain/usecases/open_shift_usecase.dart';
+import 'package:ahgzly_pos/features/shift/domain/usecases/get_shifts_history_usecase.dart';
 import 'package:ahgzly_pos/features/shift/presentation/bloc/shift_bloc.dart';
 
 void initShift() {
@@ -17,11 +18,13 @@ void initShift() {
   sl.registerLazySingleton(() => CheckActiveShiftUseCase(sl()));
   sl.registerLazySingleton(() => OpenShiftUseCase(sl()));
   sl.registerLazySingleton(() => CloseShiftUseCase(sl()));
+  sl.registerLazySingleton(() => GetShiftsHistoryUseCase(repository: sl()));
   sl.registerFactory(
     () => ShiftBloc(
       checkActiveShiftUseCase: sl(),
       openShiftUseCase: sl(),
       closeShiftUseCase: sl(),
+      getShiftsHistoryUseCase: sl(),
     ),
   );
 }

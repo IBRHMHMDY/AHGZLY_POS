@@ -347,6 +347,21 @@ class $SettingsTable extends Settings
     type: DriftSqlType.double,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _isTaxInclusiveMeta = const VerificationMeta(
+    'isTaxInclusive',
+  );
+  @override
+  late final GeneratedColumn<bool> isTaxInclusive = GeneratedColumn<bool>(
+    'is_tax_inclusive',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_tax_inclusive" IN (0, 1))',
+    ),
+    defaultValue: const Constant(true),
+  );
   static const VerificationMeta _serviceRateMeta = const VerificationMeta(
     'serviceRate',
   );
@@ -417,6 +432,7 @@ class $SettingsTable extends Settings
   List<GeneratedColumn> get $columns => [
     id,
     taxRate,
+    isTaxInclusive,
     serviceRate,
     deliveryFee,
     printerName,
@@ -446,6 +462,15 @@ class $SettingsTable extends Settings
       );
     } else if (isInserting) {
       context.missing(_taxRateMeta);
+    }
+    if (data.containsKey('is_tax_inclusive')) {
+      context.handle(
+        _isTaxInclusiveMeta,
+        isTaxInclusive.isAcceptableOrUnknown(
+          data['is_tax_inclusive']!,
+          _isTaxInclusiveMeta,
+        ),
+      );
     }
     if (data.containsKey('service_rate')) {
       context.handle(
@@ -524,6 +549,10 @@ class $SettingsTable extends Settings
         DriftSqlType.double,
         data['${effectivePrefix}tax_rate'],
       )!,
+      isTaxInclusive: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_tax_inclusive'],
+      )!,
       serviceRate: attachedDatabase.typeMapping.read(
         DriftSqlType.double,
         data['${effectivePrefix}service_rate'],
@@ -560,6 +589,7 @@ class $SettingsTable extends Settings
 class SettingsData extends DataClass implements Insertable<SettingsData> {
   final int id;
   final double taxRate;
+  final bool isTaxInclusive;
   final double serviceRate;
   final int deliveryFee;
   final String printerName;
@@ -569,6 +599,7 @@ class SettingsData extends DataClass implements Insertable<SettingsData> {
   const SettingsData({
     required this.id,
     required this.taxRate,
+    required this.isTaxInclusive,
     required this.serviceRate,
     required this.deliveryFee,
     required this.printerName,
@@ -581,6 +612,7 @@ class SettingsData extends DataClass implements Insertable<SettingsData> {
     final map = <String, Expression>{};
     map['id'] = Variable<int>(id);
     map['tax_rate'] = Variable<double>(taxRate);
+    map['is_tax_inclusive'] = Variable<bool>(isTaxInclusive);
     map['service_rate'] = Variable<double>(serviceRate);
     map['delivery_fee'] = Variable<int>(deliveryFee);
     map['printer_name'] = Variable<String>(printerName);
@@ -594,6 +626,7 @@ class SettingsData extends DataClass implements Insertable<SettingsData> {
     return SettingsCompanion(
       id: Value(id),
       taxRate: Value(taxRate),
+      isTaxInclusive: Value(isTaxInclusive),
       serviceRate: Value(serviceRate),
       deliveryFee: Value(deliveryFee),
       printerName: Value(printerName),
@@ -611,6 +644,7 @@ class SettingsData extends DataClass implements Insertable<SettingsData> {
     return SettingsData(
       id: serializer.fromJson<int>(json['id']),
       taxRate: serializer.fromJson<double>(json['taxRate']),
+      isTaxInclusive: serializer.fromJson<bool>(json['isTaxInclusive']),
       serviceRate: serializer.fromJson<double>(json['serviceRate']),
       deliveryFee: serializer.fromJson<int>(json['deliveryFee']),
       printerName: serializer.fromJson<String>(json['printerName']),
@@ -625,6 +659,7 @@ class SettingsData extends DataClass implements Insertable<SettingsData> {
     return <String, dynamic>{
       'id': serializer.toJson<int>(id),
       'taxRate': serializer.toJson<double>(taxRate),
+      'isTaxInclusive': serializer.toJson<bool>(isTaxInclusive),
       'serviceRate': serializer.toJson<double>(serviceRate),
       'deliveryFee': serializer.toJson<int>(deliveryFee),
       'printerName': serializer.toJson<String>(printerName),
@@ -637,6 +672,7 @@ class SettingsData extends DataClass implements Insertable<SettingsData> {
   SettingsData copyWith({
     int? id,
     double? taxRate,
+    bool? isTaxInclusive,
     double? serviceRate,
     int? deliveryFee,
     String? printerName,
@@ -646,6 +682,7 @@ class SettingsData extends DataClass implements Insertable<SettingsData> {
   }) => SettingsData(
     id: id ?? this.id,
     taxRate: taxRate ?? this.taxRate,
+    isTaxInclusive: isTaxInclusive ?? this.isTaxInclusive,
     serviceRate: serviceRate ?? this.serviceRate,
     deliveryFee: deliveryFee ?? this.deliveryFee,
     printerName: printerName ?? this.printerName,
@@ -657,6 +694,9 @@ class SettingsData extends DataClass implements Insertable<SettingsData> {
     return SettingsData(
       id: data.id.present ? data.id.value : this.id,
       taxRate: data.taxRate.present ? data.taxRate.value : this.taxRate,
+      isTaxInclusive: data.isTaxInclusive.present
+          ? data.isTaxInclusive.value
+          : this.isTaxInclusive,
       serviceRate: data.serviceRate.present
           ? data.serviceRate.value
           : this.serviceRate,
@@ -679,6 +719,7 @@ class SettingsData extends DataClass implements Insertable<SettingsData> {
     return (StringBuffer('SettingsData(')
           ..write('id: $id, ')
           ..write('taxRate: $taxRate, ')
+          ..write('isTaxInclusive: $isTaxInclusive, ')
           ..write('serviceRate: $serviceRate, ')
           ..write('deliveryFee: $deliveryFee, ')
           ..write('printerName: $printerName, ')
@@ -693,6 +734,7 @@ class SettingsData extends DataClass implements Insertable<SettingsData> {
   int get hashCode => Object.hash(
     id,
     taxRate,
+    isTaxInclusive,
     serviceRate,
     deliveryFee,
     printerName,
@@ -706,6 +748,7 @@ class SettingsData extends DataClass implements Insertable<SettingsData> {
       (other is SettingsData &&
           other.id == this.id &&
           other.taxRate == this.taxRate &&
+          other.isTaxInclusive == this.isTaxInclusive &&
           other.serviceRate == this.serviceRate &&
           other.deliveryFee == this.deliveryFee &&
           other.printerName == this.printerName &&
@@ -717,6 +760,7 @@ class SettingsData extends DataClass implements Insertable<SettingsData> {
 class SettingsCompanion extends UpdateCompanion<SettingsData> {
   final Value<int> id;
   final Value<double> taxRate;
+  final Value<bool> isTaxInclusive;
   final Value<double> serviceRate;
   final Value<int> deliveryFee;
   final Value<String> printerName;
@@ -726,6 +770,7 @@ class SettingsCompanion extends UpdateCompanion<SettingsData> {
   const SettingsCompanion({
     this.id = const Value.absent(),
     this.taxRate = const Value.absent(),
+    this.isTaxInclusive = const Value.absent(),
     this.serviceRate = const Value.absent(),
     this.deliveryFee = const Value.absent(),
     this.printerName = const Value.absent(),
@@ -736,6 +781,7 @@ class SettingsCompanion extends UpdateCompanion<SettingsData> {
   SettingsCompanion.insert({
     this.id = const Value.absent(),
     required double taxRate,
+    this.isTaxInclusive = const Value.absent(),
     required double serviceRate,
     required int deliveryFee,
     required String printerName,
@@ -752,6 +798,7 @@ class SettingsCompanion extends UpdateCompanion<SettingsData> {
   static Insertable<SettingsData> custom({
     Expression<int>? id,
     Expression<double>? taxRate,
+    Expression<bool>? isTaxInclusive,
     Expression<double>? serviceRate,
     Expression<int>? deliveryFee,
     Expression<String>? printerName,
@@ -762,6 +809,7 @@ class SettingsCompanion extends UpdateCompanion<SettingsData> {
     return RawValuesInsertable({
       if (id != null) 'id': id,
       if (taxRate != null) 'tax_rate': taxRate,
+      if (isTaxInclusive != null) 'is_tax_inclusive': isTaxInclusive,
       if (serviceRate != null) 'service_rate': serviceRate,
       if (deliveryFee != null) 'delivery_fee': deliveryFee,
       if (printerName != null) 'printer_name': printerName,
@@ -774,6 +822,7 @@ class SettingsCompanion extends UpdateCompanion<SettingsData> {
   SettingsCompanion copyWith({
     Value<int>? id,
     Value<double>? taxRate,
+    Value<bool>? isTaxInclusive,
     Value<double>? serviceRate,
     Value<int>? deliveryFee,
     Value<String>? printerName,
@@ -784,6 +833,7 @@ class SettingsCompanion extends UpdateCompanion<SettingsData> {
     return SettingsCompanion(
       id: id ?? this.id,
       taxRate: taxRate ?? this.taxRate,
+      isTaxInclusive: isTaxInclusive ?? this.isTaxInclusive,
       serviceRate: serviceRate ?? this.serviceRate,
       deliveryFee: deliveryFee ?? this.deliveryFee,
       printerName: printerName ?? this.printerName,
@@ -801,6 +851,9 @@ class SettingsCompanion extends UpdateCompanion<SettingsData> {
     }
     if (taxRate.present) {
       map['tax_rate'] = Variable<double>(taxRate.value);
+    }
+    if (isTaxInclusive.present) {
+      map['is_tax_inclusive'] = Variable<bool>(isTaxInclusive.value);
     }
     if (serviceRate.present) {
       map['service_rate'] = Variable<double>(serviceRate.value);
@@ -828,6 +881,7 @@ class SettingsCompanion extends UpdateCompanion<SettingsData> {
     return (StringBuffer('SettingsCompanion(')
           ..write('id: $id, ')
           ..write('taxRate: $taxRate, ')
+          ..write('isTaxInclusive: $isTaxInclusive, ')
           ..write('serviceRate: $serviceRate, ')
           ..write('deliveryFee: $deliveryFee, ')
           ..write('printerName: $printerName, ')
@@ -7996,6 +8050,7 @@ typedef $$SettingsTableCreateCompanionBuilder =
     SettingsCompanion Function({
       Value<int> id,
       required double taxRate,
+      Value<bool> isTaxInclusive,
       required double serviceRate,
       required int deliveryFee,
       required String printerName,
@@ -8007,6 +8062,7 @@ typedef $$SettingsTableUpdateCompanionBuilder =
     SettingsCompanion Function({
       Value<int> id,
       Value<double> taxRate,
+      Value<bool> isTaxInclusive,
       Value<double> serviceRate,
       Value<int> deliveryFee,
       Value<String> printerName,
@@ -8031,6 +8087,11 @@ class $$SettingsTableFilterComposer
 
   ColumnFilters<double> get taxRate => $composableBuilder(
     column: $table.taxRate,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isTaxInclusive => $composableBuilder(
+    column: $table.isTaxInclusive,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -8084,6 +8145,11 @@ class $$SettingsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<bool> get isTaxInclusive => $composableBuilder(
+    column: $table.isTaxInclusive,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<double> get serviceRate => $composableBuilder(
     column: $table.serviceRate,
     builder: (column) => ColumnOrderings(column),
@@ -8129,6 +8195,11 @@ class $$SettingsTableAnnotationComposer
 
   GeneratedColumn<double> get taxRate =>
       $composableBuilder(column: $table.taxRate, builder: (column) => column);
+
+  GeneratedColumn<bool> get isTaxInclusive => $composableBuilder(
+    column: $table.isTaxInclusive,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<double> get serviceRate => $composableBuilder(
     column: $table.serviceRate,
@@ -8190,6 +8261,7 @@ class $$SettingsTableTableManager
               ({
                 Value<int> id = const Value.absent(),
                 Value<double> taxRate = const Value.absent(),
+                Value<bool> isTaxInclusive = const Value.absent(),
                 Value<double> serviceRate = const Value.absent(),
                 Value<int> deliveryFee = const Value.absent(),
                 Value<String> printerName = const Value.absent(),
@@ -8199,6 +8271,7 @@ class $$SettingsTableTableManager
               }) => SettingsCompanion(
                 id: id,
                 taxRate: taxRate,
+                isTaxInclusive: isTaxInclusive,
                 serviceRate: serviceRate,
                 deliveryFee: deliveryFee,
                 printerName: printerName,
@@ -8210,6 +8283,7 @@ class $$SettingsTableTableManager
               ({
                 Value<int> id = const Value.absent(),
                 required double taxRate,
+                Value<bool> isTaxInclusive = const Value.absent(),
                 required double serviceRate,
                 required int deliveryFee,
                 required String printerName,
@@ -8219,6 +8293,7 @@ class $$SettingsTableTableManager
               }) => SettingsCompanion.insert(
                 id: id,
                 taxRate: taxRate,
+                isTaxInclusive: isTaxInclusive,
                 serviceRate: serviceRate,
                 deliveryFee: deliveryFee,
                 printerName: printerName,

@@ -56,6 +56,7 @@ class PosBloc extends Bloc<PosEvent, PosState> {
   PrintMode _printMode = PrintMode.ask;
   String _restaurantName = '';
   String _taxNumber = '';
+  bool _isTaxInclusive = true; // 🚀 [Sprint 2]
 
   PosBloc({
     required this.saveOrderUseCase,
@@ -100,6 +101,7 @@ class PosBloc extends Bloc<PosEvent, PosState> {
       _printMode = s.printMode;
       _restaurantName = s.restaurantName;
       _taxNumber = s.taxNumber;
+      _isTaxInclusive = s.isTaxInclusive; // 🚀 [Sprint 2]
     });
 
     // معالجة الأقسام
@@ -229,6 +231,7 @@ class PosBloc extends Bloc<PosEvent, PosState> {
       printMode: _printMode,
       restaurantName: _restaurantName,
       taxNumber: _taxNumber,
+      isTaxInclusive: _isTaxInclusive, // 🚀 [Sprint 2]
     ));
   }
 

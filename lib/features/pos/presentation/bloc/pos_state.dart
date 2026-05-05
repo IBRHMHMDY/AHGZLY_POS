@@ -40,7 +40,7 @@ class PosDataLoaded extends PosState {
   final PrintMode printMode;
   final String restaurantName;
   final String taxNumber;
-
+  final bool isTaxInclusive; // 🚀 [Sprint 2]
 
   const PosDataLoaded({
     required this.categories,
@@ -60,6 +60,7 @@ class PosDataLoaded extends PosState {
     this.printMode = PrintMode.ask,
     this.restaurantName = '',
     this.taxNumber = '',
+    this.isTaxInclusive = true,
   });
 
   // 🚀 [Fix]: الحسابات الديناميكية الحقيقية
@@ -68,11 +69,33 @@ class PosDataLoaded extends PosState {
   
   int get afterDiscount => (subTotal - discountAmount) > 0 ? (subTotal - discountAmount) : 0;
   int get serviceFeeAmount => orderType == OrderType.dineIn ? (afterDiscount * serviceRate).round() : 0;
-  int get taxAmount => ((afterDiscount + serviceFeeAmount) * taxRate).round();
+  
+  // 🚀 [Sprint 2]: حساب الضريبة بناءً على نوع التسعير (شامل / غير شامل)
+  int get taxAmount {
+    if (isTaxInclusive) {
+      // الضريبة مستقطعة من الإجمالي (Total) 
+      // Tax = Total - (Total / (1 + TaxRate))
+      // Total = afterDiscount + serviceFeeAmount + deliveryFeeAmount (without external tax)
+      final tempTotal = afterDiscount + serviceFeeAmount + deliveryFeeAmount;
+      return (tempTotal - (tempTotal / (1 + taxRate))).round();
+    } else {
+      // الضريبة مضافة فوق الإجمالي (Exclusive)
+      return ((afterDiscount + serviceFeeAmount) * taxRate).round();
+    }
+  }
+
   int get deliveryFeeAmount => orderType == OrderType.delivery ? deliveryFee : 0;
   
   // الإجمالي النهائي الدقيق الذي سيُدفع!
-  int get total => afterDiscount + serviceFeeAmount + taxAmount + deliveryFeeAmount;
+  int get total {
+    if (isTaxInclusive) {
+      // إذا كانت الأسعار شاملة الضريبة، الضريبة بالفعل داخل الأسعار ولن تُضاف.
+      return afterDiscount + serviceFeeAmount + deliveryFeeAmount;
+    } else {
+      // إذا كانت غير شاملة، تُضاف الضريبة كقيمة زائدة.
+      return afterDiscount + serviceFeeAmount + taxAmount + deliveryFeeAmount;
+    }
+  }
 
   PosDataLoaded copyWith({
     List<CategoryEntity>? categories,
@@ -92,6 +115,7 @@ class PosDataLoaded extends PosState {
     PrintMode? printMode,
     String? restaurantName,
     String? taxNumber,
+    bool? isTaxInclusive,
   }) {
     return PosDataLoaded(
       categories: categories ?? this.categories,
@@ -111,6 +135,7 @@ class PosDataLoaded extends PosState {
       printMode: printMode ?? this.printMode,
       restaurantName: restaurantName ?? this.restaurantName,
       taxNumber: taxNumber ?? this.taxNumber,
+      isTaxInclusive: isTaxInclusive ?? this.isTaxInclusive,
     );
   }
 
@@ -118,7 +143,7 @@ class PosDataLoaded extends PosState {
   List<Object?> get props => [
         categories, currentItems, selectedCategoryId, cartItems, orderType, 
         selectedTableId, selectedCustomerId, customers, tables, paymentMethods,
-        discountAmount, taxRate, serviceRate, deliveryFee, printMode, restaurantName, taxNumber
+        discountAmount, taxRate, serviceRate, deliveryFee, printMode, restaurantName, taxNumber, isTaxInclusive
       ];
 }
 

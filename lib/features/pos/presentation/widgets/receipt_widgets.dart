@@ -35,6 +35,7 @@ class CustomerReceiptWidget extends StatelessWidget {
   final String restaurantName;
   final String taxNumber;
   final String cashierName;
+  final bool isTaxInclusive; // 🚀 [Sprint 2]
   
   // 🚀 [Sprint 4]: متغيرات الطاولة والعميل
   final String? tableName; 
@@ -56,6 +57,7 @@ class CustomerReceiptWidget extends StatelessWidget {
     required this.restaurantName,
     required this.taxNumber,
     required this.cashierName,
+    this.isTaxInclusive = true,
     this.tableName,
     this.customerName = '',
     this.customerPhone = '',
@@ -117,8 +119,16 @@ class CustomerReceiptWidget extends StatelessWidget {
             const Text('----------------------------------------', style: TextStyle(color: Colors.black)),
             _buildRow('الإجمالي الفرعي:', subTotal),
             if (discountAmount > 0) _buildRow('قيمة الخصم:', -discountAmount),
-            _buildRow('الضريبة المضافة:', taxAmount),
             if (serviceFee > 0) _buildRow('رسوم الخدمة:', serviceFee),
+            
+            // 🚀 [Sprint 2]: توضيح الضريبة إذا كانت شاملة أو غير شاملة
+            if (taxAmount > 0) ...[
+              if (isTaxInclusive)
+                _buildRow('الضريبة (شاملة السعر):', taxAmount)
+              else
+                _buildRow('الضريبة المضافة:', taxAmount),
+            ],
+
             if (deliveryFee > 0) _buildRow('رسوم التوصيل:', deliveryFee),
             const Divider(color: Colors.black, thickness: 2),
             Row(
@@ -138,6 +148,9 @@ class CustomerReceiptWidget extends StatelessWidget {
               if (customerAddress.isNotEmpty) Text('العنوان: $customerAddress', style: const TextStyle(fontSize: 16, color: Colors.black)),
             ],
             const SizedBox(height: 20),
+            if (isTaxInclusive && taxAmount > 0)
+              const Text('** الأسعار أعلاه شاملة ضريبة القيمة المضافة **', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.black), textAlign: TextAlign.center),
+            const SizedBox(height: 10),
             const Text('شكراً لزيارتكم!', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black)),
           ],
         ),
@@ -225,12 +238,14 @@ class CustomerHistoryReceiptWidget extends StatelessWidget {
   final OrderHistoryEntity order;
   final String restaurantName;
   final String taxNumber;
+  final bool isTaxInclusive; // 🚀 [Sprint 2]
 
   const CustomerHistoryReceiptWidget({
     super.key,
     required this.order,
     required this.restaurantName,
     required this.taxNumber,
+    this.isTaxInclusive = true,
   });
 
   @override
@@ -321,6 +336,16 @@ class CustomerHistoryReceiptWidget extends StatelessWidget {
             ),
             _buildRow('الإجمالي الفرعي:', order.subTotal),
             if (order.discount > 0) _buildRow('قيمة الخصم:', -order.discount),
+            if (order.serviceFee > 0) _buildRow('رسوم الخدمة:', order.serviceFee),
+            
+            if (order.taxAmount > 0) ...[
+              if (isTaxInclusive)
+                _buildRow('الضريبة (شاملة السعر):', order.taxAmount)
+              else
+                _buildRow('الضريبة المضافة:', order.taxAmount),
+            ],
+
+            if (order.deliveryFee > 0) _buildRow('رسوم التوصيل:', order.deliveryFee),
             const Divider(color: Colors.black, thickness: 2),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -344,6 +369,9 @@ class CustomerHistoryReceiptWidget extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 20),
+            if (isTaxInclusive && order.taxAmount > 0)
+              const Text('** الأسعار أعلاه شاملة ضريبة القيمة المضافة **', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.black), textAlign: TextAlign.center),
+            const SizedBox(height: 10),
             Text(
               DateTime.parse(order.createdAt.toDisplayDate()).toString().substring(0, 16),
               style: const TextStyle(fontSize: 14, color: Colors.black),

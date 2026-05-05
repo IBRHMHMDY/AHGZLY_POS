@@ -6,6 +6,7 @@ abstract class ShiftLocalDataSource {
   Future<ShiftModel?> getActiveShift();
   Future<ShiftModel> openShift({required int startingCash, required int cashierId});
   Future<ShiftModel> closeShift({required int shiftId, required int actualCash});
+  Future<List<ShiftModel>> getShiftsHistory(); // 🚀 [Sprint 2]
 }
 
 class ShiftLocalDataSourceImpl implements ShiftLocalDataSource {
@@ -62,5 +63,13 @@ class ShiftLocalDataSourceImpl implements ShiftLocalDataSource {
 
     final updatedShift = await (appDatabase.select(appDatabase.shifts)..where((t) => t.id.equals(shiftId))).getSingle();
     return ShiftModel.fromDrift(updatedShift);
+  }
+
+  @override
+  Future<List<ShiftModel>> getShiftsHistory() async {
+    final query = appDatabase.select(appDatabase.shifts)
+      ..orderBy([(t) => OrderingTerm(expression: t.id, mode: OrderingMode.desc)]);
+    final shifts = await query.get();
+    return shifts.map((s) => ShiftModel.fromDrift(s)).toList();
   }
 }

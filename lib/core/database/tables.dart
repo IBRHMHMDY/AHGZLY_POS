@@ -24,6 +24,7 @@ class License extends Table {
 class Settings extends Table {
   IntColumn get id => integer().autoIncrement()();
   RealColumn get taxRate => real()();
+  BoolColumn get isTaxInclusive => boolean().withDefault(const Constant(true))(); // 🚀 [Sprint 2]
   RealColumn get serviceRate => real()();
   IntColumn get deliveryFee => integer()();
   TextColumn get printerName => text()();

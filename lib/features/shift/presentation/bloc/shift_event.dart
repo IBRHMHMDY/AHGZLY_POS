@@ -16,3 +16,5 @@ class CloseShiftSubmittedEvent extends ShiftEvent {
   final int actualCash;
   CloseShiftSubmittedEvent({required this.shiftId, required this.actualCash});
 }
+
+class LoadShiftsHistoryEvent extends ShiftEvent {} // 🚀 [Sprint 2]

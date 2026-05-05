@@ -2,6 +2,7 @@ import 'package:ahgzly_pos/core/usecases/usecase.dart'; // ⬅️ إضافة ه�
 import 'package:ahgzly_pos/features/shift/domain/usecases/check_active_shift_usecase.dart';
 import 'package:ahgzly_pos/features/shift/domain/usecases/close_shift_usecase.dart';
 import 'package:ahgzly_pos/features/shift/domain/usecases/open_shift_usecase.dart';
+import 'package:ahgzly_pos/features/shift/domain/usecases/get_shifts_history_usecase.dart'; // 🚀 [Sprint 2]
 import 'package:ahgzly_pos/features/shift/presentation/bloc/shift_event.dart';
 import 'package:ahgzly_pos/features/shift/presentation/bloc/shift_state.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -10,11 +11,13 @@ class ShiftBloc extends Bloc<ShiftEvent, ShiftState> {
   final CheckActiveShiftUseCase checkActiveShiftUseCase;
   final OpenShiftUseCase openShiftUseCase;
   final CloseShiftUseCase closeShiftUseCase;
+  final GetShiftsHistoryUseCase getShiftsHistoryUseCase; // 🚀 [Sprint 2]
 
   ShiftBloc({
     required this.checkActiveShiftUseCase,
     required this.openShiftUseCase,
     required this.closeShiftUseCase,
+    required this.getShiftsHistoryUseCase, // 🚀 [Sprint 2]
   }) : super(ShiftInitial()) {
     
     on<CheckActiveShiftEvent>((event, emit) async {
@@ -59,6 +62,16 @@ class ShiftBloc extends Bloc<ShiftEvent, ShiftState> {
       result.fold(
         (failure) => emit(ShiftError(message: failure.message)),
         (closedShift) => emit(ShiftClosedSuccess(closedShift: closedShift)),
+      );
+    });
+
+    on<LoadShiftsHistoryEvent>((event, emit) async {
+      emit(ShiftLoading());
+      final result = await getShiftsHistoryUseCase(NoParams());
+      
+      result.fold(
+        (failure) => emit(ShiftError(message: failure.message)),
+        (shifts) => emit(ShiftsHistoryLoaded(shifts: shifts)),
       );
     });
   }

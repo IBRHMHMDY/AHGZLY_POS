@@ -28,3 +28,8 @@ class ShiftError extends ShiftState {
   final String message;
   ShiftError({required this.message});
 }
+
+class ShiftsHistoryLoaded extends ShiftState {
+  final List<ShiftEntity> shifts;
+  ShiftsHistoryLoaded({required this.shifts});
+}

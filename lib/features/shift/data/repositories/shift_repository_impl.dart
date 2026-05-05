@@ -43,4 +43,14 @@ class ShiftRepositoryImpl implements ShiftRepository {
       return const Left(DatabaseFailure('فشل في إغلاق الوردية. يرجى مراجعة الحسابات وتكرار المحاولة.'));
     }
   }
+
+  @override
+  Future<Either<Failure, List<ShiftEntity>>> getShiftsHistory() async {
+    try {
+      final shifts = await localDataSource.getShiftsHistory();
+      return Right(shifts);
+    } catch (e) {
+      return const Left(DatabaseFailure('فشل في جلب سجل الورديات.'));
+    }
+  }
 }

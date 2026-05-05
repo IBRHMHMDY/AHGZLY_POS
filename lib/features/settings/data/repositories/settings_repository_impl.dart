@@ -28,6 +28,7 @@ class SettingsRepositoryImpl implements SettingsRepository {
       // Mapping Entity to Model before sending to Data Source
       final model = AppSettingsModel(
         taxRate: settings.taxRate,
+        isTaxInclusive: settings.isTaxInclusive,
         serviceRate: settings.serviceRate,
         deliveryFee: settings.deliveryFee,
         printerName: settings.printerName,

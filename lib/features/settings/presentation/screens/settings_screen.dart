@@ -12,6 +12,8 @@ import 'package:ahgzly_pos/features/settings/presentation/bloc/settings_bloc.dar
 import 'package:ahgzly_pos/features/settings/presentation/bloc/settings_event.dart';
 import 'package:ahgzly_pos/features/settings/presentation/bloc/settings_state.dart';
 import 'package:flutter_pos_printer_platform_image_3/flutter_pos_printer_platform_image_3.dart';
+import 'package:go_router/go_router.dart'; // 🚀 [Sprint 2]
+import 'package:ahgzly_pos/core/routing/app_router.dart'; // 🚀 [Sprint 2]
 import 'package:ahgzly_pos/core/common/widgets/custom_shimmer.dart'; // 🪄 استيراد مكون الشيمر
 
 class SettingsScreen extends StatefulWidget {
@@ -29,6 +31,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   bool _isLoadingPrinters = false;
   String? _selectedPrinterName;
   PrintMode _selectedPrintMode = PrintMode.ask;
+  bool _isTaxInclusive = true; // 🚀 [Sprint 2]
   bool _isInit = false;
 
   late TextEditingController _taxController;
@@ -87,6 +90,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     if (_formKey.currentState!.validate()) {
       final newSettings = AppSettingsEntity(
         taxRate: double.parse(_taxController.text) / 100,
+        isTaxInclusive: _isTaxInclusive, // 🚀 [Sprint 2]
         serviceRate: double.parse(_serviceController.text) / 100,
         deliveryFee: MoneyFormatter.toCents(double.parse(_deliveryController.text.trim())),
         printerName: _selectedPrinterName ?? '',
@@ -198,6 +202,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               _restaurantNameController.text = s.restaurantName;
               _taxNumberController.text = s.taxNumber;
               _selectedPrintMode = s.printMode;
+              _isTaxInclusive = s.isTaxInclusive; // 🚀 [Sprint 2]
               _isInit = true;
             }
 
@@ -232,6 +237,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
                               const SizedBox(width: 16),
                               Expanded(child: _CustomSettingsField(controller: _serviceController, label: 'نسبة خدمة الصالة (%)', hint: '12', icon: Icons.room_service, isNumber: true)),
                             ],
+                          ),
+                          const SizedBox(height: 16),
+                          Container(
+                            decoration: BoxDecoration(
+                              color: Colors.teal.shade50.withOpacity(0.5),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: Colors.teal.shade200),
+                            ),
+                            child: SwitchListTile(
+                              title: const Text('الأسعار بالمنيو شاملة ضريبة القيمة المضافة', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                              subtitle: const Text('إذا تم التفعيل، سيتم استقطاع الضريبة من إجمالي الفاتورة بدلاً من إضافتها كرسوم إضافية.', style: TextStyle(fontSize: 13)),
+                              value: _isTaxInclusive,
+                              activeColor: Colors.teal,
+                              onChanged: (val) => setState(() => _isTaxInclusive = val),
+                            ),
                           ),
                           const SizedBox(height: 16),
                           _CustomSettingsField(controller: _deliveryController, label: 'رسوم التوصيل الثابتة (ج.م)', hint: '20', icon: Icons.delivery_dining, isNumber: true),
@@ -289,9 +309,25 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           ),
                         ],
                       ),
+                      // 🪄 6. سجلات النظام (للمدير)
+                      _SettingsSectionCard(
+                        title: 'سجلات النظام (للمدير)',
+                        icon: Icons.history,
+                        children: [
+                          SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton.icon(
+                              style: ElevatedButton.styleFrom(backgroundColor: Colors.teal.shade800, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 20), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
+                              icon: const Icon(Icons.receipt_long),
+                              label: const Text('استعراض سجل الورديات السابقة', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                              onPressed: () => context.push(AppRoutes.shiftHistory),
+                            ),
+                          ),
+                        ],
+                      ),
                       const SizedBox(height: 32),
 
-                      // 🪄 6. التراخيص
+                      // 🪄 7. التراخيص
                       _SettingsSectionCard(
                         title: 'إدارة التراخيص (خطر)',
                         icon: Icons.key_off,

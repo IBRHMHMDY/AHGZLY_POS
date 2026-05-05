@@ -29,7 +29,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase(super.e);
 
   @override
-  int get schemaVersion => 18; 
+  int get schemaVersion => 19; // 🚀 [Sprint 2] Incremented for VAT settings 
 
   @override
   MigrationStrategy get migration {
@@ -48,6 +48,7 @@ class AppDatabase extends _$AppDatabase {
         await into(settings).insert(
           SettingsCompanion.insert(
             taxRate: 0.14,
+            isTaxInclusive: const Value(true), // 🚀 الافتراضي في مصر هو شامل الضريبة
             serviceRate: 0.12,
             deliveryFee: 2000,
             printerName: 'EPSON Printer',
@@ -122,6 +123,10 @@ class AppDatabase extends _$AppDatabase {
           await m.addColumn(orderItems, orderItems.variantId);
           // إنشاء جدول تفاصيل إضافات الطلب
           await m.createTable(orderItemAddons);
+        }
+        if (from < 19) {
+          // 🚀 [Sprint 2]: إضافة خيار "شامل الضريبة" للإعدادات
+          await m.addColumn(settings, settings.isTaxInclusive);
         }
       },
       beforeOpen: (details) async {

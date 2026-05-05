@@ -9,6 +9,9 @@ class OrderHistoryEntity extends Equatable {
   final int subTotal;
   final int discount;
   final int total;
+  final int taxAmount;
+  final int serviceFee;
+  final int deliveryFee;
   final int? paymentMethodId;
   final String paymentMethodName;
   final DateTime createdAt;
@@ -21,6 +24,9 @@ class OrderHistoryEntity extends Equatable {
     required this.subTotal,
     required this.discount,
     required this.total,
+    required this.taxAmount,
+    required this.serviceFee,
+    required this.deliveryFee,
     required this.paymentMethodId,
     required this.paymentMethodName,
     required this.createdAt,
@@ -30,7 +36,7 @@ class OrderHistoryEntity extends Equatable {
 
   @override
   List<Object?> get props => [
-    id, orderType, subTotal, discount, total, 
+    id, orderType, subTotal, discount, total, taxAmount, serviceFee, deliveryFee,
     paymentMethodId, paymentMethodName, createdAt, status, items
   ];
 }
