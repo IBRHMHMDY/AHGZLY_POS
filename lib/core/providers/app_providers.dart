@@ -1,3 +1,6 @@
+import 'package:ahgzly_pos/features/inventory/presentation/bloc/inventory_bloc.dart';
+import 'package:ahgzly_pos/features/purchases/presentation/bloc/purchases_bloc.dart';
+import 'package:ahgzly_pos/features/suppliers/presentation/bloc/suppliers_bloc.dart';
 import 'package:ahgzly_pos/features/users/presentation/bloc/users_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -31,6 +34,9 @@ class AppProviders extends StatelessWidget {
         BlocProvider(create: (_) => di.sl<OrdersBloc>()),
         BlocProvider(create: (_) => di.sl<ExpensesBloc>()),
         BlocProvider(create: (_) => di.sl<UsersBloc>()),
+        BlocProvider(create: (_) => di.sl<InventoryBloc>()),
+        BlocProvider(create: (_) => di.sl<SuppliersBloc>()),
+        BlocProvider(create: (_) => di.sl<PurchasesBloc>()),
       ],
       child: child,
     );

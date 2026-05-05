@@ -98,7 +98,7 @@ class _ShiftHistoryScreenState extends State<ShiftHistoryScreen> {
                       child: SingleChildScrollView(
                         controller: _scrollController,
                         child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             DataTable(
                               headingRowColor: MaterialStateProperty.all(Colors.teal.shade50),

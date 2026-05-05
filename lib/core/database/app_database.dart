@@ -20,7 +20,10 @@ part 'app_database.g.dart';
   Customers, Zones, RestaurantTables, PaymentMethods,
   
   // 🚀 الجداول المضافة في Sprint 2 (تعريفها يحل مشكلة Undefined name)
-  ItemVariants, Addons, InventoryItems, Recipes, OrderItemAddons
+  ItemVariants, Addons, InventoryItems, Recipes, OrderItemAddons,
+
+  // 🚀 الجداول المضافة في Sprint 3 (Inventory & Suppliers)
+  Suppliers, PurchaseInvoices, PurchaseInvoiceItems, InventoryTransactions
 ])
 
 class AppDatabase extends _$AppDatabase {
@@ -29,7 +32,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase(super.e);
 
   @override
-  int get schemaVersion => 19; // 🚀 [Sprint 2] Incremented for VAT settings 
+  int get schemaVersion => 20; // 🚀 [Sprint 3] Incremented for Inventory & Suppliers Module
 
   @override
   MigrationStrategy get migration {
@@ -127,6 +130,14 @@ class AppDatabase extends _$AppDatabase {
         if (from < 19) {
           // 🚀 [Sprint 2]: إضافة خيار "شامل الضريبة" للإعدادات
           await m.addColumn(settings, settings.isTaxInclusive);
+        }
+        if (from < 20) {
+          // 🚀 [Sprint 3]: Inventory & Suppliers Module
+          await m.createTable(suppliers);
+          await m.createTable(purchaseInvoices);
+          await m.createTable(purchaseInvoiceItems);
+          await m.createTable(inventoryTransactions);
+          await m.addColumn(recipes, recipes.addonId); // Added addonId to Recipes
         }
       },
       beforeOpen: (details) async {

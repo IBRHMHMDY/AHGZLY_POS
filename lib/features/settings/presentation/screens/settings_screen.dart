@@ -323,6 +323,36 @@ class _SettingsScreenState extends State<SettingsScreen> {
                               onPressed: () => context.push(AppRoutes.shiftHistory),
                             ),
                           ),
+                          const SizedBox(height: 16),
+                          SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton.icon(
+                              style: ElevatedButton.styleFrom(backgroundColor: Colors.blue.shade800, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 20), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
+                              icon: const Icon(Icons.warehouse),
+                              label: const Text('إدارة المخزون والمقادير', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                              onPressed: () => context.push(AppRoutes.inventory),
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton.icon(
+                              style: ElevatedButton.styleFrom(backgroundColor: Colors.indigo.shade800, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 20), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
+                              icon: const Icon(Icons.local_shipping),
+                              label: const Text('إدارة الموردين', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                              onPressed: () => context.push(AppRoutes.suppliers),
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton.icon(
+                              style: ElevatedButton.styleFrom(backgroundColor: Colors.brown.shade800, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 20), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
+                              icon: const Icon(Icons.shopping_cart),
+                              label: const Text('إدارة فواتير المشتريات والتوريد', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                              onPressed: () => context.push(AppRoutes.purchases),
+                            ),
+                          ),
                         ],
                       ),
                       const SizedBox(height: 32),

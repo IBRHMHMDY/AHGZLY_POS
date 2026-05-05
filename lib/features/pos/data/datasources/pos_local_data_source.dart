@@ -82,6 +82,65 @@ class PosLocalDataSourceImpl implements PosLocalDataSource {
         }
       }
 
+      // 🚀 [Sprint 3] الخصم من المخزون (Inventory Deduction)
+      for (var item in order.items) {
+        final itemModel = item as OrderItemModel;
+        
+        // 1. جلب وصفة الصنف الأساسي أو المقاس
+        List<RecipeData> recipes = [];
+        if (itemModel.selectedVariant != null) {
+          recipes = await (appDatabase.select(appDatabase.recipes)..where((t) => t.variantId.equals(itemModel.selectedVariant!.id!))).get();
+        } else {
+          recipes = await (appDatabase.select(appDatabase.recipes)..where((t) => t.itemId.equals(itemModel.itemId) & t.variantId.isNull() & t.addonId.isNull())).get();
+        }
+
+        for (var recipe in recipes) {
+          final deductedQty = recipe.quantityNeeded * itemModel.quantity;
+          
+          final invItem = await (appDatabase.select(appDatabase.inventoryItems)..where((t) => t.id.equals(recipe.inventoryItemId))).getSingle();
+          await (appDatabase.update(appDatabase.inventoryItems)..where((t) => t.id.equals(invItem.id))).write(
+            InventoryItemsCompanion(stockQuantity: Value(invItem.stockQuantity - deductedQty))
+          );
+          
+          await appDatabase.into(appDatabase.inventoryTransactions).insert(
+            InventoryTransactionsCompanion.insert(
+              inventoryItemId: invItem.id,
+              transactionType: 'order_deduction',
+              quantity: -deductedQty,
+              referenceId: Value(orderId),
+              notes: const Value('استهلاك مبيعات صنف'),
+              createdAt: order.createdAt,
+            )
+          );
+        }
+
+        // 2. خصم الخامات للإضافات
+        if (itemModel.selectedAddons.isNotEmpty) {
+          for (var addon in itemModel.selectedAddons) {
+            final addonRecipes = await (appDatabase.select(appDatabase.recipes)..where((t) => t.addonId.equals(addon.id!))).get();
+            for (var recipe in addonRecipes) {
+              final deductedQty = recipe.quantityNeeded * itemModel.quantity; 
+              
+              final invItem = await (appDatabase.select(appDatabase.inventoryItems)..where((t) => t.id.equals(recipe.inventoryItemId))).getSingle();
+              await (appDatabase.update(appDatabase.inventoryItems)..where((t) => t.id.equals(invItem.id))).write(
+                InventoryItemsCompanion(stockQuantity: Value(invItem.stockQuantity - deductedQty))
+              );
+              
+              await appDatabase.into(appDatabase.inventoryTransactions).insert(
+                InventoryTransactionsCompanion.insert(
+                  inventoryItemId: invItem.id,
+                  transactionType: 'order_deduction',
+                  quantity: -deductedQty,
+                  referenceId: Value(orderId),
+                  notes: const Value('استهلاك مبيعات إضافة'),
+                  createdAt: order.createdAt,
+                )
+              );
+            }
+          }
+        }
+      }
+
       // 3. تحديث إحصائيات الوردية
       final shift = await (appDatabase.select(appDatabase.shifts)
             ..where((t) => t.id.equals(order.shiftId!) & t.status.equals('active')))

@@ -229,6 +229,57 @@ class Recipes extends Table {
   IntColumn get itemId => integer().nullable().references(Items, #id)();
   IntColumn get variantId =>
       integer().nullable().references(ItemVariants, #id)();
+  IntColumn get addonId => integer().nullable().references(Addons, #id)(); // 🚀 [Sprint 3]
   IntColumn get inventoryItemId => integer().references(InventoryItems, #id)();
   RealColumn get quantityNeeded => real()();
+}
+
+// ==========================================
+// 🚀 Sprint 3: Inventory & Suppliers Module
+// ==========================================
+
+/// Suppliers Table
+@DataClassName('SupplierData')
+class Suppliers extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  TextColumn get name => text().withLength(min: 2, max: 100)();
+  TextColumn get phone => text().nullable().withLength(min: 10, max: 20)();
+  TextColumn get address => text().nullable()();
+  TextColumn get notes => text().nullable()();
+  TextColumn get createdAt => text().map(const DateTimeConverter())();
+}
+
+/// PurchaseInvoices Table
+@DataClassName('PurchaseInvoiceData')
+class PurchaseInvoices extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  IntColumn get supplierId => integer().nullable().references(Suppliers, #id)();
+  IntColumn get totalAmount => integer()();
+  IntColumn get paidAmount => integer().withDefault(const Constant(0))();
+  TextColumn get invoiceDate => text().map(const DateTimeConverter())();
+  TextColumn get notes => text().nullable()();
+  TextColumn get createdAt => text().map(const DateTimeConverter())();
+}
+
+/// PurchaseInvoiceItems Table
+@DataClassName('PurchaseInvoiceItemData')
+class PurchaseInvoiceItems extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  IntColumn get invoiceId => integer().references(PurchaseInvoices, #id)();
+  IntColumn get inventoryItemId => integer().references(InventoryItems, #id)();
+  RealColumn get quantity => real()();
+  IntColumn get unitCost => integer()(); // Cost per unit
+  IntColumn get totalCost => integer()();
+}
+
+/// InventoryTransactions Table
+@DataClassName('InventoryTransactionData')
+class InventoryTransactions extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  IntColumn get inventoryItemId => integer().references(InventoryItems, #id)();
+  TextColumn get transactionType => text()(); // 'in', 'out', 'waste', 'sale'
+  RealColumn get quantity => real()();
+  IntColumn get referenceId => integer().nullable()(); // OrderId or PurchaseInvoiceId
+  TextColumn get notes => text().nullable()();
+  TextColumn get createdAt => text().map(const DateTimeConverter())();
 }

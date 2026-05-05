@@ -62,8 +62,8 @@ class _ItemDialogState extends State<ItemDialog> {
 
   void _onSubmit() {
     if (_formKey.currentState!.validate()) {
-      final priceDouble = double.parse(_priceController.text);
-      final costPriceDouble = double.parse(_costPriceController.text);
+      final priceDouble = double.tryParse(_priceController.text) ?? 0;
+      final costPriceDouble = double.tryParse(_costPriceController.text) ?? 0;
 
       final priceCents = priceDouble.toCents();
       final costPriceCents = costPriceDouble.toCents();
@@ -127,7 +127,7 @@ class _ItemDialogState extends State<ItemDialog> {
               TextFormField(
                 controller: vCostCtrl,
                 keyboardType: TextInputType.number,
-                decoration: _inputDecoration(label: 'سعر التكلفة (ج.م)', icon: Icons.inventory_2),
+                decoration: _inputDecoration(label: 'التكلفة اليدوية (اختياري)', icon: Icons.inventory_2),
               ),
             ],
           ),
@@ -193,11 +193,17 @@ class _ItemDialogState extends State<ItemDialog> {
                   Row(
                     children: [
                       Expanded(
-                        child: TextFormField(
-                          controller: _costPriceController,
-                          keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                          decoration: _inputDecoration(label: 'التكلفة الأساسية', icon: Icons.inventory_2_outlined),
-                          validator: (v) => (v == null || v.isEmpty) ? 'مطلوب' : null,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            TextFormField(
+                              controller: _costPriceController,
+                              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                              decoration: _inputDecoration(label: 'التكلفة اليدوية (اختياري)', icon: Icons.inventory_2_outlined),
+                            ),
+                            const SizedBox(height: 4),
+                            Text('إذا تم ربط الصنف بمقادير، سيتم تجاهل هذا الرقم وحسابه تلقائياً.', style: TextStyle(fontSize: 10, color: Colors.grey.shade600)),
+                          ],
                         ),
                       ),
                       const SizedBox(width: 12),

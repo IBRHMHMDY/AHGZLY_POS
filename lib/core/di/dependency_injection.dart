@@ -1,4 +1,7 @@
 import 'package:ahgzly_pos/core/di/modular/init_auth.dart';
+import 'package:ahgzly_pos/core/di/modular/init_purchases.dart';
+import 'package:ahgzly_pos/core/di/modular/init_suppliers.dart';
+import 'package:ahgzly_pos/core/di/modular/init_inventory.dart';
 import 'package:ahgzly_pos/core/di/modular/init_core.dart';
 import 'package:ahgzly_pos/core/di/modular/init_expenses.dart';
 import 'package:ahgzly_pos/core/di/modular/init_license.dart';
@@ -23,6 +26,9 @@ Future<void> init() async {
   initOrders();
   initExpenses();
   initUsers();
+  initInventory();
+  initSuppliers();
+  initPurchases();
 }
 
 

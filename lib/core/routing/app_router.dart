@@ -16,6 +16,10 @@ import 'package:ahgzly_pos/features/orders/presentation/screens/orders_screen.da
 import 'package:ahgzly_pos/features/expenses/presentation/screens/expenses_screen.dart';
 import 'package:ahgzly_pos/features/users/presentation/screens/users_screen.dart';
 import 'package:ahgzly_pos/features/settings/presentation/screens/settings_screen.dart';
+import 'package:ahgzly_pos/features/inventory/presentation/screens/inventory_screen.dart';
+import 'package:ahgzly_pos/features/suppliers/presentation/screens/suppliers_screen.dart';
+import 'package:ahgzly_pos/features/purchases/presentation/screens/purchases_screen.dart';
+import 'package:ahgzly_pos/features/purchases/presentation/screens/add_purchase_screen.dart';
 
 /// 🛣️ مسارات التطبيق (Route Constants)
 abstract class AppRoutes {
@@ -32,6 +36,10 @@ abstract class AppRoutes {
   static const String expenses = '/expenses';
   static const String users = '/users';
   static const String settings = '/settings';
+  static const String inventory = '/inventory';
+  static const String suppliers = '/suppliers';
+  static const String purchases = '/purchases';
+  static const String addPurchase = '/addPurchase';
 }
 
 /// 🗺️ مدير التوجيه المركزي (Router Configuration)
@@ -108,6 +116,22 @@ class AppRouter {
         GoRoute(
           path: AppRoutes.settings,
           builder: (context, state) => const SettingsScreen(),
+        ),
+        GoRoute(
+          path: AppRoutes.inventory,
+          builder: (context, state) => const InventoryScreen(),
+        ),
+        GoRoute(
+          path: AppRoutes.suppliers,
+          builder: (context, state) => const SuppliersScreen(),
+        ),
+        GoRoute(
+          path: AppRoutes.purchases,
+          builder: (context, state) => const PurchasesScreen(),
+        ),
+        GoRoute(
+          path: AppRoutes.addPurchase,
+          builder: (context, state) => const AddPurchaseScreen(),
         ),
       ],
     );
