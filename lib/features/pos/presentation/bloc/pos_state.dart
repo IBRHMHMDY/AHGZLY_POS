@@ -3,6 +3,7 @@ import 'package:ahgzly_pos/core/common/entities/restaurant_table_entity.dart';
 import 'package:ahgzly_pos/core/common/entities/payment_method_entity.dart';
 import 'package:ahgzly_pos/core/extensions/order_type.dart';
 import 'package:ahgzly_pos/core/extensions/print_mode.dart';
+import 'package:ahgzly_pos/core/utils/order_pricing_calculator.dart';
 import 'package:ahgzly_pos/features/menu/domain/entities/category_entity.dart';
 import 'package:ahgzly_pos/features/menu/domain/entities/item_entity.dart';
 import 'package:ahgzly_pos/features/pos/domain/entities/order_item_entity.dart';
@@ -15,20 +16,22 @@ abstract class PosState extends Equatable {
 }
 
 class PosInitial extends PosState {}
+
 class PosLoading extends PosState {}
 
 class PosDataLoaded extends PosState {
   final List<CategoryEntity> categories;
   final List<ItemEntity> currentItems;
   final int? selectedCategoryId;
-  
+
   final List<OrderItemEntity> cartItems;
   final OrderType orderType;
   final int? selectedTableId;
   final int? selectedCustomerId;
   final List<CustomerEntity> customers;
   final List<RestaurantTableEntity> tables;
-  final List<PaymentMethodEntity> paymentMethods; // 🚀 [Fix]: طرق الدفع من قاعدة البيانات
+  final List<PaymentMethodEntity>
+  paymentMethods; // 🚀 [Fix]: طرق الدفع من قاعدة البيانات
 
   // 🚀 [Fix]: المتغيرات المالية للحساب الدقيق في الواجهة
   final int discountAmount;
@@ -60,29 +63,23 @@ class PosDataLoaded extends PosState {
     this.taxNumber = '',
   });
 
-  // 🚀 [Fix]: الحسابات الديناميكية الحقيقية
-  // استخراج الإجمالي الفرعي (بناءً على سعر البيع)
-  int get subTotal => cartItems.fold(0, (sum, item) => sum + item.totalPrice);
-  
-  // 🚀 [تمت إعادتها]: استخراج إجمالي التكلفة (بناءً على سعر الشراء/التكلفة لحساب الأرباح)
-  int get totalCost => cartItems.fold(0, (sum, item) => sum + item.totalCost);
-  
-  // الإجمالي بعد الخصم (وهو الأساس الذي سنحسب عليه كل شيء)
-  int get afterDiscount => (subTotal - discountAmount) > 0 ? (subTotal - discountAmount) : 0;
-  
-  // حساب رسوم الخدمة تضرب في الإجمالي بعد الخصم
-  int get serviceFeeAmount => orderType == OrderType.dineIn ? (afterDiscount * serviceRate).round() : 0;
-  
-  // التوصيل (إن وجد)
-  int get deliveryFeeAmount => orderType == OrderType.delivery ? deliveryFee : 0;
+  OrderPricingCalculator get pricingCalculator => OrderPricingCalculator(
+    cartItems: cartItems,
+    orderType: orderType,
+    discountAmount: discountAmount,
+    taxRate: taxRate,
+    serviceRate: serviceRate,
+    deliveryFee: deliveryFee,
+  );
 
-  // الضريبة تُحسب الآن مباشرة على (الإجمالي بعد الخصم) كما في الصور (Exclusive)
-  int get taxAmount => (afterDiscount * taxRate).round(); 
-
-  // الإجمالي النهائي المماثل للصور
-  int get total {
-    return afterDiscount + serviceFeeAmount + taxAmount + deliveryFeeAmount;
-  }
+  // 🔄 تكييف الـ Getters القديمة لتعمل كـ تفويض (Delegation) تضمن استقرار الـ UI تماماً:
+  int get subTotal => pricingCalculator.subTotal;
+  int get totalCost => pricingCalculator.totalCost;
+  int get afterDiscount => pricingCalculator.afterDiscount;
+  int get serviceFeeAmount => pricingCalculator.serviceFeeAmount;
+  int get deliveryFeeAmount => pricingCalculator.deliveryFeeAmount;
+  int get taxAmount => pricingCalculator.taxAmount;
+  int get total => pricingCalculator.total;
 
   PosDataLoaded copyWith({
     List<CategoryEntity>? categories,
@@ -127,10 +124,24 @@ class PosDataLoaded extends PosState {
 
   @override
   List<Object?> get props => [
-        categories, currentItems, selectedCategoryId, cartItems, orderType, 
-        selectedTableId, selectedCustomerId, customers, tables, paymentMethods,
-        discountAmount, taxRate, serviceRate, deliveryFee, printMode, restaurantName, taxNumber,
-      ];
+    categories,
+    currentItems,
+    selectedCategoryId,
+    cartItems,
+    orderType,
+    selectedTableId,
+    selectedCustomerId,
+    customers,
+    tables,
+    paymentMethods,
+    discountAmount,
+    taxRate,
+    serviceRate,
+    deliveryFee,
+    printMode,
+    restaurantName,
+    taxNumber,
+  ];
 }
 
 class PosCheckoutSuccess extends PosState {

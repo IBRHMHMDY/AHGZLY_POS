@@ -47,9 +47,16 @@ class InventoryLocalDataSourceImpl implements InventoryLocalDataSource {
   @override
   Future<InventoryItemModel> updateInventoryItem(InventoryItemsCompanion item) async {
     try {
-      await appDatabase.update(appDatabase.inventoryItems).replace(item);
-      final data = await (appDatabase.select(appDatabase.inventoryItems)..where((t) => t.id.equals(item.id.value))).getSingle();
-      return InventoryItemModel.fromDrift(data);
+      // 🚀 [Sprint 2 FIX]: استخدام Transaction لضمان إعادة حساب التكلفة عند تعديل الخامة
+      return await appDatabase.transaction(() async {
+        await appDatabase.update(appDatabase.inventoryItems).replace(item);
+        final data = await (appDatabase.select(appDatabase.inventoryItems)..where((t) => t.id.equals(item.id.value))).getSingle();
+        
+        final costingHelper = CostingHelper(appDatabase);
+        await costingHelper.recalculateCostsForInventoryItem(data.id);
+        
+        return InventoryItemModel.fromDrift(data);
+      });
     } catch (e) {
       throw CacheException('فشل في تحديث الخامة: $e');
     }
@@ -70,11 +77,7 @@ class InventoryLocalDataSourceImpl implements InventoryLocalDataSource {
       final items = await appDatabase.select(appDatabase.items).get();
       final variants = await appDatabase.select(appDatabase.itemVariants).get();
       final addons = await appDatabase.select(appDatabase.addons).get();
-      return {
-        'items': items,
-        'variants': variants,
-        'addons': addons,
-      };
+      return {'items': items, 'variants': variants, 'addons': addons};
     } catch (e) {
       throw CacheException('فشل في جلب قائمة المنيو: $e');
     }
@@ -121,16 +124,18 @@ class InventoryLocalDataSourceImpl implements InventoryLocalDataSource {
   @override
   Future<RecipeModel> addRecipe(RecipesCompanion recipe) async {
     try {
-      final id = await appDatabase.into(appDatabase.recipes).insert(recipe);
-      final data = await (appDatabase.select(appDatabase.recipes)..where((t) => t.id.equals(id))).getSingle();
+      // 🚀 [Sprint 2 FIX]: دمج إضافة الوصفة وتحديث التكلفة في Transaction واحد
+      return await appDatabase.transaction(() async {
+        final id = await appDatabase.into(appDatabase.recipes).insert(recipe);
+        final data = await (appDatabase.select(appDatabase.recipes)..where((t) => t.id.equals(id))).getSingle();
 
-      // [Costing] Recalculate cost for the target menu item
-      final costingHelper = CostingHelper(appDatabase);
-      if (data.itemId != null) await costingHelper.recalculateCostForItem(data.itemId!);
-      if (data.variantId != null) await costingHelper.recalculateCostForVariant(data.variantId!);
-      if (data.addonId != null) await costingHelper.recalculateCostForAddon(data.addonId!);
+        final costingHelper = CostingHelper(appDatabase);
+        if (data.itemId != null) await costingHelper.recalculateCostForItem(data.itemId!);
+        if (data.variantId != null) await costingHelper.recalculateCostForVariant(data.variantId!);
+        if (data.addonId != null) await costingHelper.recalculateCostForAddon(data.addonId!);
 
-      return RecipeModel.fromDrift(data);
+        return RecipeModel.fromDrift(data);
+      });
     } catch (e) {
       throw CacheException('فشل في ربط المقدار: $e');
     }
@@ -139,17 +144,19 @@ class InventoryLocalDataSourceImpl implements InventoryLocalDataSource {
   @override
   Future<void> deleteRecipe(int id) async {
     try {
-      final recipeToDelete = await (appDatabase.select(appDatabase.recipes)..where((t) => t.id.equals(id))).getSingleOrNull();
-      
-      await (appDatabase.delete(appDatabase.recipes)..where((t) => t.id.equals(id))).go();
+      // 🚀 [Sprint 2 FIX]: دمج الحذف وتحديث التكلفة في Transaction واحد
+      await appDatabase.transaction(() async {
+        final recipeToDelete = await (appDatabase.select(appDatabase.recipes)..where((t) => t.id.equals(id))).getSingleOrNull();
+        
+        await (appDatabase.delete(appDatabase.recipes)..where((t) => t.id.equals(id))).go();
 
-      // [Costing] Recalculate cost for the target menu item after deleting recipe
-      if (recipeToDelete != null) {
-        final costingHelper = CostingHelper(appDatabase);
-        if (recipeToDelete.itemId != null) await costingHelper.recalculateCostForItem(recipeToDelete.itemId!);
-        if (recipeToDelete.variantId != null) await costingHelper.recalculateCostForVariant(recipeToDelete.variantId!);
-        if (recipeToDelete.addonId != null) await costingHelper.recalculateCostForAddon(recipeToDelete.addonId!);
-      }
+        if (recipeToDelete != null) {
+          final costingHelper = CostingHelper(appDatabase);
+          if (recipeToDelete.itemId != null) await costingHelper.recalculateCostForItem(recipeToDelete.itemId!);
+          if (recipeToDelete.variantId != null) await costingHelper.recalculateCostForVariant(recipeToDelete.variantId!);
+          if (recipeToDelete.addonId != null) await costingHelper.recalculateCostForAddon(recipeToDelete.addonId!);
+        }
+      });
     } catch (e) {
       throw CacheException('فشل في حذف المقدار: $e');
     }
