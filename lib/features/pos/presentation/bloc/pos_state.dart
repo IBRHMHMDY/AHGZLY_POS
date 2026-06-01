@@ -66,34 +66,26 @@ class PosDataLoaded extends PosState {
   // 🚀 [Fix]: الحسابات الديناميكية الحقيقية
   int get subTotal => cartItems.fold(0, (sum, item) => sum + item.totalPrice);
   int get totalCost => cartItems.fold(0, (sum, item) => sum + item.totalCost);
-  
   int get afterDiscount => (subTotal - discountAmount) > 0 ? (subTotal - discountAmount) : 0;
   int get serviceFeeAmount => orderType == OrderType.dineIn ? (afterDiscount * serviceRate).round() : 0;
-  
-  // 🚀 [Sprint 2]: حساب الضريبة بناءً على نوع التسعير (شامل / غير شامل)
+  int get deliveryFeeAmount => orderType == OrderType.delivery ? deliveryFee : 0;
+  int get taxableAmount => afterDiscount + serviceFeeAmount;
   int get taxAmount {
     if (isTaxInclusive) {
-      // الضريبة مستقطعة من الإجمالي (Total) 
-      // Tax = Total - (Total / (1 + TaxRate))
-      // Total = afterDiscount + serviceFeeAmount + deliveryFeeAmount (without external tax)
-      final tempTotal = afterDiscount + serviceFeeAmount + deliveryFeeAmount;
-      return (tempTotal - (tempTotal / (1 + taxRate))).round();
+      // [Refactored]: استبعاد رسوم التوصيل لتوحيد المنطق مع الضريبة الحصرية
+      return (taxableAmount - (taxableAmount / (1 + taxRate))).round();
     } else {
-      // الضريبة مضافة فوق الإجمالي (Exclusive)
-      return ((afterDiscount + serviceFeeAmount) * taxRate).round();
+      return (taxableAmount * taxRate).round();
     }
   }
-
-  int get deliveryFeeAmount => orderType == OrderType.delivery ? deliveryFee : 0;
   
-  // الإجمالي النهائي الدقيق الذي سيُدفع!
   int get total {
     if (isTaxInclusive) {
-      // إذا كانت الأسعار شاملة الضريبة، الضريبة بالفعل داخل الأسعار ولن تُضاف.
-      return afterDiscount + serviceFeeAmount + deliveryFeeAmount;
+      // [Refactored]: الضريبة مضمنة مسبقاً في الـ taxableAmount، نضيف فقط التوصيل
+      return taxableAmount + deliveryFeeAmount;
     } else {
-      // إذا كانت غير شاملة، تُضاف الضريبة كقيمة زائدة.
-      return afterDiscount + serviceFeeAmount + taxAmount + deliveryFeeAmount;
+      // الضريبة غير مضمنة، نجمعها مع الوعاء الضريبي ورسوم التوصيل
+      return taxableAmount + taxAmount + deliveryFeeAmount;
     }
   }
 
