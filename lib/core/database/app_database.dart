@@ -51,7 +51,6 @@ class AppDatabase extends _$AppDatabase {
         await into(settings).insert(
           SettingsCompanion.insert(
             taxRate: 0.14,
-            isTaxInclusive: const Value(true), // 🚀 الافتراضي في مصر هو شامل الضريبة
             serviceRate: 0.12,
             deliveryFee: 2000,
             printerName: 'EPSON Printer',
@@ -127,10 +126,7 @@ class AppDatabase extends _$AppDatabase {
           // إنشاء جدول تفاصيل إضافات الطلب
           await m.createTable(orderItemAddons);
         }
-        if (from < 19) {
-          // 🚀 [Sprint 2]: إضافة خيار "شامل الضريبة" للإعدادات
-          await m.addColumn(settings, settings.isTaxInclusive);
-        }
+        
         if (from < 20) {
           // 🚀 [Sprint 3]: Inventory & Suppliers Module
           await m.createTable(suppliers);
