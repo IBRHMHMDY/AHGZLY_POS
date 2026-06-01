@@ -31,7 +31,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
   bool _isLoadingPrinters = false;
   String? _selectedPrinterName;
   PrintMode _selectedPrintMode = PrintMode.ask;
-  bool _isTaxInclusive = true; // 🚀 [Sprint 2]
   bool _isInit = false;
 
   late TextEditingController _taxController;
@@ -90,7 +89,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
     if (_formKey.currentState!.validate()) {
       final newSettings = AppSettingsEntity(
         taxRate: double.parse(_taxController.text) / 100,
-        isTaxInclusive: _isTaxInclusive, // 🚀 [Sprint 2]
         serviceRate: double.parse(_serviceController.text) / 100,
         deliveryFee: MoneyFormatter.toCents(double.parse(_deliveryController.text.trim())),
         printerName: _selectedPrinterName ?? '',
@@ -202,7 +200,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
               _restaurantNameController.text = s.restaurantName;
               _taxNumberController.text = s.taxNumber;
               _selectedPrintMode = s.printMode;
-              _isTaxInclusive = s.isTaxInclusive; // 🚀 [Sprint 2]
               _isInit = true;
             }
 
@@ -237,21 +234,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                               const SizedBox(width: 16),
                               Expanded(child: _CustomSettingsField(controller: _serviceController, label: 'نسبة خدمة الصالة (%)', hint: '12', icon: Icons.room_service, isNumber: true)),
                             ],
-                          ),
-                          const SizedBox(height: 16),
-                          Container(
-                            decoration: BoxDecoration(
-                              color: Colors.teal.shade50.withOpacity(0.5),
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: Colors.teal.shade200),
-                            ),
-                            child: SwitchListTile(
-                              title: const Text('الأسعار بالمنيو شاملة ضريبة القيمة المضافة', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                              subtitle: const Text('إذا تم التفعيل، سيتم استقطاع الضريبة من إجمالي الفاتورة بدلاً من إضافتها كرسوم إضافية.', style: TextStyle(fontSize: 13)),
-                              value: _isTaxInclusive,
-                              activeColor: Colors.teal,
-                              onChanged: (val) => setState(() => _isTaxInclusive = val),
-                            ),
                           ),
                           const SizedBox(height: 16),
                           _CustomSettingsField(controller: _deliveryController, label: 'رسوم التوصيل الثابتة (ج.م)', hint: '20', icon: Icons.delivery_dining, isNumber: true),

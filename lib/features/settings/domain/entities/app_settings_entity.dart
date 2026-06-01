@@ -3,7 +3,6 @@ import 'package:equatable/equatable.dart';
 
 class AppSettingsEntity extends Equatable {
   final double taxRate; 
-  final bool isTaxInclusive; // 🚀 [Sprint 2]
   final double serviceRate; 
   final int deliveryFee; 
   final String printerName;
@@ -13,7 +12,6 @@ class AppSettingsEntity extends Equatable {
 
   const AppSettingsEntity({
     required this.taxRate,
-    required this.isTaxInclusive,
     required this.serviceRate,
     required this.deliveryFee,
     required this.printerName,
@@ -23,5 +21,5 @@ class AppSettingsEntity extends Equatable {
   });
 
   @override
-  List<Object?> get props => [taxRate, isTaxInclusive, serviceRate, deliveryFee, printerName, restaurantName, taxNumber, printMode];
+  List<Object?> get props => [taxRate, serviceRate, deliveryFee, printerName, restaurantName, taxNumber, printMode];
 }

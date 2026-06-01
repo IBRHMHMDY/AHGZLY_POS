@@ -5,7 +5,6 @@ import 'package:ahgzly_pos/features/settings/domain/entities/app_settings_entity
 class AppSettingsModel extends AppSettingsEntity {
   const AppSettingsModel({
     required super.taxRate,
-    required super.isTaxInclusive,
     required super.serviceRate,
     required super.deliveryFee,
     required super.printerName,
@@ -18,7 +17,6 @@ class AppSettingsModel extends AppSettingsEntity {
   factory AppSettingsModel.fromDrift(SettingsData data) {
     return AppSettingsModel(
       taxRate: data.taxRate,
-      isTaxInclusive: data.isTaxInclusive,
       serviceRate: data.serviceRate,
       deliveryFee: data.deliveryFee,
       printerName: data.printerName,
@@ -32,7 +30,6 @@ class AppSettingsModel extends AppSettingsEntity {
   factory AppSettingsModel.fromEntity(AppSettingsEntity setting) {
     return AppSettingsModel(
       taxRate: setting.taxRate,
-      isTaxInclusive: setting.isTaxInclusive,
       serviceRate: setting.serviceRate,
       deliveryFee: setting.deliveryFee,
       printerName: setting.printerName,

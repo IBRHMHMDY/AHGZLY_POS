@@ -69,7 +69,6 @@ class _CartSectionState extends State<CartSection> {
           restaurantName: orderState.restaurantName,
           taxNumber: orderState.taxNumber,
           cashierName: currentCashierName,
-          isTaxInclusive: orderState.isTaxInclusive, // 🚀 [Sprint 2]
           customerName: _lastCustomerData?['name'] ?? '',
           customerPhone: _lastCustomerData?['phone'] ?? '',
           customerAddress: _lastCustomerData?['address'] ?? '',

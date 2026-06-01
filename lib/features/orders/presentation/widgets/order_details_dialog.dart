@@ -117,7 +117,6 @@ class _DialogActions extends StatelessWidget {
     String rName = 'مـطـعـم احـجـزلـي';
     String tNum = '123-456-789';
     String pName = 'EPSON Printer';
-    bool taxInclusive = true; // 🚀 [Sprint 2]
 
     settingsResult.fold(
       (failure) => debugPrint('Failed to get settings: ${failure.message}'), 
@@ -125,7 +124,6 @@ class _DialogActions extends StatelessWidget {
         rName = settings.restaurantName;
         tNum = settings.taxNumber;
         pName = settings.printerName;
-        taxInclusive = settings.isTaxInclusive; // 🚀 [Sprint 2]
       }
     );
 
@@ -135,7 +133,6 @@ class _DialogActions extends StatelessWidget {
         order: order, 
         restaurantName: rName, 
         taxNumber: tNum,
-        isTaxInclusive: taxInclusive, // 🚀 [Sprint 2]
       ),
       printerName: pName,
     );

@@ -26,7 +26,6 @@ class PosDataLoaded extends PosState {
   final OrderType orderType;
   final int? selectedTableId;
   final int? selectedCustomerId;
-
   final List<CustomerEntity> customers;
   final List<RestaurantTableEntity> tables;
   final List<PaymentMethodEntity> paymentMethods; // 🚀 [Fix]: طرق الدفع من قاعدة البيانات
@@ -40,7 +39,6 @@ class PosDataLoaded extends PosState {
   final PrintMode printMode;
   final String restaurantName;
   final String taxNumber;
-  final bool isTaxInclusive; // 🚀 [Sprint 2]
 
   const PosDataLoaded({
     required this.categories,
@@ -60,33 +58,30 @@ class PosDataLoaded extends PosState {
     this.printMode = PrintMode.ask,
     this.restaurantName = '',
     this.taxNumber = '',
-    this.isTaxInclusive = true,
   });
 
   // 🚀 [Fix]: الحسابات الديناميكية الحقيقية
+  // استخراج الإجمالي الفرعي (بناءً على سعر البيع)
   int get subTotal => cartItems.fold(0, (sum, item) => sum + item.totalPrice);
-  int get totalCost => cartItems.fold(0, (sum, item) => sum + item.totalCost);
-  int get afterDiscount => (subTotal - discountAmount) > 0 ? (subTotal - discountAmount) : 0;
-  int get serviceFeeAmount => orderType == OrderType.dineIn ? (afterDiscount * serviceRate).round() : 0;
-  int get deliveryFeeAmount => orderType == OrderType.delivery ? deliveryFee : 0;
-  int get taxableAmount => afterDiscount + serviceFeeAmount;
-  int get taxAmount {
-    if (isTaxInclusive) {
-      // [Refactored]: استبعاد رسوم التوصيل لتوحيد المنطق مع الضريبة الحصرية
-      return (taxableAmount - (taxableAmount / (1 + taxRate))).round();
-    } else {
-      return (taxableAmount * taxRate).round();
-    }
-  }
   
+  // 🚀 [تمت إعادتها]: استخراج إجمالي التكلفة (بناءً على سعر الشراء/التكلفة لحساب الأرباح)
+  int get totalCost => cartItems.fold(0, (sum, item) => sum + item.totalCost);
+  
+  // الإجمالي بعد الخصم (وهو الأساس الذي سنحسب عليه كل شيء)
+  int get afterDiscount => (subTotal - discountAmount) > 0 ? (subTotal - discountAmount) : 0;
+  
+  // حساب رسوم الخدمة تضرب في الإجمالي بعد الخصم
+  int get serviceFeeAmount => orderType == OrderType.dineIn ? (afterDiscount * serviceRate).round() : 0;
+  
+  // التوصيل (إن وجد)
+  int get deliveryFeeAmount => orderType == OrderType.delivery ? deliveryFee : 0;
+
+  // الضريبة تُحسب الآن مباشرة على (الإجمالي بعد الخصم) كما في الصور (Exclusive)
+  int get taxAmount => (afterDiscount * taxRate).round(); 
+
+  // الإجمالي النهائي المماثل للصور
   int get total {
-    if (isTaxInclusive) {
-      // [Refactored]: الضريبة مضمنة مسبقاً في الـ taxableAmount، نضيف فقط التوصيل
-      return taxableAmount + deliveryFeeAmount;
-    } else {
-      // الضريبة غير مضمنة، نجمعها مع الوعاء الضريبي ورسوم التوصيل
-      return taxableAmount + taxAmount + deliveryFeeAmount;
-    }
+    return afterDiscount + serviceFeeAmount + taxAmount + deliveryFeeAmount;
   }
 
   PosDataLoaded copyWith({
@@ -127,7 +122,6 @@ class PosDataLoaded extends PosState {
       printMode: printMode ?? this.printMode,
       restaurantName: restaurantName ?? this.restaurantName,
       taxNumber: taxNumber ?? this.taxNumber,
-      isTaxInclusive: isTaxInclusive ?? this.isTaxInclusive,
     );
   }
 
@@ -135,7 +129,7 @@ class PosDataLoaded extends PosState {
   List<Object?> get props => [
         categories, currentItems, selectedCategoryId, cartItems, orderType, 
         selectedTableId, selectedCustomerId, customers, tables, paymentMethods,
-        discountAmount, taxRate, serviceRate, deliveryFee, printMode, restaurantName, taxNumber, isTaxInclusive
+        discountAmount, taxRate, serviceRate, deliveryFee, printMode, restaurantName, taxNumber,
       ];
 }
 
