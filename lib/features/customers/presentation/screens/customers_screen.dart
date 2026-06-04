@@ -1,5 +1,5 @@
 import 'package:ahgzly_pos/core/utils/money_formatter.dart';
-import 'package:ahgzly_pos/features/customers/data/models/customer_model.dart';
+import 'package:ahgzly_pos/shared/data/models/customer_model.dart';
 import 'package:ahgzly_pos/features/customers/presentation/bloc/customers_bloc.dart';
 import 'package:ahgzly_pos/features/customers/presentation/bloc/customers_event.dart';
 import 'package:ahgzly_pos/features/customers/presentation/bloc/customers_state.dart';

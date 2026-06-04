@@ -1,5 +1,5 @@
-import 'package:ahgzly_pos/core/extensions/order_status.dart';
-import 'package:ahgzly_pos/core/extensions/order_type.dart';
+import 'package:ahgzly_pos/shared/domain/enums/order_status.dart';
+import 'package:ahgzly_pos/shared/domain/enums/order_type.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:ahgzly_pos/features/auth/presentation/bloc/auth_bloc.dart';
@@ -12,7 +12,7 @@ import 'package:ahgzly_pos/features/orders/presentation/bloc/orders_state.dart';
 import 'package:ahgzly_pos/features/orders/domain/entities/order_history_entity.dart';
 import 'package:ahgzly_pos/features/orders/presentation/widgets/order_details_dialog.dart';
 import 'package:ahgzly_pos/core/utils/money_formatter.dart';
-import 'package:ahgzly_pos/core/common/widgets/custom_shimmer.dart';
+import 'package:ahgzly_pos/shared/widgets/custom_shimmer.dart';
 import 'package:intl/intl.dart'; // 🪄 استيراد الشيمر
 
 class OrdersScreen extends StatefulWidget {

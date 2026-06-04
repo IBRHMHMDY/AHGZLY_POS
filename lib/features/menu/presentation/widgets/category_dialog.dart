@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:ahgzly_pos/features/menu/domain/entities/category_entity.dart';
-import 'package:ahgzly_pos/core/common/widgets/pos_dialog_components.dart'; // 🚀 استدعاء المكون المشترك
+import 'package:ahgzly_pos/shared/widgets/pos_dialog_components.dart'; // 🚀 استدعاء المكون المشترك
 
 class CategoryDialog extends StatefulWidget {
   final CategoryEntity? category;

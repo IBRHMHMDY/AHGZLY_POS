@@ -1,5 +1,5 @@
 import 'package:ahgzly_pos/core/utils/money_formatter.dart';
-import 'package:ahgzly_pos/core/common/widgets/pos_dialog_components.dart'; // 🚀 استدعاء المكونات المشتركة
+import 'package:ahgzly_pos/shared/widgets/pos_dialog_components.dart'; // 🚀 استدعاء المكونات المشتركة
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 

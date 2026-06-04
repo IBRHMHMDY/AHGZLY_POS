@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ahgzly_pos/core/routing/app_router.dart';
-import 'package:ahgzly_pos/core/common/widgets/pos_numpad.dart'; // المكون المشترك
+import 'package:ahgzly_pos/shared/widgets/pos_numpad.dart'; // المكون المشترك
 import '../bloc/auth_bloc.dart';
 import '../bloc/auth_event.dart';
 import '../bloc/auth_state.dart';

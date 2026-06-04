@@ -1,4 +1,4 @@
-import 'package:ahgzly_pos/core/extensions/user_role.dart';
+import 'package:ahgzly_pos/shared/domain/enums/user_role.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';

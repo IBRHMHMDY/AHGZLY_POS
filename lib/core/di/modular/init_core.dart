@@ -4,7 +4,7 @@
 import 'package:ahgzly_pos/core/database/app_database.dart';
 import 'package:ahgzly_pos/core/di/dependency_injection.dart';
 import 'package:ahgzly_pos/core/services/backup_service.dart';
-import 'package:ahgzly_pos/core/services/printer_service.dart';
+import 'package:ahgzly_pos/core/services/printers/printer_service.dart';
 import 'package:ahgzly_pos/core/services/security/crypto_service.dart';
 import 'package:ahgzly_pos/core/services/security/device_security_service.dart';
 import 'package:ahgzly_pos/core/services/security/time_guard_service.dart';

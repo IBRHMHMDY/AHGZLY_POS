@@ -105,68 +105,78 @@ class _PosScreenState extends State<PosScreen> {
             },
           ),
         ],
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              flex: 1,
-              child: CategoriesSection(
-                categories: _categories,
-                selectedCategory: _selectedCategory,
-                isLoading: context.watch<MenuBloc>().state is MenuLoading,
-                onCategorySelected: (category) {
-                  setState(() => _selectedCategory = category);
-                  context.read<MenuBloc>().add(FetchItemsEvent(category.id!));
-                },
-              ),
-            ),
-            Expanded(
-              flex: 3,
-              child: ItemsSection(
-                items: _items,
-                isLoading: context.watch<MenuBloc>().state is MenuLoading,
-                // 🚀 [FIXED]: معالجة النقر على الصنف وإظهار نافذة الإضافات إذا لزم الأمر
-                onItemTap: (item) async {
-                  if (item.variants.isNotEmpty || item.availableAddons.isNotEmpty) {
-                    final result = await showDialog<Map<String, dynamic>>(
-                      context: context,
-                      builder: (_) => ModifiersDialog(item: item),
-                    );
-                    
-                    if (result != null && context.mounted) {
-                      final selectedVariant = result['variant']; // سحب المقاس المختار
-                      
-                      final orderItem = OrderItemEntity(
-                        itemId: item.id!,
-                        itemName: item.name,
-                        quantity: 1,
-                        // 🚀 [FIXED]: أخذ سعر المقاس المختار، وإذا لم يوجد نأخذ السعر الأساسي
-                        unitPrice: selectedVariant != null ? selectedVariant.price : item.price,
-                        // 🚀 [FIXED]: نفس الأمر بالنسبة لتكلفة الصنف (لحساب الأرباح بدقة)
-                        unitCostPrice: selectedVariant != null ? selectedVariant.costPrice : item.costPrice,
-                        selectedVariant: selectedVariant,
-                        selectedAddons: List.from(result['addons'] ?? []),
-                      );
-                      
-                      context.read<PosBloc>().add(AddItemToCartEvent(orderItem));
-                    }
-                  } else {
-                    // في حال كان الصنف عادياً (بدون إضافات أو مقاسات)
-                    final orderItem = OrderItemEntity(
-                      itemId: item.id!,
-                      itemName: item.name,
-                      quantity: 1,
-                      unitPrice: item.price,
-                      unitCostPrice: item.costPrice,
-                    );
-                    
-                    context.read<PosBloc>().add(AddItemToCartEvent(orderItem));
-                  }
-                },
-              ),
-            ),
-            const Expanded(flex: 2, child: CartSection()),
-          ],
+        // ♻️ [REFACTOR]: إضافة LayoutBuilder لدعم الـ Tablet First والشاشات الطولية (Portrait)
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            // نعتبر الشاشة مدمجة (Compact) إذا كان العرض أقل من 900 بكسل
+            final bool isCompact = constraints.maxWidth < 900;
+
+            return Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  // زيادة مساحة الأقسام في الشاشات الصغيرة لمنع قص النصوص
+                  flex: isCompact ? 2 : 1, 
+                  child: CategoriesSection(
+                    categories: _categories,
+                    selectedCategory: _selectedCategory,
+                    isLoading: context.watch<MenuBloc>().state is MenuLoading,
+                    onCategorySelected: (category) {
+                      setState(() => _selectedCategory = category);
+                      context.read<MenuBloc>().add(FetchItemsEvent(category.id!));
+                    },
+                  ),
+                ),
+                Expanded(
+                  // موازنة مساحة الأصناف
+                  flex: isCompact ? 4 : 3,
+                  child: ItemsSection(
+                    items: _items,
+                    isLoading: context.watch<MenuBloc>().state is MenuLoading,
+                    onItemTap: (item) async {
+                      if (item.variants.isNotEmpty || item.availableAddons.isNotEmpty) {
+                        final result = await showDialog<Map<String, dynamic>>(
+                          context: context,
+                          builder: (_) => ModifiersDialog(item: item),
+                        );
+                        
+                        if (result != null && context.mounted) {
+                          final selectedVariant = result['variant']; 
+                          
+                          final orderItem = OrderItemEntity(
+                            itemId: item.id!,
+                            itemName: item.name,
+                            quantity: 1,
+                            unitPrice: selectedVariant != null ? selectedVariant.price : item.price,
+                            unitCostPrice: selectedVariant != null ? selectedVariant.costPrice : item.costPrice,
+                            selectedVariant: selectedVariant,
+                            selectedAddons: List.from(result['addons'] ?? []),
+                          );
+                          
+                          context.read<PosBloc>().add(AddItemToCartEvent(orderItem));
+                        }
+                      } else {
+                        final orderItem = OrderItemEntity(
+                          itemId: item.id!,
+                          itemName: item.name,
+                          quantity: 1,
+                          unitPrice: item.price,
+                          unitCostPrice: item.costPrice,
+                        );
+                        
+                        context.read<PosBloc>().add(AddItemToCartEvent(orderItem));
+                      }
+                    },
+                  ),
+                ),
+                Expanded(
+                  // إعطاء مساحة أكبر لسلة المشتريات في الشاشات الصغيرة لتظل قابلة للقراءة
+                  flex: isCompact ? 4 : 2, 
+                  child: const CartSection(),
+                ),
+              ],
+            );
+          },
         ),
       ),
     );

@@ -1,6 +1,6 @@
 import 'package:ahgzly_pos/core/error/failures.dart';
 import 'package:ahgzly_pos/core/usecases/usecase.dart';
-import 'package:ahgzly_pos/core/common/entities/payment_method_entity.dart';
+import 'package:ahgzly_pos/shared/domain/entities/payment_method_entity.dart';
 import 'package:ahgzly_pos/features/pos/domain/repositories/pos_repository.dart';
 import 'package:dartz/dartz.dart';
 

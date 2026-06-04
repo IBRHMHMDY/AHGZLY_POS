@@ -1,6 +1,6 @@
 import 'package:ahgzly_pos/core/database/app_database.dart'; 
 import 'package:ahgzly_pos/core/error/exceptions.dart';
-import 'package:ahgzly_pos/core/extensions/print_mode.dart';
+import 'package:ahgzly_pos/core/services/printers/print_mode.dart';
 import 'package:ahgzly_pos/features/settings/data/models/app_settings_model.dart';
 import 'package:drift/drift.dart'; 
 

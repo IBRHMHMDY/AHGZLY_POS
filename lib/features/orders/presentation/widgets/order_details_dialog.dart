@@ -1,5 +1,5 @@
-import 'package:ahgzly_pos/core/common/widgets/pos_dialog_components.dart';
-import 'package:ahgzly_pos/core/extensions/order_status.dart';
+import 'package:ahgzly_pos/shared/widgets/pos_dialog_components.dart';
+import 'package:ahgzly_pos/shared/domain/enums/order_status.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:ahgzly_pos/features/auth/presentation/bloc/auth_bloc.dart';
@@ -7,7 +7,7 @@ import 'package:ahgzly_pos/features/auth/presentation/bloc/auth_state.dart';
 import 'package:ahgzly_pos/features/shift/presentation/bloc/shift_bloc.dart';
 import 'package:ahgzly_pos/features/shift/presentation/bloc/shift_state.dart';
 import 'package:ahgzly_pos/core/di/dependency_injection.dart';
-import 'package:ahgzly_pos/core/services/printer_service.dart';
+import 'package:ahgzly_pos/core/services/printers/printer_service.dart';
 import 'package:ahgzly_pos/core/usecases/usecase.dart';
 import 'package:ahgzly_pos/features/orders/domain/entities/order_history_entity.dart';
 import 'package:ahgzly_pos/features/orders/presentation/bloc/orders_bloc.dart';

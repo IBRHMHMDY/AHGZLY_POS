@@ -1,6 +1,6 @@
 import 'package:ahgzly_pos/core/database/app_database.dart';
 import 'package:ahgzly_pos/core/error/exceptions.dart';
-import 'package:ahgzly_pos/core/extensions/order_status.dart';
+import 'package:ahgzly_pos/shared/domain/enums/order_status.dart';
 import 'package:ahgzly_pos/features/orders/data/models/order_history_model.dart';
 import 'package:drift/drift.dart';
 

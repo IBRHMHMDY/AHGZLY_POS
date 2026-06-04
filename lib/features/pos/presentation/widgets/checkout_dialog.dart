@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:ahgzly_pos/core/utils/money_formatter.dart';
-import 'package:ahgzly_pos/core/common/widgets/pos_dialog_components.dart';
-import 'package:ahgzly_pos/core/common/widgets/pos_numpad.dart'; 
-import 'package:ahgzly_pos/core/common/entities/payment_method_entity.dart';
+import 'package:ahgzly_pos/shared/widgets/pos_dialog_components.dart';
+import 'package:ahgzly_pos/shared/widgets/pos_numpad.dart'; 
+import 'package:ahgzly_pos/shared/domain/entities/payment_method_entity.dart';
 
 class CheckoutDialog extends StatefulWidget {
   final int totalAmount; // Total in Cents

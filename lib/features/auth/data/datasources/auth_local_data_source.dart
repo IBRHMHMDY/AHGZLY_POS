@@ -1,5 +1,5 @@
 import 'package:ahgzly_pos/core/database/app_database.dart';
-import 'package:ahgzly_pos/core/common/users/models/user_model.dart';
+import 'package:ahgzly_pos/shared/data/models/user_model.dart';
 import 'package:ahgzly_pos/core/utils/hash_util.dart';
 import 'package:ahgzly_pos/core/error/exceptions.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';

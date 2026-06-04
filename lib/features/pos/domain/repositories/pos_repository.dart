@@ -1,7 +1,7 @@
-import 'package:ahgzly_pos/core/common/entities/customer_entity.dart';
-import 'package:ahgzly_pos/core/common/entities/payment_method_entity.dart';
-import 'package:ahgzly_pos/core/common/entities/restaurant_table_entity.dart';
-import 'package:ahgzly_pos/core/common/entities/zone_entity.dart';
+import 'package:ahgzly_pos/shared/domain/entities/customer_entity.dart';
+import 'package:ahgzly_pos/shared/domain/entities/payment_method_entity.dart';
+import 'package:ahgzly_pos/shared/domain/entities/restaurant_table_entity.dart';
+import 'package:ahgzly_pos/shared/domain/entities/zone_entity.dart';
 import 'package:dartz/dartz.dart' hide Order;
 import 'package:ahgzly_pos/core/error/failures.dart';
 import 'package:ahgzly_pos/features/pos/domain/entities/order_entity.dart';

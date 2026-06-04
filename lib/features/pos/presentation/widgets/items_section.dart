@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:ahgzly_pos/features/menu/domain/entities/item_entity.dart';
 import 'package:ahgzly_pos/core/utils/money_formatter.dart';
-import 'package:ahgzly_pos/core/common/widgets/custom_shimmer.dart';
+import 'package:ahgzly_pos/shared/widgets/custom_shimmer.dart';
 
 class ItemsSection extends StatelessWidget {
   final List<ItemEntity> items;

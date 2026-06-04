@@ -1,12 +1,12 @@
-import 'package:ahgzly_pos/core/common/entities/customer_entity.dart';
-import 'package:ahgzly_pos/core/common/entities/restaurant_table_entity.dart';
-import 'package:ahgzly_pos/core/common/entities/payment_method_entity.dart';
-import 'package:ahgzly_pos/core/extensions/order_type.dart';
-import 'package:ahgzly_pos/core/extensions/print_mode.dart';
-import 'package:ahgzly_pos/core/utils/order_pricing_calculator.dart';
+import 'package:ahgzly_pos/shared/domain/entities/customer_entity.dart';
+import 'package:ahgzly_pos/shared/domain/entities/restaurant_table_entity.dart';
+import 'package:ahgzly_pos/shared/domain/entities/payment_method_entity.dart';
+import 'package:ahgzly_pos/shared/domain/enums/order_type.dart';
+import 'package:ahgzly_pos/core/services/printers/print_mode.dart';
 import 'package:ahgzly_pos/features/menu/domain/entities/category_entity.dart';
 import 'package:ahgzly_pos/features/menu/domain/entities/item_entity.dart';
 import 'package:ahgzly_pos/features/pos/domain/entities/order_item_entity.dart';
+import 'package:ahgzly_pos/shared/domain/utils/order_pricing_calculator.dart';
 import 'package:equatable/equatable.dart';
 
 abstract class PosState extends Equatable {

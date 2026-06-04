@@ -43,7 +43,7 @@ class _OpenShiftScreenState extends State<OpenShiftScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.teal.shade50, // 🪄 توحيد الخلفية مع هوية التطبيق
+      backgroundColor: Colors.teal.shade50,
       appBar: AppBar(
         title: const Text('فتح وردية جديدة', style: TextStyle(fontWeight: FontWeight.bold)),
         centerTitle: true,
@@ -67,12 +67,28 @@ class _OpenShiftScreenState extends State<OpenShiftScreen> {
           }
         },
         builder: (context, state) {
-          return Center(
-            child: _OpenShiftForm(
-              cashController: _cashController,
-              isLoading: state is ShiftLoading,
-              onSubmit: _submit,
-            ),
+          // 🚀 [HOTFIX]: تطبيق النمط القياسي للفورم المتمركز القابل للتمرير
+          return LayoutBuilder(
+            builder: (context, constraints) {
+              return SingleChildScrollView(
+                physics: const BouncingScrollPhysics(),
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(
+                    minHeight: constraints.maxHeight, // إجبار المحتوى على أخذ ارتفاع الشاشة كحد أدنى
+                  ),
+                  child: Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: _OpenShiftForm(
+                        cashController: _cashController,
+                        isLoading: state is ShiftLoading,
+                        onSubmit: _submit,
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            },
           );
         },
       ),
@@ -80,7 +96,9 @@ class _OpenShiftScreenState extends State<OpenShiftScreen> {
   }
 }
 
-// 🪄 استخراج الفورم لتنظيف دالة الـ Build
+// ==========================================
+// Sub-Widgets
+// ==========================================
 class _OpenShiftForm extends StatelessWidget {
   final TextEditingController cashController;
   final bool isLoading;
@@ -90,13 +108,20 @@ class _OpenShiftForm extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // ♻️ [REFACTOR]: تمت إزالة SingleChildScrollView من هنا لتجنب تداخل الـ Scrolls
     return Container(
       width: 450,
       padding: const EdgeInsets.all(40.0),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(24),
-        boxShadow: [BoxShadow(color: Colors.teal.withOpacity(0.1), blurRadius: 20, offset: const Offset(0, 10))],
+        boxShadow: [
+          BoxShadow(
+            color: Colors.teal.withOpacity(0.1), 
+            blurRadius: 20, 
+            offset: const Offset(0, 10)
+          )
+        ],
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,

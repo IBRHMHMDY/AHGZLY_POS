@@ -1,7 +1,7 @@
 import 'dart:io';
 import 'package:ahgzly_pos/core/database/types_converter.dart';
-import 'package:ahgzly_pos/core/extensions/order_status.dart';
-import 'package:ahgzly_pos/core/extensions/order_type.dart';
+import 'package:ahgzly_pos/shared/domain/enums/order_status.dart';
+import 'package:ahgzly_pos/shared/domain/enums/order_type.dart';
 import 'package:ahgzly_pos/core/utils/hash_util.dart';
 import 'package:drift/drift.dart';
 import 'package:drift/native.dart';

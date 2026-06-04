@@ -1,15 +1,15 @@
-import 'package:ahgzly_pos/core/extensions/order_type.dart';
-import 'package:ahgzly_pos/core/extensions/print_mode.dart';
+import 'package:ahgzly_pos/shared/domain/enums/order_type.dart';
+import 'package:ahgzly_pos/core/services/printers/print_mode.dart';
 import 'package:ahgzly_pos/features/shift/presentation/bloc/shift_bloc.dart';
 import 'package:ahgzly_pos/features/shift/presentation/bloc/shift_state.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import 'package:ahgzly_pos/core/common/widgets/custom_shimmer.dart';
+import 'package:ahgzly_pos/shared/widgets/custom_shimmer.dart';
 import 'package:ahgzly_pos/core/usecases/usecase.dart';
 import 'package:ahgzly_pos/core/utils/money_formatter.dart';
 import 'package:ahgzly_pos/core/di/dependency_injection.dart';
-import 'package:ahgzly_pos/core/services/printer_service.dart';
+import 'package:ahgzly_pos/core/services/printers/printer_service.dart';
 
 import 'package:ahgzly_pos/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:ahgzly_pos/features/auth/presentation/bloc/auth_state.dart';

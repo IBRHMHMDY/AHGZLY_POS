@@ -1,7 +1,7 @@
 import 'package:dartz/dartz.dart';
 import 'package:ahgzly_pos/core/error/failures.dart';
 import 'package:ahgzly_pos/core/error/exceptions.dart';
-import 'package:ahgzly_pos/core/common/users/entities/user_entity.dart';
+import 'package:ahgzly_pos/shared/domain/entities/user_entity.dart';
 import 'package:ahgzly_pos/features/auth/domain/repositories/auth_repository.dart';
 import 'package:ahgzly_pos/features/auth/data/datasources/auth_local_data_source.dart';
 

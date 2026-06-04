@@ -1,4 +1,4 @@
-import 'package:ahgzly_pos/core/extensions/order_type.dart';
+import 'package:ahgzly_pos/shared/domain/enums/order_type.dart';
 import 'package:ahgzly_pos/features/pos/domain/entities/order_item_entity.dart';
 import 'package:equatable/equatable.dart';
 

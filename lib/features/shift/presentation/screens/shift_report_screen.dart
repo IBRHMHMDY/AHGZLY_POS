@@ -9,7 +9,7 @@ import 'package:go_router/go_router.dart';
 
 import 'package:ahgzly_pos/core/routing/app_router.dart';
 import 'package:ahgzly_pos/core/di/dependency_injection.dart';
-import 'package:ahgzly_pos/core/services/printer_service.dart';
+import 'package:ahgzly_pos/core/services/printers/printer_service.dart';
 
 import 'package:ahgzly_pos/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:ahgzly_pos/features/auth/presentation/bloc/auth_event.dart';

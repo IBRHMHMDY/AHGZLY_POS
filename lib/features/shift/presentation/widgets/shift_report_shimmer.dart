@@ -1,4 +1,4 @@
-import 'package:ahgzly_pos/core/common/widgets/custom_shimmer.dart';
+import 'package:ahgzly_pos/shared/widgets/custom_shimmer.dart';
 import 'package:flutter/material.dart';
 
 class ShiftReportShimmer extends StatelessWidget {

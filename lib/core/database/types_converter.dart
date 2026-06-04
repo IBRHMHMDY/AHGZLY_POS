@@ -1,6 +1,6 @@
 import 'package:drift/drift.dart';
-import 'package:ahgzly_pos/core/extensions/order_status.dart';
-import 'package:ahgzly_pos/core/extensions/order_type.dart';
+import 'package:ahgzly_pos/shared/domain/enums/order_status.dart';
+import 'package:ahgzly_pos/shared/domain/enums/order_type.dart';
 
 // ==========================================
 // 🔄 Type Converters (Clean Code Approach)

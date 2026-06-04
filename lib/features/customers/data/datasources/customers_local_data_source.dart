@@ -1,7 +1,7 @@
 import 'package:ahgzly_pos/core/database/app_database.dart';
 import 'package:ahgzly_pos/core/error/exceptions.dart';
 import 'package:drift/drift.dart';
-import '../models/customer_model.dart';
+import '../../../../shared/data/models/customer_model.dart';
 
 abstract class CustomersLocalDataSource {
   Future<List<CustomerModel>> getCustomers({String? searchQuery});

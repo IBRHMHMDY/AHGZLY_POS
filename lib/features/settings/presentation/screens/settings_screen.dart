@@ -1,7 +1,7 @@
 import 'dart:io';
 import 'package:ahgzly_pos/core/database/app_database.dart';
 import 'package:ahgzly_pos/core/di/dependency_injection.dart';
-import 'package:ahgzly_pos/core/extensions/print_mode.dart';
+import 'package:ahgzly_pos/core/services/printers/print_mode.dart';
 import 'package:ahgzly_pos/core/utils/money_formatter.dart';
 import 'package:drift/drift.dart' as drift;
 import 'package:flutter/material.dart';
@@ -14,7 +14,7 @@ import 'package:ahgzly_pos/features/settings/presentation/bloc/settings_state.da
 import 'package:flutter_pos_printer_platform_image_3/flutter_pos_printer_platform_image_3.dart';
 import 'package:go_router/go_router.dart'; // 🚀 [Sprint 2]
 import 'package:ahgzly_pos/core/routing/app_router.dart'; // 🚀 [Sprint 2]
-import 'package:ahgzly_pos/core/common/widgets/custom_shimmer.dart'; // 🪄 استيراد مكون الشيمر
+import 'package:ahgzly_pos/shared/widgets/custom_shimmer.dart'; // 🪄 استيراد مكون الشيمر
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});

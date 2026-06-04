@@ -1,9 +1,9 @@
-import 'package:ahgzly_pos/core/common/entities/customer_entity.dart';
-import 'package:ahgzly_pos/core/common/entities/restaurant_table_entity.dart';
+import 'package:ahgzly_pos/shared/domain/entities/customer_entity.dart';
+import 'package:ahgzly_pos/shared/domain/entities/restaurant_table_entity.dart';
 import 'package:ahgzly_pos/features/menu/domain/entities/category_entity.dart';
 import 'package:ahgzly_pos/features/menu/domain/entities/item_entity.dart';
-import 'package:ahgzly_pos/core/common/entities/payment_method_entity.dart';
-import 'package:ahgzly_pos/core/extensions/print_mode.dart';
+import 'package:ahgzly_pos/shared/domain/entities/payment_method_entity.dart';
+import 'package:ahgzly_pos/core/services/printers/print_mode.dart';
 import 'package:ahgzly_pos/features/settings/domain/entities/app_settings_entity.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:ahgzly_pos/core/usecases/usecase.dart'; 
@@ -19,8 +19,8 @@ import 'package:ahgzly_pos/features/pos/presentation/bloc/pos_event.dart';
 import 'package:ahgzly_pos/features/pos/presentation/bloc/pos_state.dart';
 import 'package:ahgzly_pos/features/pos/domain/entities/order_entity.dart';
 import 'package:ahgzly_pos/features/pos/domain/entities/order_item_entity.dart';
-import 'package:ahgzly_pos/core/extensions/order_status.dart';
-import 'package:ahgzly_pos/core/extensions/order_type.dart';
+import 'package:ahgzly_pos/shared/domain/enums/order_status.dart';
+import 'package:ahgzly_pos/shared/domain/enums/order_type.dart';
 
 class PosBloc extends Bloc<PosEvent, PosState> {
   final SaveOrderUseCase saveOrderUseCase;
