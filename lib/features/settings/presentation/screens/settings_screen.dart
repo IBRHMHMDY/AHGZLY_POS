@@ -12,9 +12,9 @@ import 'package:ahgzly_pos/features/settings/presentation/bloc/settings_bloc.dar
 import 'package:ahgzly_pos/features/settings/presentation/bloc/settings_event.dart';
 import 'package:ahgzly_pos/features/settings/presentation/bloc/settings_state.dart';
 import 'package:flutter_pos_printer_platform_image_3/flutter_pos_printer_platform_image_3.dart';
-import 'package:go_router/go_router.dart'; // 🚀 [Sprint 2]
-import 'package:ahgzly_pos/core/routing/app_router.dart'; // 🚀 [Sprint 2]
-import 'package:ahgzly_pos/shared/widgets/custom_shimmer.dart'; // 🪄 استيراد مكون الشيمر
+import 'package:go_router/go_router.dart';
+import 'package:ahgzly_pos/core/routing/app_router.dart';
+import 'package:ahgzly_pos/shared/widgets/custom_shimmer.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -188,7 +188,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         },
         builder: (context, state) {
           if (state is SettingsLoading) {
-            return const _SettingsShimmerLoading(); // 🪄 استخدام الشيمر
+            return const _SettingsShimmerLoading();
           }
           if (state is SettingsLoaded) {
             if (!_isInit) {
@@ -211,7 +211,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   child: ListView(
                     padding: const EdgeInsets.all(24.0),
                     children: [
-                      // 🪄 1. البيانات الأساسية
                       _SettingsSectionCard(
                         title: 'البيانات الأساسية',
                         icon: Icons.store,
@@ -222,8 +221,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         ],
                       ),
                       const SizedBox(height: 24),
-
-                      // 🪄 2. الرسوم والضرائب
                       _SettingsSectionCard(
                         title: 'الرسوم والضرائب',
                         icon: Icons.account_balance_wallet,
@@ -240,8 +237,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         ],
                       ),
                       const SizedBox(height: 24),
-
-                      // 🪄 3. الأجهزة والطباعة
                       _SettingsSectionCard(
                         title: 'الأجهزة والطباعة',
                         icon: Icons.print,
@@ -252,8 +247,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         ],
                       ),
                       const SizedBox(height: 32),
-
-                      // 🪄 4. زر الحفظ الرئيسي
                       ElevatedButton.icon(
                         style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 20), backgroundColor: Colors.teal, foregroundColor: Colors.white, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)), elevation: 4),
                         icon: const Icon(Icons.save_rounded, size: 28),
@@ -261,8 +254,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         onPressed: _saveSettings,
                       ),
                       const SizedBox(height: 48),
-
-                      // 🪄 5. أدوات النظام المتقدمة
                       _SettingsSectionCard(
                         title: 'النسخ الاحتياطي (الأمان)',
                         icon: Icons.security,
@@ -291,7 +282,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           ),
                         ],
                       ),
-                      // 🪄 6. سجلات النظام (للمدير)
                       _SettingsSectionCard(
                         title: 'سجلات النظام (للمدير)',
                         icon: Icons.history,
@@ -358,8 +348,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         ],
                       ),
                       const SizedBox(height: 32),
-
-                      // 🪄 7. التراخيص
                       _SettingsSectionCard(
                         title: 'إدارة التراخيص (خطر)',
                         icon: Icons.key_off,
@@ -387,10 +375,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
       ),
     );
   }
-
-  // ==========================================
-  // مكونات فرعية محلية لتنظيف الدالة الرئيسية
-  // ==========================================
 
   Widget _buildPrinterSelector() {
     return Row(
@@ -426,7 +410,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Widget _buildPrintModeSelector() {
-    // [Refactored]: استخدام الـ Enum بشكل آلي ومحمي
     return DropdownButtonFormField<PrintMode>(
       value: _selectedPrintMode,
       decoration: _inputStyle(label: 'وضع الطباعة بعد الدفع', icon: Icons.settings_suggest),
@@ -460,10 +443,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 }
-
-// ==========================================
-// 🪄 مكونات الواجهة المعزولة (Clean Widgets)
-// ==========================================
 
 class _CustomSettingsField extends StatelessWidget {
   final TextEditingController controller;

@@ -1,7 +1,7 @@
 name: ahgzly_pos
 description: "Ahgzly POS System to Mini Restaurants"
 
-publish_to: 'none' # Remove this line if you wish to publish to pub.dev
+publish_to: 'none'
 
 version: 1.0.0+1
 
@@ -13,7 +13,6 @@ dependencies:
     sdk: flutter
   flutter_localizations:
     sdk: flutter
- 
   cupertino_icons: ^1.0.8
   flutter_bloc: ^9.1.1
   equatable: ^2.0.8
@@ -35,8 +34,8 @@ dependencies:
   drift: ^2.32.1
   sqlite3_flutter_libs: ^0.6.0+eol
   shimmer: ^3.0.0
-  flutter_pos_printer_platform_image_3: ^1.1.2
   fl_chart: ^0.68.0
+  flutter_pos_printer_platform_image_3: ^1.2.4
   
 dev_dependencies:
   flutter_test:

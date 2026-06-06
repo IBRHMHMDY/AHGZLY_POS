@@ -7,86 +7,48 @@ import 'package:image/image.dart' as img;
 import 'package:esc_pos_utils_plus/esc_pos_utils_plus.dart';
 import 'package:flutter_pos_printer_platform_image_3/flutter_pos_printer_platform_image_3.dart';
 
-/// واجهة الخدمة لضمان قابلية الاختبار (Dependency Inversion Principle)
-abstract class IPrinterService {
-  Future<bool> printReceiptUsb({
-    required Widget receiptWidget,
-    required String printerName,
-  });
-}
-
-class PrinterService implements IPrinterService {
+class PrinterService {
   final ScreenshotController _screenshotController = ScreenshotController();
-  final PrinterManager _printerManager = PrinterManager.instance;
 
-  @override
   Future<bool> printReceiptUsb({
     required Widget receiptWidget,
-    required String printerName,
+    required String printerName, 
   }) async {
     try {
-      debugPrint('USB Print: Starting print process for [$printerName]...');
+      debugPrint('USB Print: Searching for printer [$printerName]...');
+      
+      // 1. التقاط صورة للفاتورة
+      final Uint8List capturedImage = await _screenshotController.captureFromWidget(
+        receiptWidget,
+        pixelRatio: 2.0, // دقة عالية لضمان وضوح النص
+        delay: const Duration(milliseconds: 300), 
+      );
 
-      // 1. استخراج الأوامر وتحويل الصورة (SRP)
-      final List<int>? bytes = await _generatePrintBytes(receiptWidget);
-      if (bytes == null || bytes.isEmpty) return false;
-
-      // 2. البحث عن الطابعة
-      final targetDevice = await _findUsbPrinter(printerName);
-
-      // 3. [FIX] التحقق الصارم لمنع انهيار الـ Native Android (NullPointerException)
-      // لا نرسل طلب اتصال إذا كانت معرفات الـ USB مفقودة
-      if (targetDevice == null || targetDevice.productId == null || targetDevice.vendorId == null) {
-        debugPrint('Print Error: Printer not found or missing Hardware IDs (vendorId/productId).');
+      // 2. تحويل الصورة
+      final img.Image? decodedImage = img.decodeImage(capturedImage);
+      if (decodedImage == null) {
+        debugPrint('Print Error: Failed to decode captured image.');
         return false;
       }
 
-      // 4. الاتصال والطباعة
-      return await _connectAndPrint(targetDevice, bytes);
-
-    } catch (e) {
-      debugPrint('USB Print Exception (Main Flow): $e');
-      return false;
-    }
-  }
-
-  /// مسؤولية تحويل الـ Widget إلى مصفوفة بايتات ESC/POS
-  Future<List<int>?> _generatePrintBytes(Widget receiptWidget) async {
-    try {
-      final Uint8List capturedImage = await _screenshotController.captureFromWidget(
-        receiptWidget,
-        pixelRatio: 2.0,
-        delay: const Duration(milliseconds: 300),
-      );
-
-      final img.Image? decodedImage = img.decodeImage(capturedImage);
-      if (decodedImage == null) return null;
-
       final img.Image resizedImage = img.copyResize(decodedImage, width: 576);
+
+      // 3. توليد أوامر ESC/POS
       final profile = await CapabilityProfile.load();
       final generator = Generator(PaperSize.mm80, profile);
-      
       List<int> bytes = [];
+      
       bytes.addAll(generator.reset());
       bytes.addAll(generator.imageRaster(resizedImage, align: PosAlign.center));
       bytes.addAll(generator.drawer(pin: PosDrawer.pin2));
       bytes.addAll(generator.feed(2));
       bytes.addAll(generator.cut());
+
+      // 4. البحث عن الطابعة
+      PrinterDevice? targetDevice;
+      final completer = Completer<PrinterDevice?>();
       
-      return bytes;
-    } catch (e) {
-      debugPrint('Print Error: Failed to generate print bytes - $e');
-      return null;
-    }
-  }
-
-  /// مسؤولية اكتشاف الطابعة عبر منفذ USB بأمان
-  Future<PrinterDevice?> _findUsbPrinter(String printerName) async {
-    final completer = Completer<PrinterDevice?>();
-    StreamSubscription? subscription;
-
-    try {
-      subscription = _printerManager.discovery(type: PrinterType.usb).listen((device) {
+      final subscription = PrinterManager.instance.discovery(type: PrinterType.usb).listen((device) {
         if (device.name.trim().toLowerCase() == printerName.trim().toLowerCase()) {
           if (!completer.isCompleted) {
             completer.complete(device);
@@ -94,52 +56,45 @@ class PrinterService implements IPrinterService {
         }
       });
 
-      // مهلة زمنية للبحث لتجنب الـ Deadlock
       Future.delayed(const Duration(seconds: 3), () {
-        if (!completer.isCompleted) completer.complete(null);
+        if (!completer.isCompleted) {
+          completer.complete(null);
+        }
       });
 
-      return await completer.future;
-    } finally {
-      // ضمان إغلاق الـ Stream دائماً
-      await subscription?.cancel();
-    }
-  }
+      targetDevice = await completer.future;
+      await subscription.cancel();
 
-  /// مسؤولية الاتصال الفعلي بالطابعة وإرسال البيانات
-  Future<bool> _connectAndPrint(PrinterDevice device, List<int> bytes) async {
-    try {
-      // محاولة الفصل المسبق للتأكد من عدم وجود جلسات معلقة
-      try {
-        await _printerManager.disconnect(type: PrinterType.usb);
-      } catch (_) {}
-
-      debugPrint('USB Print: Connecting to ${device.name}...');
-      
-      final isConnected = await _printerManager.connect(
-        type: PrinterType.usb,
-        model: UsbPrinterInput(
-          name: device.name,
-          productId: device.productId, // أصبحنا متأكدين أنها ليست Null بفضل التحقق السابق
-          vendorId: device.vendorId,   // أصبحنا متأكدين أنها ليست Null بفضل التحقق السابق
-        ),
-      );
-
-      if (isConnected != true) {
-        debugPrint('Print Error: Failed to establish USB connection.');
+      if (targetDevice == null) {
+        debugPrint('Print Error: Printer [$printerName] not found on USB ports.');
         return false;
       }
 
-      debugPrint('USB Print: Connected. Sending bytes...');
-      final result = await _printerManager.send(type: PrinterType.usb, bytes: bytes);
+      // 5. الاتصال والطبع
+      debugPrint('USB Print: Printer found! Connecting...');
+      try {
+        await PrinterManager.instance.disconnect(type: PrinterType.usb);
+      } catch (_) {}
       
-      // تأخير بسيط لضمان اكتمال استلام الطابعة للبيانات قبل إغلاق الاتصال
+      await PrinterManager.instance.connect(
+        type: PrinterType.usb,
+        model: UsbPrinterInput(
+          name: targetDevice.name,
+          productId: targetDevice.productId,
+          vendorId: targetDevice.vendorId,
+        ),
+      );
+
+      debugPrint('USB Print: Connected. Sending bytes...');
+      final result = await PrinterManager.instance.send(type: PrinterType.usb, bytes: bytes);
+      
       await Future.delayed(const Duration(milliseconds: 500));
-      await _printerManager.disconnect(type: PrinterType.usb);
+      await PrinterManager.instance.disconnect(type: PrinterType.usb);
       
       return result;
+
     } catch (e) {
-      debugPrint('Print Error during connection/sending: $e');
+      debugPrint('USB Print Exception: $e');
       return false;
     }
   }
