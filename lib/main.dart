@@ -29,6 +29,14 @@ class AhgzlyPOS extends StatelessWidget {
           GlobalWidgetsLocalizations.delegate,
           GlobalCupertinoLocalizations.delegate,
         ],
+        // [Keyboard Fix]: هذا السطر السحري يمنع انضغاط واجهة التطبيق عند صعود الكيبورد في بعض الحالات
+        builder: (context, child) {
+          return MediaQuery(
+            // تحديد حجم الخط الثابت لمنع المستخدم من تكبير الخطوط من إعدادات الهاتف وإفساد الـ POS
+            data: MediaQuery.of(context).copyWith(textScaleFactor: 1.0),
+            child: child!,
+          );
+        },
         routerConfig: AppRouter.getRouter(),
       ),
     );
