@@ -1,154 +1,57 @@
+// مسار الملف: lib/core/database/app_database.dart
+
 import 'dart:io';
-import 'package:ahgzly_pos/core/database/types_converter.dart';
-import 'package:ahgzly_pos/shared/domain/enums/order_status.dart';
-import 'package:ahgzly_pos/shared/domain/enums/order_type.dart';
-import 'package:ahgzly_pos/core/utils/hash_util.dart';
 import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
-import 'tables.dart';
 
-part 'app_database.g.dart'; 
+// --- Imports ---
+import 'package:ahgzly_pos/core/database/tables.dart';
+import 'package:ahgzly_pos/core/database/types_converter.dart';
+import 'package:ahgzly_pos/core/database/migrations/app_migrator.dart';
+import 'package:ahgzly_pos/shared/domain/enums/order_status.dart';
+import 'package:ahgzly_pos/shared/domain/enums/order_type.dart';
 
-@DriftDatabase(tables: [
-  // الجداول القديمة
-  License, Settings, Users, Shifts, Categories, 
-  Items, Expenses, Orders, OrderItems,
-  
-  // 🚀 الجداول المضافة في Sprint 1 (تعريفها يحل مشكلة الـ Migration)
-  Customers, Zones, RestaurantTables, PaymentMethods,
-  
-  // 🚀 الجداول المضافة في Sprint 2 (تعريفها يحل مشكلة Undefined name)
-  ItemVariants, Addons, InventoryItems, Recipes, OrderItemAddons,
+import 'package:ahgzly_pos/core/database/daos/customers_dao.dart';
+import 'package:ahgzly_pos/core/database/daos/inventory_dao.dart';
 
-  // 🚀 الجداول المضافة في Sprint 3 (Inventory & Suppliers)
-  Suppliers, PurchaseInvoices, PurchaseInvoiceItems, InventoryTransactions
-])
+part 'app_database.g.dart';
 
+@DriftDatabase(
+  tables: [
+    // 🗄️ Core & Auth
+    License, Settings, Users, Shifts, Categories,
+    Items, Expenses, Orders, OrderItems,
+
+    // 🧑‍🤝‍🧑 Shared (Customers & Tables)
+    Customers, Zones, RestaurantTables, PaymentMethods,
+
+    // 🍔 Menu Details
+    ItemVariants, Addons, OrderItemAddons,
+
+    // 📦 Inventory & Suppliers
+    InventoryItems, Recipes, Suppliers, PurchaseInvoices,
+    PurchaseInvoiceItems, InventoryTransactions,
+  ],
+  daos: [CustomersDao, InventoryDao],
+)
 class AppDatabase extends _$AppDatabase {
-  
-  // Refactored: Accept QueryExecutor to allow dependency injection (e.g., In-Memory DB for testing)
   AppDatabase(super.e);
 
   @override
-  int get schemaVersion => 20; // 🚀 [Sprint 3] Incremented for Inventory & Suppliers Module
+  int get schemaVersion => 20;
 
+  // 🚀 [Refactored]: تم نقل كل منطق الميغريشن إلى كلاس خارجي لسهولة القراءة والصيانة
   @override
-  MigrationStrategy get migration {
-    return MigrationStrategy(
-      onCreate: (Migrator m) async {
-        await m.createAll();
-        
-        // Insert default initial data
-        await into(license).insert(
-          LicenseCompanion.insert(
-            isActivated: const Value(false),
-            trialStartDate: Value(DateTime.now()),
-          ),
-        );
-
-        await into(settings).insert(
-          SettingsCompanion.insert(
-            taxRate: 0.14,
-            serviceRate: 0.12,
-            deliveryFee: 2000,
-            printerName: 'EPSON Printer',
-            restaurantName: 'مـطـعـم احـجـزلـي',
-            taxNumber: '123-456-789',
-            printMode: 'ask',
-          ),
-        );
-
-        final adminSalt = HashUtil.generateSalt();
-        final adminHashedPin = HashUtil.generatePinHash('123456', adminSalt); 
-        final cashierSalt = HashUtil.generateSalt();
-        final cashierHashedPin = HashUtil.generatePinHash('000000', cashierSalt);
-
-        await into(users).insert(
-          UsersCompanion.insert(
-            name: 'مدير النظام',
-            pinHash: adminHashedPin,
-            salt: adminSalt,
-            role: 'admin',
-            isActive: const Value(true),
-          ),
-        );
-
-        await into(users).insert(
-          UsersCompanion.insert(
-            name: 'كاشير 1',
-            pinHash: cashierHashedPin,
-            salt: cashierSalt,
-            role: 'cashier',
-            isActive: const Value(true),
-          ),
-        );
-
-        await into(paymentMethods).insert(PaymentMethodsCompanion.insert(name: 'كاش'));
-        await into(paymentMethods).insert(PaymentMethodsCompanion.insert(name: 'بطاقة إئتمان (فيزا / مدى)'));
-      },
-      onUpgrade: (Migrator m, int from, int to) async {
-        if (from < 15) {
-          // إضافة الأعمدة الجديدة للجداول القديمة بدون مسح بيانات العميل
-          await m.addColumn(items, items.costPrice);
-          await m.addColumn(orders, orders.totalCost);
-          await m.addColumn(orderItems, orderItems.unitCostPrice);
-        }
-
-        if (from < 16) {
-          // 1. إنشاء الجداول الجديدة
-          await m.createTable(customers);
-          await m.createTable(zones);
-          await m.createTable(restaurantTables);
-          await m.createTable(paymentMethods);
-
-          // 2. إضافة الأعمدة الجديدة لجدول الطلبات القديم بأمان
-          await m.addColumn(orders, orders.customerId);
-          await m.addColumn(orders, orders.tableId);
-          await m.addColumn(orders, orders.orderType);
-          await m.addColumn(orders, orders.paymentMethodId);
-
-          // 3. حقن طرق الدفع الأساسية للعملاء الحاليين الذين يمتلكون النظام بالفعل
-          await into(paymentMethods).insert(PaymentMethodsCompanion.insert(name: 'كاش'));
-          await into(paymentMethods).insert(PaymentMethodsCompanion.insert(name: 'بطاقة إئتمان (فيزا / مدى)'));
-        }
-
-        if (from < 17) {
-          await m.createTable(itemVariants);
-          await m.createTable(addons);
-          await m.createTable(inventoryItems);
-          await m.createTable(recipes);
-        }
-        if (from < 18) {
-          // إضافة عمود المقاس لجدول عناصر الطلب
-          await m.addColumn(orderItems, orderItems.variantId);
-          // إنشاء جدول تفاصيل إضافات الطلب
-          await m.createTable(orderItemAddons);
-        }
-        
-        if (from < 20) {
-          // 🚀 [Sprint 3]: Inventory & Suppliers Module
-          await m.createTable(suppliers);
-          await m.createTable(purchaseInvoices);
-          await m.createTable(purchaseInvoiceItems);
-          await m.createTable(inventoryTransactions);
-          await m.addColumn(recipes, recipes.addonId); // Added addonId to Recipes
-        }
-      },
-      beforeOpen: (details) async {
-        // Enable Foreign Keys for relational integrity
-        await customStatement('PRAGMA foreign_keys = ON');
-      },
-    );
-  }
+  MigrationStrategy get migration => AppMigrator(this).strategy;
 }
 
-// Refactored: Extracted helper function to be used in dependency injection setup (e.g., dependency_injection.dart)
+// 🔧 Database Connection Initialization
 LazyDatabase openConnection(String dbName) {
   return LazyDatabase(() async {
     final dbFolder = await getApplicationDocumentsDirectory();
-    final file = File(p.join(dbFolder.path, dbName)); 
+    final file = File(p.join(dbFolder.path, dbName));
     return NativeDatabase.createInBackground(file);
   });
 }

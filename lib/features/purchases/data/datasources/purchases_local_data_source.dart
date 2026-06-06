@@ -3,7 +3,6 @@ import 'package:ahgzly_pos/core/error/exceptions.dart';
 import 'package:drift/drift.dart';
 import '../models/purchase_invoice_model.dart';
 import '../models/purchase_invoice_item_model.dart';
-import 'package:ahgzly_pos/core/database/costing_helper.dart';
 
 abstract class PurchasesLocalDataSource {
   Future<List<PurchaseInvoiceModel>> getPurchaseInvoices();
@@ -20,6 +19,33 @@ class PurchasesLocalDataSourceImpl implements PurchasesLocalDataSource {
   final AppDatabase appDatabase;
 
   PurchasesLocalDataSourceImpl({required this.appDatabase});
+
+  // 🛠️ دالة المساعدة الداخلية
+  Future<void> _recalculateCostsForInventoryItem(int inventoryItemId) async {
+    final recipes = await appDatabase.inventoryDao.getRecipesByInventoryItemId(inventoryItemId);
+    final itemIds = <int>{};
+    final variantIds = <int>{};
+    final addonIds = <int>{};
+
+    for (var recipe in recipes) {
+      if (recipe.itemId != null) itemIds.add(recipe.itemId!);
+      if (recipe.variantId != null) variantIds.add(recipe.variantId!);
+      if (recipe.addonId != null) addonIds.add(recipe.addonId!);
+    }
+
+    for (var id in itemIds) {
+      final newCost = await appDatabase.inventoryDao.calculateTotalCostForTarget(itemId: id);
+      await appDatabase.inventoryDao.updateItemCost(id, newCost);
+    }
+    for (var id in variantIds) {
+      final newCost = await appDatabase.inventoryDao.calculateTotalCostForTarget(variantId: id);
+      await appDatabase.inventoryDao.updateVariantCost(id, newCost);
+    }
+    for (var id in addonIds) {
+      final newCost = await appDatabase.inventoryDao.calculateTotalCostForTarget(addonId: id);
+      await appDatabase.inventoryDao.updateAddonCost(id, newCost);
+    }
+  }
 
   @override
   Future<List<PurchaseInvoiceModel>> getPurchaseInvoices() async {
@@ -45,7 +71,6 @@ class PurchasesLocalDataSourceImpl implements PurchasesLocalDataSource {
       return await appDatabase.transaction(() async {
         final now = DateTime.now();
         
-        // 1. إنشاء الفاتورة
         final invoiceId = await appDatabase.into(appDatabase.purchaseInvoices).insert(
           PurchaseInvoicesCompanion.insert(
             supplierId: Value(supplierId),
@@ -57,7 +82,6 @@ class PurchasesLocalDataSourceImpl implements PurchasesLocalDataSource {
           ),
         );
 
-        // 2. تسجيل العناصر وحركات المخزون
         for (var item in items) {
           await appDatabase.into(appDatabase.purchaseInvoiceItems).insert(
             PurchaseInvoiceItemsCompanion.insert(
@@ -69,22 +93,18 @@ class PurchasesLocalDataSourceImpl implements PurchasesLocalDataSource {
             ),
           );
 
-          // 3. زيادة كمية المخزون في الخامات
           final inventoryItem = await (appDatabase.select(appDatabase.inventoryItems)
             ..where((t) => t.id.equals(item.inventoryItemId))).getSingle();
             
           final newStock = inventoryItem.stockQuantity + item.quantity;
           
-          // 4. تحديث سعر التكلفة للوحدة (متوسط مرجح أو سعر آخر شراء)
-          // هنا سنستخدم سعر آخر شراء لتسهيل الحسابات (أو يمكن عمل Weighted Average)
           await (appDatabase.update(appDatabase.inventoryItems)
             ..where((t) => t.id.equals(item.inventoryItemId)))
             .write(InventoryItemsCompanion(
               stockQuantity: Value(newStock),
-              costPerUnit: Value(item.unitCost), // 🚀 [Costing]: تحديث سعر الخامة لتحديث أسعار المنيو تلقائياً
+              costPerUnit: Value(item.unitCost), 
             ));
 
-          // 5. تسجيل حركة مخزنية (Transaction)
           await appDatabase.into(appDatabase.inventoryTransactions).insert(
             InventoryTransactionsCompanion.insert(
               inventoryItemId: item.inventoryItemId,
@@ -100,10 +120,9 @@ class PurchasesLocalDataSourceImpl implements PurchasesLocalDataSource {
         final invoiceData = await (appDatabase.select(appDatabase.purchaseInvoices)
           ..where((t) => t.id.equals(invoiceId))).getSingle();
 
-        // 6. [Costing] Recalculate cost prices for affected menu items
-        final costingHelper = CostingHelper(appDatabase);
+        // 🚀 الـ Costing الجديد لتحديث تكلفة المنيو بناءً على المشتريات
         for (var item in items) {
-          await costingHelper.recalculateCostsForInventoryItem(item.inventoryItemId);
+          await _recalculateCostsForInventoryItem(item.inventoryItemId);
         }
 
         return PurchaseInvoiceModel.fromDrift(invoiceData);

@@ -1,5 +1,4 @@
 import 'package:ahgzly_pos/core/database/app_database.dart';
-import 'package:ahgzly_pos/core/database/app_database_extentions.dart'; 
 import 'package:ahgzly_pos/core/error/exceptions.dart';
 import 'package:ahgzly_pos/features/pos/data/models/order_model.dart';
 import 'package:ahgzly_pos/features/pos/data/models/order_item_model.dart';
@@ -179,17 +178,17 @@ class PosLocalDataSourceImpl implements PosLocalDataSource {
   }
 
   @override
-  Future<List<CustomerData>> getCustomers() async => await appDatabase.getAllCustomers();
+  Future<List<CustomerData>> getCustomers() async => await appDatabase.customersDao.getAllCustomers();
 
   @override
-  Future<List<ZoneData>> getZones() async => await appDatabase.getAllZones();
+  Future<List<ZoneData>> getZones() async => await appDatabase.customersDao.getAllZones();
 
   @override
-  Future<List<RestaurantTableData>> getTablesByZone(int zoneId) async => await appDatabase.getTablesByZoneId(zoneId);
+  Future<List<RestaurantTableData>> getTablesByZone(int zoneId) async => await appDatabase.customersDao.getTablesByZoneId(zoneId);
 
   @override
-  Future<List<PaymentMethodData>> getPaymentMethods() async => await appDatabase.getAllPaymentMethods();
+  Future<List<PaymentMethodData>> getPaymentMethods() async => await appDatabase.customersDao.getAllPaymentMethods();
 
   @override
-  Future<int> addCustomer(CustomersCompanion customer) async => await appDatabase.insertCustomer(customer);
+  Future<int> addCustomer(CustomersCompanion customer) async => await appDatabase.customersDao.insertCustomer(customer);
 }

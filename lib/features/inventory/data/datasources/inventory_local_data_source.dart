@@ -3,7 +3,6 @@ import 'package:ahgzly_pos/core/error/exceptions.dart';
 import 'package:ahgzly_pos/features/inventory/data/models/inventory_item_model.dart';
 import 'package:ahgzly_pos/features/inventory/data/models/recipe_model.dart';
 import 'package:ahgzly_pos/features/inventory/domain/entities/recipe_with_details_entity.dart';
-import 'package:ahgzly_pos/core/database/costing_helper.dart';
 import 'package:drift/drift.dart';
 
 abstract class InventoryLocalDataSource {
@@ -22,6 +21,33 @@ class InventoryLocalDataSourceImpl implements InventoryLocalDataSource {
   final AppDatabase appDatabase;
 
   InventoryLocalDataSourceImpl({required this.appDatabase});
+
+  // 🛠️ دالة مساعدة داخلية لحساب التكلفة باستخدام الـ DAO
+  Future<void> _recalculateCostsForInventoryItem(int inventoryItemId) async {
+    final recipes = await appDatabase.inventoryDao.getRecipesByInventoryItemId(inventoryItemId);
+    final itemIds = <int>{};
+    final variantIds = <int>{};
+    final addonIds = <int>{};
+
+    for (var recipe in recipes) {
+      if (recipe.itemId != null) itemIds.add(recipe.itemId!);
+      if (recipe.variantId != null) variantIds.add(recipe.variantId!);
+      if (recipe.addonId != null) addonIds.add(recipe.addonId!);
+    }
+
+    for (var id in itemIds) {
+      final newCost = await appDatabase.inventoryDao.calculateTotalCostForTarget(itemId: id);
+      await appDatabase.inventoryDao.updateItemCost(id, newCost);
+    }
+    for (var id in variantIds) {
+      final newCost = await appDatabase.inventoryDao.calculateTotalCostForTarget(variantId: id);
+      await appDatabase.inventoryDao.updateVariantCost(id, newCost);
+    }
+    for (var id in addonIds) {
+      final newCost = await appDatabase.inventoryDao.calculateTotalCostForTarget(addonId: id);
+      await appDatabase.inventoryDao.updateAddonCost(id, newCost);
+    }
+  }
 
   @override
   Future<List<InventoryItemModel>> getInventoryItems() async {
@@ -47,13 +73,11 @@ class InventoryLocalDataSourceImpl implements InventoryLocalDataSource {
   @override
   Future<InventoryItemModel> updateInventoryItem(InventoryItemsCompanion item) async {
     try {
-      // 🚀 [Sprint 2 FIX]: استخدام Transaction لضمان إعادة حساب التكلفة عند تعديل الخامة
       return await appDatabase.transaction(() async {
         await appDatabase.update(appDatabase.inventoryItems).replace(item);
         final data = await (appDatabase.select(appDatabase.inventoryItems)..where((t) => t.id.equals(item.id.value))).getSingle();
         
-        final costingHelper = CostingHelper(appDatabase);
-        await costingHelper.recalculateCostsForInventoryItem(data.id);
+        await _recalculateCostsForInventoryItem(data.id); // 🚀 الـ Costing الجديد
         
         return InventoryItemModel.fromDrift(data);
       });
@@ -124,15 +148,23 @@ class InventoryLocalDataSourceImpl implements InventoryLocalDataSource {
   @override
   Future<RecipeModel> addRecipe(RecipesCompanion recipe) async {
     try {
-      // 🚀 [Sprint 2 FIX]: دمج إضافة الوصفة وتحديث التكلفة في Transaction واحد
       return await appDatabase.transaction(() async {
         final id = await appDatabase.into(appDatabase.recipes).insert(recipe);
         final data = await (appDatabase.select(appDatabase.recipes)..where((t) => t.id.equals(id))).getSingle();
 
-        final costingHelper = CostingHelper(appDatabase);
-        if (data.itemId != null) await costingHelper.recalculateCostForItem(data.itemId!);
-        if (data.variantId != null) await costingHelper.recalculateCostForVariant(data.variantId!);
-        if (data.addonId != null) await costingHelper.recalculateCostForAddon(data.addonId!);
+        // 🚀 الـ Costing الجديد للصنف بمجرد إضافة مقدار له
+        if (data.itemId != null) {
+          final cost = await appDatabase.inventoryDao.calculateTotalCostForTarget(itemId: data.itemId!);
+          await appDatabase.inventoryDao.updateItemCost(data.itemId!, cost);
+        }
+        if (data.variantId != null) {
+          final cost = await appDatabase.inventoryDao.calculateTotalCostForTarget(variantId: data.variantId!);
+          await appDatabase.inventoryDao.updateVariantCost(data.variantId!, cost);
+        }
+        if (data.addonId != null) {
+          final cost = await appDatabase.inventoryDao.calculateTotalCostForTarget(addonId: data.addonId!);
+          await appDatabase.inventoryDao.updateAddonCost(data.addonId!, cost);
+        }
 
         return RecipeModel.fromDrift(data);
       });
@@ -144,17 +176,25 @@ class InventoryLocalDataSourceImpl implements InventoryLocalDataSource {
   @override
   Future<void> deleteRecipe(int id) async {
     try {
-      // 🚀 [Sprint 2 FIX]: دمج الحذف وتحديث التكلفة في Transaction واحد
       await appDatabase.transaction(() async {
         final recipeToDelete = await (appDatabase.select(appDatabase.recipes)..where((t) => t.id.equals(id))).getSingleOrNull();
         
         await (appDatabase.delete(appDatabase.recipes)..where((t) => t.id.equals(id))).go();
 
         if (recipeToDelete != null) {
-          final costingHelper = CostingHelper(appDatabase);
-          if (recipeToDelete.itemId != null) await costingHelper.recalculateCostForItem(recipeToDelete.itemId!);
-          if (recipeToDelete.variantId != null) await costingHelper.recalculateCostForVariant(recipeToDelete.variantId!);
-          if (recipeToDelete.addonId != null) await costingHelper.recalculateCostForAddon(recipeToDelete.addonId!);
+          // 🚀 الـ Costing الجديد لإعادة الحساب بعد الحذف
+          if (recipeToDelete.itemId != null) {
+            final cost = await appDatabase.inventoryDao.calculateTotalCostForTarget(itemId: recipeToDelete.itemId!);
+            await appDatabase.inventoryDao.updateItemCost(recipeToDelete.itemId!, cost);
+          }
+          if (recipeToDelete.variantId != null) {
+            final cost = await appDatabase.inventoryDao.calculateTotalCostForTarget(variantId: recipeToDelete.variantId!);
+            await appDatabase.inventoryDao.updateVariantCost(recipeToDelete.variantId!, cost);
+          }
+          if (recipeToDelete.addonId != null) {
+            final cost = await appDatabase.inventoryDao.calculateTotalCostForTarget(addonId: recipeToDelete.addonId!);
+            await appDatabase.inventoryDao.updateAddonCost(recipeToDelete.addonId!, cost);
+          }
         }
       });
     } catch (e) {
